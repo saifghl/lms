@@ -17,8 +17,15 @@ import Units from "./components/admin/Units";
 import AddUnit from "./components/admin/AddUnit";
 import EditUnit from "./components/admin/EditUnit";
 import UnitDetails from "./components/admin/UnitDetails";
+<<<<<<< Updated upstream
 import LeaseDashboard from "./components/lease-management/LeaseDashboard";
 
+=======
+import Leases from "./components/admin/Leases";
+import AddLease from "./components/admin/AddLease";
+import EditLease from "./components/admin/EditLease";
+import LeaseDetails from "./components/admin/LeaseDetails";
+>>>>>>> Stashed changes
 import DocRepo from "./components/management-rep/doc-repo";
 import Login from "./components/Login/Login";
 import Logout from "./components/Logout/Logout";
@@ -47,6 +54,10 @@ function App() {
         <Route path="/admin/add-unit" element={<AddUnit />} />
         <Route path="/admin/edit-unit/:id" element={<EditUnit />} />
         <Route path="/admin/view-unit/:id" element={<UnitDetails />} />
+        <Route path="/admin/leases" element={<Leases />} />
+        <Route path="/admin/add-lease" element={<AddLease />} />
+        <Route path="/admin/edit-lease/:id" element={<EditLease />} />
+        <Route path="/admin/view-lease/:id" element={<LeaseDetails />} />
 
         {/* Other Admin Modules */}
         <Route path="/admin/settings" element={<Settings />} />

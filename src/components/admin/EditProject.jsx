@@ -86,7 +86,7 @@ const EditProject = () => {
                                 </div>
                                 <div className="form-group vertical">
                                     <label>Lease Rental Rang</label>
-                                    <input type="text" defaultValue="$ 30 / sqft - $ 60 / sqft" className="bg-input" />
+                                    <input type="text" defaultValue="₹ 30 / sqft - ₹ 60 / sqft" className="bg-input" />
                                 </div>
                             </section>
 
@@ -102,15 +102,15 @@ const EditProject = () => {
                                 <h3>Rent Projection</h3>
                                 <div className="form-group vertical">
                                     <label>Rent per month/year</label>
-                                    <input type="text" defaultValue="$ 1,200,000" />
+                                    <input type="text" defaultValue="₹ 1,200,000" />
                                 </div>
                                 <div className="form-group vertical">
                                     <label>Average Monthly Rent</label>
-                                    <input type="text" defaultValue="$ 45,000" />
+                                    <input type="text" defaultValue="₹ 45,000" />
                                 </div>
                                 <div className="form-group vertical">
                                     <label>Security Deposit</label>
-                                    <input type="text" defaultValue="$ 90,000" />
+                                    <input type="text" defaultValue="₹ 90,000" />
                                 </div>
                             </section>
 

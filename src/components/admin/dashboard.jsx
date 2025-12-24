@@ -1,10 +1,13 @@
 import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './dashboard.css';
 
 const Dashboard = () => {
     // BACKEND: Fetch dashboard data (stats, charts, lists) here
     // const { stats, revenueData, renewals, expiries, escalations } = useDashboardData();
+
+    const navigate = useNavigate();
 
     return (
         <div className="dashboard-container">
@@ -22,7 +25,7 @@ const Dashboard = () => {
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                         </button>
                         {/* BACKEND: Link to New Lease creation workflow */}
-                        <button className="primary-btn">+ New Lease</button>
+                        <button className="primary-btn" onClick={() => navigate('/admin/leases')}>+ New Lease</button>
                     </div>
                 </header>
 
@@ -45,7 +48,7 @@ const Dashboard = () => {
                         </div>
                         <div className="stat-detail">
                             <span className="label">Area Occupied</span>
-                            <span className="sub-label">Average Rent Achieved: $37.20 per sq ft</span>
+                            <span className="sub-label">Average Rent Achieved: ₹37.20 per sq ft</span>
                         </div>
                     </div>
 
@@ -80,7 +83,7 @@ const Dashboard = () => {
                         </div>
                         <div className="stat-detail">
                             <span className="label">Area Vacant</span>
-                            <span className="sub-label">Average Expected Rent: $38.00 per sq ft</span>
+                            <span className="sub-label">Average Expected Rent: ₹38.00 per sq ft</span>
                         </div>
                     </div>
 
@@ -103,29 +106,31 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    <div className="stat-card">
-                        <h3>Total Leases</h3>
-                        {/* BACKEND: stats.totalLeases */}
-                        <div className="stat-value">138</div>
-                        <div className="stat-change positive">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                            +4% vs last month
+                    <Link to="/admin/leases" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <div className="stat-card">
+                            <h3>Total Leases</h3>
+                            {/* BACKEND: stats.totalLeases */}
+                            <div className="stat-value">138</div>
+                            <div className="stat-change positive">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                +4% vs last month
+                            </div>
+                            <div className="mini-chart purple">
+                                <svg width="100%" height="100%" viewBox="0 0 100 30" preserveAspectRatio="none">
+                                    <path d="M0,20 Q10,15 20,20 T40,10 T60,15 T80,5 T100,15" fill="none" stroke="#6c5ce7" strokeWidth="2" />
+                                </svg>
+                            </div>
+                            <div className="stat-detail">
+                                <span className="label">42,000 sq ft</span>
+                                <span className="sub-label">Total Leasable Area</span>
+                            </div>
                         </div>
-                        <div className="mini-chart purple">
-                            <svg width="100%" height="100%" viewBox="0 0 100 30" preserveAspectRatio="none">
-                                <path d="M0,20 Q10,15 20,20 T40,10 T60,15 T80,5 T100,15" fill="none" stroke="#6c5ce7" strokeWidth="2" />
-                            </svg>
-                        </div>
-                        <div className="stat-detail">
-                            <span className="label">42,000 sq ft</span>
-                            <span className="sub-label">Total Leasable Area</span>
-                        </div>
-                    </div>
+                    </Link>
 
                     <div className="stat-card">
                         <h3>Total Revenue</h3>
                         {/* BACKEND: stats.totalRevenue */}
-                        <div className="stat-value">$1.2M</div>
+                        <div className="stat-value">₹1.2M</div>
                         <div className="stat-change positive">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                             +12% YTD

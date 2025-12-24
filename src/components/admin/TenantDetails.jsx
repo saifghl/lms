@@ -31,7 +31,7 @@ const TenantDetails = () => {
 
     const keyTerms = {
         monthlyRent: '2,450.00',
-        revenueShare: '+ 5% Revenue Share > $50K',
+        revenueShare: '+ 5% Revenue Share > ₹50K',
         dateOfLease: 'Jan 01, 24',
         lockinDate: 'Jan 01, 24',
         areaOccupied: '1,250'
@@ -132,7 +132,7 @@ const TenantDetails = () => {
                             <div className="rent-section">
                                 <label className="rent-label">Monthly Rent</label>
                                 <div className="rent-amount">
-                                    ${keyTerms.monthlyRent} <span className="rent-period">(Fixed)</span>
+                                    ₹{keyTerms.monthlyRent} <span className="rent-period">(Fixed)</span>
                                 </div>
                                 <span className="revenue-share">{keyTerms.revenueShare}</span>
                             </div>

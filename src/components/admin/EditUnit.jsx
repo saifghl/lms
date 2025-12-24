@@ -82,11 +82,11 @@ const EditUnit = () => {
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label>Monthly Base Rent</label>
-                                        <input type="text" defaultValue="$2,400.00" className="blue-text-input" />
+                                        <input type="text" defaultValue="₹2,400.00" className="blue-text-input" />
                                     </div>
                                     <div className="form-group">
                                         <label>Security Deposit</label>
-                                        <input type="text" defaultValue="$2,400.00" className="blue-text-input" />
+                                        <input type="text" defaultValue="₹2,400.00" className="blue-text-input" />
                                     </div>
                                 </div>
                                 <div className="form-row">

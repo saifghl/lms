@@ -175,7 +175,7 @@ const OwnerDetails = () => {
                                             </div>
                                         </td>
                                         <td><span className="status-badge-unit occupied">Occupied</span></td>
-                                        <td className="rent-val">$2,450</td>
+                                        <td className="rent-val">₹2,450</td>
                                     </tr>
 
                                     <tr>
@@ -192,7 +192,7 @@ const OwnerDetails = () => {
                                             </div>
                                         </td>
                                         <td><span className="status-badge-unit vacant">Vacant</span></td>
-                                        <td className="rent-val">$1,800</td>
+                                        <td className="rent-val">₹1,800</td>
                                     </tr>
 
                                     <tr>
@@ -209,7 +209,7 @@ const OwnerDetails = () => {
                                             </div>
                                         </td>
                                         <td><span className="status-badge-unit occupied">Occupied</span></td>
-                                        <td className="rent-val">$1,200</td>
+                                        <td className="rent-val">₹1,200</td>
                                     </tr>
                                 </tbody>
                             </table>

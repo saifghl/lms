@@ -122,7 +122,7 @@ const UnitDetails = () => {
                             </div>
                             <div className="stat-item">
                                 <label>Market Rent:</label>
-                                <div className="stat-value big">$2,200 / month</div>
+                                <div className="stat-value big">₹2,200 / month</div>
                             </div>
                             <div className="stat-item">
                                 <label>Next Renewal:</label>
@@ -151,7 +151,7 @@ const UnitDetails = () => {
                                     <div className="timeline-dot green"></div>
                                     <div className="timeline-content">
                                         <h4>Rent Payment Received</h4>
-                                        <p>Payment of $2,400.00 processed successfully.</p>
+                                        <p>Payment of ₹2,400.00 processed successfully.</p>
                                         <span className="time">5 days ago</span>
                                     </div>
                                 </div>

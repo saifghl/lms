@@ -93,10 +93,10 @@ const AddUnit = () => {
                                         </div>
                                     </div>
                                     <div className="form-group">
-                                        <label>Projected Rent ($/month)</label>
+                                        <label>Projected Rent (₹/month)</label>
                                         <div className="input-with-suffix">
-                                            <input type="text" placeholder="$0.00 USD" />
-                                            <span className="suffix">USD</span>
+                                            <input type="text" placeholder="₹0.00 INR" />
+                                            <span className="suffix">INR</span>
                                         </div>
                                     </div>
                                 </div>
