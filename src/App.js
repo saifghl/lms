@@ -20,6 +20,9 @@ import UnitDetails from "./components/admin/UnitDetails";
 import LeaseDashboard from "./components/lease-management/LeaseDashboard";
 import RepDashboard from "./components/management-rep/RepDashboard";
 import Reports from "./components/management-rep/Reports";
+import SearchFilters from "./components/management-rep/SearchFilters";
+import Notifications from "./components/management-rep/Notifications";
+import RepSettings from "./components/management-rep/RepSettings";
 import Leases from "./components/admin/Leases";
 import AddLease from "./components/admin/AddLease";
 import EditLease from "./components/admin/EditLease";
@@ -83,6 +86,9 @@ function App() {
         <Route path="/lease/reminders" element={<LeaseReminders />} />
         <Route path="/management/dashboard" element={<RepDashboard />} />
         <Route path="/management/reports" element={<Reports />} />
+        <Route path="/management/search" element={<SearchFilters />} />
+        <Route path="/management/notifications" element={<Notifications />} />
+        <Route path="/management/settings" element={<RepSettings />} />
 
       </Routes >
     </BrowserRouter >
