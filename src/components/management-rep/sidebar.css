@@ -1,4 +1,9 @@
-/* Sidebar container */
+/* ===== GLOBAL RESET ===== */
+* {
+  box-sizing: border-box;
+}
+
+/* ===== SIDEBAR ===== */
 .sidebar {
   width: 240px;
   height: 100vh;
@@ -6,12 +11,12 @@
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
-/* Header */
+/* ===== SIDEBAR HEADER ===== */
 .sidebar-header {
-  padding: 20px;
+  padding: 22px 20px;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -22,10 +27,10 @@
   color: #1f2937;
 }
 
-/* Menu */
+/* ===== MENU ===== */
 .sidebar-menu {
   list-style: none;
-  padding: 0;
+  padding: 10px 0;
   margin: 0;
   flex-grow: 1;
 }
@@ -35,13 +40,16 @@
   font-size: 14px;
   color: #374151;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
 }
 
 .menu-item:hover {
   background-color: #f3f4f6;
 }
 
-/* Active menu item */
+/* ACTIVE ITEM */
 .menu-item.active {
   background-color: #e8f0fe;
   color: #2563eb;
@@ -49,29 +57,35 @@
   border-left: 4px solid #2563eb;
 }
 
-/* Footer */
+/* ===== FOOTER ===== */
 .sidebar-footer {
-  padding: 15px 20px;
+  padding: 16px 20px;
   border-top: 1px solid #e5e7eb;
   font-size: 14px;
   color: #dc2626;
   cursor: pointer;
+  transition: background 0.2s ease;
 }
-/* Main layout */
+
+.sidebar-footer:hover {
+  background-color: #fef2f2;
+}
+
+/* ===== MAIN LAYOUT ===== */
 .dashboard {
   display: flex;
   min-height: 100vh;
   background-color: #f9fafb;
 }
 
-/* Right content area */
+/* ===== CONTENT AREA ===== */
 .content-area {
   flex: 1;
   padding: 30px;
   background-color: #f9fafb;
 }
 
-/* Page header */
+/* ===== PAGE HEADER ===== */
 .page-header h2 {
   margin: 0;
   font-size: 22px;
@@ -85,7 +99,7 @@
   color: #6b7280;
 }
 
-/* Upload section */
+/* ===== UPLOAD SECTION ===== */
 .upload-section {
   margin-top: 25px;
 }
@@ -93,41 +107,54 @@
 .upload-box {
   background: #ffffff;
   border: 2px dashed #c7d2fe;
-  padding: 40px;
+  padding: 45px;
   text-align: center;
-  border-radius: 6px;
+  border-radius: 8px;
+}
+
+.upload-box p {
+  font-size: 14px;
+  color: #6b7280;
 }
 
 .upload-btn {
-  margin-top: 15px;
-  padding: 8px 18px;
+  margin-top: 18px;
+  padding: 9px 22px;
   background-color: #2563eb;
   color: #ffffff;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
 }
 
-/* Filters */
+.upload-btn:hover {
+  background-color: #1d4ed8;
+}
+
+/* ===== FILTERS ===== */
 .filter-section {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin: 25px 0;
 }
 
 .search-input,
 .filter-dropdown {
-  padding: 8px;
+  padding: 9px 12px;
   font-size: 14px;
   border: 1px solid #d1d5db;
-  border-radius: 4px;
+  border-radius: 6px;
+  background-color: #ffffff;
 }
 
-/* Table */
+/* ===== TABLE ===== */
 .table-section {
   background: #ffffff;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .doc-table {
@@ -138,31 +165,39 @@
 .doc-table th {
   background-color: #f3f4f6;
   text-align: left;
-  padding: 12px;
+  padding: 14px;
   font-size: 13px;
   color: #374151;
+  font-weight: 600;
 }
 
 .doc-table td {
-  padding: 12px;
+  padding: 14px;
   border-top: 1px solid #e5e7eb;
   font-size: 14px;
+  color: #374151;
 }
 
-/* Pagination */
+.doc-table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* ===== PAGINATION ===== */
 .pagination-section {
   display: flex;
   justify-content: space-between;
   margin-top: 20px;
   font-size: 14px;
+  color: #6b7280;
 }
 
 .pagination .page {
-  margin-left: 8px;
+  margin-left: 10px;
   cursor: pointer;
   color: #2563eb;
 }
 
 .pagination .page.active {
   font-weight: 600;
+  text-decoration: underline;
 }
