@@ -1,0 +1,273 @@
+/* Reports.css */
+.reports-container {
+    padding: 24px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+.reports-header {
+    margin-bottom: 24px;
+}
+
+.reports-header h1 {
+    font-size: 1.5rem;
+    margin: 0 0 4px 0;
+    color: #1a202c;
+}
+
+.reports-header p {
+    color: #718096;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Filter Section */
+.reports-filters-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #edf2f7;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.filter-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 150px;
+}
+
+.filter-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #2d3748;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.filter-date-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #2d3748;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.report-tabs {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    border-bottom: 1px solid #edf2f7;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+}
+
+.report-tab {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #718096;
+    cursor: pointer;
+    padding-bottom: 4px;
+    border-bottom: 2px solid transparent;
+}
+
+.report-tab.active {
+    color: #3182ce;
+    border-bottom-color: #3182ce;
+}
+
+.report-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-bar-container {
+    position: relative;
+    width: 300px;
+}
+
+.search-icon-inside {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+}
+
+.report-search-input {
+    width: 100%;
+    padding: 8px 10px 8px 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: #f7fafc;
+}
+
+.export-report-btn {
+    background-color: #2b6cb0;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+/* Table */
+.reports-table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #edf2f7;
+    overflow: hidden;
+}
+
+.reports-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.reports-table th {
+    text-align: left;
+    padding: 16px 24px;
+    color: #718096;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.reports-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+.project-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.project-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #cbd5e0;
+    /* Placeholder color */
+    background-size: cover;
+    background-position: center;
+}
+
+.project-info h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #2d3748;
+}
+
+.project-id {
+    font-size: 0.75rem;
+    color: #718096;
+}
+
+.date-text,
+.type-text {
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-badge.ready {
+    background-color: #c6f6d5;
+    color: #276749;
+}
+
+.status-badge.generating {
+    background-color: #feebc8;
+    color: #9c4221;
+}
+
+.status-badge.planning {
+    background-color: #bee3f8;
+    color: #2c5282;
+}
+
+.status-badge.failed {
+    background-color: #fed7d7;
+    color: #9b2c2c;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: #718096;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.action-btn:hover {
+    color: #2d3748;
+}
+
+/* Pagination */
+.table-footer {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #718096;
+    font-size: 0.85rem;
+}
+
+.pagination {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.page-num {
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.page-num.active {
+    background-color: #ebf8ff;
+    color: #2b6cb0;
+    font-weight: 600;
+}

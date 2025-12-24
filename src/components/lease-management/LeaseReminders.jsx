@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import Sidebar from "../management-rep/sidebar";
+import RepSidebar from "../management-rep/RepSidebar";
+import "../management-rep/RepSidebar.css";
 import "./leaseManagement.css";
 
 const LeaseReminders = () => {
@@ -16,7 +17,7 @@ const LeaseReminders = () => {
 
     return (
         <div className="dashboard-layout">
-            <Sidebar />
+            <RepSidebar />
 
             <div className="lease-dashboard-content">
                 {/* Page Header */}

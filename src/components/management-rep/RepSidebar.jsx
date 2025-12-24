@@ -1,30 +1,22 @@
 import React from "react";
-<<<<<<< Updated upstream:src/components/management-rep/sidebar.jsx
 import { useLocation, useNavigate } from "react-router-dom";
-import "./sidebar.css";
+import "./RepSidebar.css";
 
-function Sidebar() {
+function RepSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
 
   // Helper to determine active state
   const isActive = (routeKey) => {
-    if (routeKey === 'dashboard' && path.includes('/admin/dashboard')) return true;
-    if (routeKey === 'lease' && (path.includes('/lease/dashboard') || path.includes('/lease/validation'))) return true;
-    if (routeKey === 'review' && path.includes('/lease/lifecycle')) return true;
+    if (routeKey === 'dashboard' && path.includes('/management/dashboard')) return true;
+    if (routeKey === 'reports' && path.includes('/management/reports')) return true;
+    if (routeKey === 'doc-repo' && path.includes('/doc-repo')) return true;
     if (routeKey === 'tracker' && path.includes('/lease/reports')) return true; // Mapping Analytics to Tracker
     if (routeKey === 'notification' && path.includes('/lease/reminders')) return true; // Mapping Reminders to Notification
     if (routeKey === 'settings' && path.includes('/settings')) return true; // Assuming a settings route
     return false;
   };
-
-=======
-import { NavLink } from "react-router-dom";
-import "./RepSidebar.css";
-
-function RepSidebar() {
->>>>>>> Stashed changes:src/components/management-rep/RepSidebar.jsx
   return (
     <div className="sidebar">
       {/* Logo / Company Name */}
@@ -40,23 +32,19 @@ function RepSidebar() {
 
       {/* Navigation */}
       <ul className="sidebar-menu">
-<<<<<<< Updated upstream:src/components/management-rep/sidebar.jsx
         <li
           className={`menu-item ${isActive('dashboard') ? 'active' : ''}`}
-          onClick={() => navigate('/admin/dashboard')}
+          onClick={() => navigate('/management/dashboard')}
         >
-=======
-        <NavLink to="/management/dashboard" className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}>
->>>>>>> Stashed changes:src/components/management-rep/RepSidebar.jsx
           <span className="menu-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           </span>
           Dashboard
-        </NavLink>
+        </li>
 
         <li
-          className={`menu-item ${isActive('lease') ? 'active' : ''}`}
-          onClick={() => navigate('/lease/dashboard')}
+          className={`menu-item ${isActive('reports') ? 'active' : ''}`}
+          onClick={() => navigate('/management/reports')}
         >
           <span className="menu-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -65,8 +53,8 @@ function RepSidebar() {
         </li>
 
         <li
-          className={`menu-item ${isActive('review') ? 'active' : ''}`}
-          onClick={() => navigate('/lease/lifecycle')}
+          className={`menu-item ${isActive('doc-repo') ? 'active' : ''}`}
+          onClick={() => navigate('/doc-repo')}
         >
           <span className="menu-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
@@ -109,7 +97,7 @@ function RepSidebar() {
         </span>
         <span>Log Out</span>
       </div>
-    </div>
+    </div >
   );
 }
 
