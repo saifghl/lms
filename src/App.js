@@ -8,6 +8,8 @@ import Units from "./components/admin/Units";
 import AddUnit from "./components/admin/AddUnit";
 import EditUnit from "./components/admin/EditUnit";
 import UnitDetails from "./components/admin/UnitDetails";
+import LeaseDashboard from "./components/lease-management/LeaseDashboard";
+
 import DocRepo from "./components/management-rep/doc-repo";
 import Login from "./components/Login/Login";
 import Logout from "./components/Logout/Logout";
@@ -36,6 +38,9 @@ function App() {
 
         {/* Management Rep Routes */}
         <Route path="/doc-repo" element={<DocRepo />} />
+        {/* Lease Manager Routes */}
+<Route path="/lease/dashboard" element={<LeaseDashboard />} />
+
       </Routes>
     </BrowserRouter>
   );
