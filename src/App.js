@@ -17,15 +17,11 @@ import Units from "./components/admin/Units";
 import AddUnit from "./components/admin/AddUnit";
 import EditUnit from "./components/admin/EditUnit";
 import UnitDetails from "./components/admin/UnitDetails";
-<<<<<<< Updated upstream
 import LeaseDashboard from "./components/lease-management/LeaseDashboard";
-
-=======
 import Leases from "./components/admin/Leases";
 import AddLease from "./components/admin/AddLease";
 import EditLease from "./components/admin/EditLease";
 import LeaseDetails from "./components/admin/LeaseDetails";
->>>>>>> Stashed changes
 import DocRepo from "./components/management-rep/doc-repo";
 import Login from "./components/Login/Login";
 import Logout from "./components/Logout/Logout";
@@ -73,7 +69,7 @@ function App() {
         {/* Management Rep Routes */}
         <Route path="/doc-repo" element={<DocRepo />} />
         {/* Lease Manager Routes */}
-<Route path="/lease/dashboard" element={<LeaseDashboard />} />
+        <Route path="/lease/dashboard" element={<LeaseDashboard />} />
 
       </Routes>
     </BrowserRouter>
