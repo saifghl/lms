@@ -1,0 +1,267 @@
+.tenant-details-container {
+    display: flex;
+    background-color: #f5f7fa;
+    min-height: 100vh;
+}
+
+.tenant-details-content {
+    flex: 1;
+    padding: 20px 30px;
+    margin-left: 250px;
+    transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .tenant-details-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+}
+
+.tenant-header-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    margin-bottom: 25px;
+}
+
+.tenant-identity {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.tenant-avatar-large {
+    width: 64px;
+    height: 64px;
+    background-color: #e91e63;
+    /* Pink/Red color from screenshot */
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.tenant-identity-info h2 {
+    margin: 0 0 5px 0;
+    color: #1a1a1a;
+    font-size: 24px;
+}
+
+.tenant-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+.status-badge-active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.btn-edit-tenant {
+    background-color: #0d47a1;
+    /* Dark blue */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.btn-edit-tenant:hover {
+    background-color: #002171;
+}
+
+/* Layout Grid */
+.details-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+}
+
+@media (max-width: 1024px) {
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Left Column Cards */
+.info-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    margin-bottom: 25px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.view-contract-link {
+    color: #2196f3;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.personal-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.info-item label {
+    display: block;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.info-item p {
+    margin: 0;
+    color: #1a1a1a;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+/* Lease Section */
+.lease-card-content {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.property-image {
+    width: 180px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.lease-details h4 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: #1a1a1a;
+}
+
+.property-address {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.lease-dates {
+    display: flex;
+    gap: 40px;
+}
+
+.date-item label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.date-item span {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+}
+
+
+/* Right Column - Key Terms Card */
+.key-terms-card {
+    background-color: #0046b5;
+    /* Official Blue from screenshot */
+    color: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 70, 181, 0.3);
+}
+
+.key-terms-title {
+    font-size: 16px;
+    opacity: 0.9;
+    margin-bottom: 20px;
+}
+
+.rent-section {
+    margin-bottom: 25px;
+}
+
+.rent-label {
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.rent-amount {
+    font-size: 32px;
+    font-weight: 700;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.rent-period {
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+.revenue-share {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: 5px;
+    display: block;
+}
+
+.terms-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.term-item label {
+    display: block;
+    font-size: 13px;
+    opacity: 0.7;
+    margin-bottom: 5px;
+}
+
+.term-item span {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+}

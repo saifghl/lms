@@ -1,0 +1,362 @@
+.role-management-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #fcfcfc;
+}
+
+.role-content {
+    flex: 1;
+    padding: 30px 40px;
+    margin-left: 250px;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Header */
+.role-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+.role-title h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 8px;
+}
+
+.role-title p {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.create-user-btn {
+    background-color: #155eef;
+    /* Bright blue */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 16px;
+    padding: 30px 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f0f0f0;
+}
+
+.stats-card h3 {
+    color: #555;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.stats-card .stat-value {
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #111;
+}
+
+/* Table Section */
+.role-table-container {
+    background: transparent;
+}
+
+.role-table-header {
+    display: grid;
+    grid-template-columns: 50px 2.5fr 1.5fr 2fr 1fr 0.5fr;
+    padding: 15px 20px;
+    color: #666;
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: none;
+    align-items: center;
+}
+
+.user-row {
+    display: grid;
+    grid-template-columns: 50px 2.5fr 1.5fr 2fr 1fr 0.5fr;
+    background: white;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 12px;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    border: 1px solid #f2f2f2;
+}
+
+/* Checkbox */
+.checkbox-wrapper input[type="radio"],
+.checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #ddd;
+    cursor: pointer;
+}
+
+/* User Info Column */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-details h4 {
+    margin: 0;
+    color: #111;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.user-details span {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Badges */
+.role-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.role-badge.data-entry {
+    background-color: #e0f2fe;
+    color: #0284c7;
+}
+
+.role-badge.admin {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.role-badge.lease-mgr {
+    background-color: #e0e7ff;
+    color: #4f46e5;
+}
+
+.role-badge.mgmt-rep {
+    background-color: #ffedd5;
+    color: #ea580c;
+}
+
+/* Module Access Toggles */
+.module-access {
+    display: flex;
+    gap: 15px;
+}
+
+.toggle-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.toggle-label {
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: #1d4ed8;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px #1d4ed8;
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(18px);
+    -ms-transform: translateX(18px);
+    transform: translateX(18px);
+}
+
+/* Status */
+.status-indicator {
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-indicator.active {
+    color: #16a34a;
+}
+
+.status-indicator.inactive {
+    color: #dc2626;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.active .dot {
+    background-color: #16a34a;
+}
+
+.inactive .dot {
+    background-color: #dc2626;
+}
+
+/* Actions */
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    justify-content: center;
+}
+
+/* Footer */
+.table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.page-item {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.page-item.active {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+.page-arrow {
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+/* Top Search Bar (Mockup) */
+.top-search-bar {
+    position: absolute;
+    top: 20px;
+    left: 280px;
+    width: 300px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    background: #f1f2f4;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+}
+
+.search-input-wrapper input {
+    background: transparent;
+    border: none;
+    margin-left: 8px;
+    outline: none;
+    font-size: 0.9rem;
+    width: 100%;
+    color: #555;
+}
+
+.search-icon {
+    color: #777;
+}
+
+/* Make sure main layout is responsive */
+@media (max-width: 1200px) {
+
+    .role-table-header,
+    .user-row {
+        grid-template-columns: 40px 2fr 1.2fr 1.8fr 1fr 0.5fr;
+    }
+}
