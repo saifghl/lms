@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './AddOwner.css';
@@ -6,16 +6,7 @@ import './AddOwner.css';
 const AddOwner = () => {
     const navigate = useNavigate();
 
-    // Form state (simplified for UI demo)
-    const [formData, setFormData] = useState({
-        fullName: '',
-        email: '',
-        repName: '',
-        phone: '',
-        altContact: '',
-        units: [],
-        address: ''
-    });
+
 
     const handleCancel = () => {
         navigate('/admin/owner');

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./components/admin/dashboard";
 import Projects from "./components/admin/Projects";
@@ -18,10 +18,18 @@ import AddUnit from "./components/admin/AddUnit";
 import EditUnit from "./components/admin/EditUnit";
 import UnitDetails from "./components/admin/UnitDetails";
 import LeaseDashboard from "./components/lease-management/LeaseDashboard";
+<<<<<<< Updated upstream
 import Leases from "./components/admin/Leases";
 import AddLease from "./components/admin/AddLease";
 import EditLease from "./components/admin/EditLease";
 import LeaseDetails from "./components/admin/LeaseDetails";
+=======
+import LeaseValidation from "./components/lease-management/LeaseValidation";
+import LeaseLifecycle from "./components/lease-management/LeaseLifecycle";
+import LeaseReports from "./components/lease-management/LeaseReports";
+import LeaseReminders from "./components/lease-management/LeaseReminders";
+
+>>>>>>> Stashed changes
 import DocRepo from "./components/management-rep/doc-repo";
 import Login from "./components/Login/Login";
 import Logout from "./components/Logout/Logout";
@@ -69,7 +77,16 @@ function App() {
         {/* Management Rep Routes */}
         <Route path="/doc-repo" element={<DocRepo />} />
         {/* Lease Manager Routes */}
+<<<<<<< Updated upstream
         <Route path="/lease/dashboard" element={<LeaseDashboard />} />
+=======
+        <Route path="/lease" element={<Navigate to="/lease/dashboard" replace />} />
+        <Route path="/lease/dashboard" element={<LeaseDashboard />} />
+        <Route path="/lease/validation" element={<LeaseValidation />} />
+        <Route path="/lease/lifecycle" element={<LeaseLifecycle />} />
+        <Route path="/lease/reports" element={<LeaseReports />} />
+        <Route path="/lease/reminders" element={<LeaseReminders />} />
+>>>>>>> Stashed changes
 
       </Routes>
     </BrowserRouter>

@@ -213,13 +213,13 @@ const OwnerDetails = () => {
                                     </tr>
                                 </tbody>
                             </table>
-                            <a href="#" className="view-all-link">View all 12 units →</a>
+                            <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textDecoration: 'underline' }}>View all 12 units →</button>
                         </div>
 
                         {/* Documents Section */}
                         <div className="kyc-header">
                             <h3>KYC & Documents</h3>
-                            <a href="#" className="view-all-docs">View All</a>
+                            <button className="view-all-docs" style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
                         </div>
 
                         <div className="docs-grid">

@@ -123,7 +123,7 @@ const Login = () => {
                 <input type="checkbox" />
                 Remember me
               </label>
-              <a href="#" className="forgot-password">Forgot Password?</a>
+              <button className="forgot-password" style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'underline', color: 'inherit', cursor: 'pointer' }}>Forgot Password?</button>
             </div>
 
             <button type="submit" className="login-button">
@@ -136,7 +136,7 @@ const Login = () => {
           </form>
 
           <div className="signup-link">
-            Don't have an account? <a href="#">sign up</a>
+            Don't have an account? <button style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'underline', color: 'inherit', cursor: 'pointer' }}>sign up</button>
           </div>
         </div>
       </div>

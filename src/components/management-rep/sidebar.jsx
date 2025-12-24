@@ -1,7 +1,23 @@
 import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./sidebar.css";
 
 function Sidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const path = location.pathname;
+
+  // Helper to determine active state
+  const isActive = (routeKey) => {
+    if (routeKey === 'dashboard' && path.includes('/admin/dashboard')) return true;
+    if (routeKey === 'lease' && (path.includes('/lease/dashboard') || path.includes('/lease/validation'))) return true;
+    if (routeKey === 'review' && path.includes('/lease/lifecycle')) return true;
+    if (routeKey === 'tracker' && path.includes('/lease/reports')) return true; // Mapping Analytics to Tracker
+    if (routeKey === 'notification' && path.includes('/lease/reminders')) return true; // Mapping Reminders to Notification
+    if (routeKey === 'settings' && path.includes('/settings')) return true; // Assuming a settings route
+    return false;
+  };
+
   return (
     <div className="sidebar">
       {/* Logo / Company Name */}
@@ -17,35 +33,50 @@ function Sidebar() {
 
       {/* Navigation */}
       <ul className="sidebar-menu">
-        <li className="menu-item active">
+        <li
+          className={`menu-item ${isActive('dashboard') ? 'active' : ''}`}
+          onClick={() => navigate('/admin/dashboard')}
+        >
           <span className="menu-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           </span>
           Dashboard
         </li>
 
-        <li className="menu-item">
+        <li
+          className={`menu-item ${isActive('lease') ? 'active' : ''}`}
+          onClick={() => navigate('/lease/dashboard')}
+        >
           <span className="menu-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
           </span>
           Lease
         </li>
 
-        <li className="menu-item">
+        <li
+          className={`menu-item ${isActive('review') ? 'active' : ''}`}
+          onClick={() => navigate('/lease/lifecycle')}
+        >
           <span className="menu-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
           </span>
           Review center
         </li>
 
-        <li className="menu-item">
+        <li
+          className={`menu-item ${isActive('notification') ? 'active' : ''}`}
+          onClick={() => navigate('/lease/reminders')}
+        >
           <span className="menu-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
           </span>
           Notification
         </li>
 
-        <li className="menu-item">
+        <li
+          className={`menu-item ${isActive('tracker') ? 'active' : ''}`}
+          onClick={() => navigate('/lease/reports')}
+        >
           <span className="menu-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
           </span>

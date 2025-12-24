@@ -177,7 +177,7 @@ const Dashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Upcoming Renewals</h3>
-                            <a href="#">View All</a>
+                            <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
                         </div>
                         {/* BACKEND: Map through upcomingRenewals data */}
                         <div className="list-item">
@@ -218,7 +218,7 @@ const Dashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Upcoming Expiries</h3>
-                            <a href="#">View All</a>
+                            <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
                         </div>
                         {/* BACKEND: Map through upcomingExpiries data */}
                         <div className="list-item">
@@ -259,7 +259,7 @@ const Dashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Rent Escalations</h3>
-                            <a href="#">View All</a>
+                            <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
                         </div>
                         {/* BACKEND: Map through rentEscalations data */}
                         <div className="list-item">

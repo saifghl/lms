@@ -1,11 +1,10 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './TenantDetails.css';
 
 const TenantDetails = () => {
     const { id } = useParams();
-    const navigate = useNavigate();
 
     // Mock Data based on the provided screenshot
     const tenant = {
