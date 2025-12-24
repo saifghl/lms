@@ -1,8 +1,19 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './projects.css';
 
 const Projects = () => {
+    // TODO: Backend - Fetch all projects from API
+    // useEffect(() => {
+    //   const fetchProjects = async () => {
+    //     const response = await fetch('/api/projects');
+    //     setProjects(await response.json());
+    //   };
+    //   fetchProjects();
+    // }, []);
+
+    // Mock Data
     const projects = [
         {
             id: "P-1024",
@@ -60,7 +71,7 @@ const Projects = () => {
                         <h1>Projects</h1>
                         <p>Manage your commercial properties and business spaces</p>
                     </div>
-                    <button className="primary-btn">+ Add Project</button>
+                    <Link to="/admin/add-project" className="primary-btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>+ Add Project</Link>
                 </header>
 
                 <div className="content-card">
@@ -132,9 +143,9 @@ const Projects = () => {
                                                 <button className="action-btn view" title="View">
                                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                                 </button>
-                                                <button className="action-btn edit" title="Edit">
+                                                <Link to={`/admin/edit-project/${project.id}`} className="action-btn edit" title="Edit">
                                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                </button>
+                                                </Link>
                                             </div>
                                         </td>
                                     </tr>
