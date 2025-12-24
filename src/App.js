@@ -11,6 +11,12 @@ import OwnerList from "./components/admin/OwnerList";
 import AddOwner from "./components/admin/AddOwner";
 import OwnerDetails from "./components/admin/OwnerDetails";
 import ActivityLogs from "./components/admin/ActivityLogs";
+import AddProject from "./components/admin/AddProject";
+import EditProject from "./components/admin/EditProject";
+import Units from "./components/admin/Units";
+import AddUnit from "./components/admin/AddUnit";
+import EditUnit from "./components/admin/EditUnit";
+import UnitDetails from "./components/admin/UnitDetails";
 import DocRepo from "./components/management-rep/doc-repo";
 import Login from "./components/Login/Login";
 import Logout from "./components/Logout/Logout";
@@ -31,6 +37,16 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/admin/projects" element={<Projects />} />
+        <Route path="/admin/add-project" element={<AddProject />} />
+        <Route path="/admin/edit-project/:id" element={<EditProject />} />
+
+        {/* Unit Management */}
+        <Route path="/admin/units" element={<Units />} />
+        <Route path="/admin/add-unit" element={<AddUnit />} />
+        <Route path="/admin/edit-unit/:id" element={<EditUnit />} />
+        <Route path="/admin/view-unit/:id" element={<UnitDetails />} />
+
+        {/* Other Admin Modules */}
         <Route path="/admin/settings" element={<Settings />} />
         <Route path="/admin/role-management" element={<RoleManagement />} />
         <Route path="/admin/tenant" element={<Tenant />} />
