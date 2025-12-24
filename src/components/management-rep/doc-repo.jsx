@@ -1,12 +1,12 @@
 import React from "react";
-import Sidebar from "./sidebar";
-import "./sidebar.css";
+import RepSidebar from "./RepSidebar";
+import "./RepSidebar.css";
 
 function DocRepo() {
   return (
     <div className="dashboard">
       {/* Left Sidebar */}
-      <Sidebar />
+      <RepSidebar />
 
       {/* Main Content */}
       <div className="content-area">

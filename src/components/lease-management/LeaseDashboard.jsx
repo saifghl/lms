@@ -1,11 +1,11 @@
 import React from "react";
-import Sidebar from "../management-rep/sidebar";
+import RepSidebar from "../management-rep/RepSidebar";
 import "./leaseManagement.css";
 
 const LeaseDashboard = () => {
   return (
     <div className="dashboard-layout">
-      <Sidebar />
+      <RepSidebar />
 
       <div className="lease-dashboard-content">
         {/* Page Header */}

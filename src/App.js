@@ -19,6 +19,10 @@ import EditUnit from "./components/admin/EditUnit";
 import UnitDetails from "./components/admin/UnitDetails";
 import LeaseDashboard from "./components/lease-management/LeaseDashboard";
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+import RepDashboard from "./components/management-rep/RepDashboard";
+>>>>>>> Stashed changes
 import Leases from "./components/admin/Leases";
 import AddLease from "./components/admin/AddLease";
 import EditLease from "./components/admin/EditLease";
@@ -79,6 +83,7 @@ function App() {
         {/* Lease Manager Routes */}
 <<<<<<< Updated upstream
         <Route path="/lease/dashboard" element={<LeaseDashboard />} />
+<<<<<<< Updated upstream
 =======
         <Route path="/lease" element={<Navigate to="/lease/dashboard" replace />} />
         <Route path="/lease/dashboard" element={<LeaseDashboard />} />
@@ -86,6 +91,9 @@ function App() {
         <Route path="/lease/lifecycle" element={<LeaseLifecycle />} />
         <Route path="/lease/reports" element={<LeaseReports />} />
         <Route path="/lease/reminders" element={<LeaseReminders />} />
+>>>>>>> Stashed changes
+=======
+        <Route path="/management/dashboard" element={<RepDashboard />} />
 >>>>>>> Stashed changes
 
       </Routes>

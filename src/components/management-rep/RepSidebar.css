@@ -77,6 +77,8 @@
   transition: all 0.2s ease;
   font-weight: 600;
   /* Stronger menu text */
+  text-decoration: none;
+  /* For NavLink */
 }
 
 .menu-icon {
