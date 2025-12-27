@@ -30,31 +30,22 @@ const Dashboard = () => {
                 </header>
 
                 <section className="stats-grid">
-                    {/* BACKEND: Map through stats data to render cards dynamically */}
                     <div className="stat-card">
                         <h3>Total Projects</h3>
-                        {/* BACKEND: stats.totalProjects */}
                         <div className="stat-value">12</div>
                         <div className="stat-change positive">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                            {/* BACKEND: stats.projectGrowth */}
                             +2% vs last month
                         </div>
                         <div className="mini-chart green">
-                            {/* BACKEND: Render mini-chart based on project history */}
                             <svg width="100%" height="100%" viewBox="0 0 100 30" preserveAspectRatio="none">
                                 <path mc_style="fill:none;stroke:#00b894;stroke-width:2" d="M0,25 Q10,20 20,25 T40,15 T60,20 T80,10 T100,5" fill="none" stroke="#00b894" strokeWidth="2" />
                             </svg>
-                        </div>
-                        <div className="stat-detail">
-                            <span className="label">Area Occupied</span>
-                            <span className="sub-label">Average Rent Achieved: ₹37.20 per sq ft</span>
                         </div>
                     </div>
 
                     <div className="stat-card">
                         <h3>Total Units</h3>
-                        {/* BACKEND: stats.totalUnits */}
                         <div className="stat-value">148</div>
                         <div className="stat-change positive">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
@@ -65,15 +56,10 @@ const Dashboard = () => {
                                 <path d="M0,20 Q10,25 20,20 T40,15 T60,25 T80,15 T100,20" fill="none" stroke="#ff7675" strokeWidth="2" />
                             </svg>
                         </div>
-                        <div className="stat-detail">
-                            <span className="label">245,000 sq ft</span>
-                            <span className="sub-label">Total Leasable Area</span>
-                        </div>
                     </div>
 
                     <div className="stat-card">
                         <h3>Total Owners</h3>
-                        {/* BACKEND: stats.totalOwners */}
                         <div className="stat-value">45</div>
                         <div className="stat-change neutral">- 0% change</div>
                         <div className="mini-chart blue">
@@ -81,15 +67,10 @@ const Dashboard = () => {
                                 <path d="M0,15 Q25,15 50,15 T100,15" fill="none" stroke="#0984e3" strokeWidth="2" />
                             </svg>
                         </div>
-                        <div className="stat-detail">
-                            <span className="label">Area Vacant</span>
-                            <span className="sub-label">Average Expected Rent: ₹38.00 per sq ft</span>
-                        </div>
                     </div>
 
                     <div className="stat-card">
                         <h3>Total Tenants</h3>
-                        {/* BACKEND: stats.totalTenants */}
                         <div className="stat-value">142</div>
                         <div className="stat-change negative">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
@@ -100,16 +81,11 @@ const Dashboard = () => {
                                 <path d="M0,10 Q10,15 20,10 T40,20 T60,10 T80,15 T100,5" fill="none" stroke="#6c5ce7" strokeWidth="2" />
                             </svg>
                         </div>
-                        <div className="stat-detail">
-                            <span className="label">245,000 sq ft</span>
-                            <span className="sub-label">Total Leasable Area</span>
-                        </div>
                     </div>
 
                     <Link to="/admin/leases" style={{ textDecoration: 'none', color: 'inherit' }}>
                         <div className="stat-card">
                             <h3>Total Leases</h3>
-                            {/* BACKEND: stats.totalLeases */}
                             <div className="stat-value">138</div>
                             <div className="stat-change positive">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
@@ -120,29 +96,56 @@ const Dashboard = () => {
                                     <path d="M0,20 Q10,15 20,20 T40,10 T60,15 T80,5 T100,15" fill="none" stroke="#6c5ce7" strokeWidth="2" />
                                 </svg>
                             </div>
-                            <div className="stat-detail">
-                                <span className="label">42,000 sq ft</span>
-                                <span className="sub-label">Total Leasable Area</span>
-                            </div>
                         </div>
                     </Link>
 
                     <div className="stat-card">
                         <h3>Total Revenue</h3>
-                        {/* BACKEND: stats.totalRevenue */}
-                        <div className="stat-value">₹1.2M</div>
+                        <div className="stat-value">$1.2M</div>
                         <div className="stat-change positive">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                            +12% YTD
+                            -12% YTD
                         </div>
                         <div className="mini-chart red">
                             <svg width="100%" height="100%" viewBox="0 0 100 30" preserveAspectRatio="none">
                                 <path d="M0,25 Q10,20 20,25 T40,10 T60,15 T80,5 T100,10" fill="none" stroke="#ff7675" strokeWidth="2" />
                             </svg>
                         </div>
-                        <div className="stat-detail">
-                            <span className="label">42,000 sq ft</span>
-                            <span className="sub-label">Super Leasable Area</span>
+                    </div>
+                </section>
+
+                {/* Secondary Stats Row (Area details) */}
+                <section className="secondary-stats-row">
+                    <div className="secondary-stat-card">
+                        <div className="sec-stat-info">
+                            <h3>Area Occupied</h3>
+                            <p>Average Rent Achieved: ₹57.20 per sq ft</p>
+                        </div>
+                        <div className="sec-stat-value">
+                            245,000 sq ft
+                            <span>Super / Leasable Area</span>
+                        </div>
+                    </div>
+
+                    <div className="secondary-stat-card">
+                        <div className="sec-stat-info">
+                            <h3>Area Vacant</h3>
+                            <p>Average Expected Rent: ₹53.82 per sq ft</p>
+                        </div>
+                        <div className="sec-stat-value">
+                            42,000 sq ft
+                            <span>Super / Leasable Area</span>
+                        </div>
+                    </div>
+
+                    <div className="secondary-stat-card">
+                        <div className="sec-stat-info">
+                            <h3>Total Leasable</h3>
+                            <p>Total Area across all properties</p>
+                        </div>
+                        <div className="sec-stat-value">
+                            287,000 sq ft
+                            <span>Super / Leasable Area</span>
                         </div>
                     </div>
                 </section>

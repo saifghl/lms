@@ -3,7 +3,8 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #1e1e1e; /* Dark background */
+  background-color: #1e1e1e;
+  /* Dark background */
   font-family: 'Inter', sans-serif;
 }
 
@@ -21,7 +22,8 @@
 /* Left Side - Image/Branding */
 .login-left {
   flex: 1;
-  background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%); /* Subtle gradient as seen in image */
+  background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
+  /* Subtle gradient as seen in image */
   padding: 40px;
   display: flex;
   flex-direction: column;
@@ -42,7 +44,8 @@
 .logo-placeholder {
   width: 40px;
   height: 40px;
-  background-color: #e0f2fe; /* Light blue placeholder */
+  background-color: #e0f2fe;
+  /* Light blue placeholder */
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -58,14 +61,17 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  border: 2px solid #3b82f6; /* Blue border as shown */
-  padding: 4px; /* Inner spacing for the border effect */
+  border: 2px solid #3b82f6;
+  /* Blue border as shown */
+  padding: 4px;
+  /* Inner spacing for the border effect */
 }
 
 .hero-image-placeholder {
   width: 100%;
   height: 100%;
-  background-image: url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2613&auto=format&fit=crop'); /* Placeholder city image */
+  background-image: url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2613&auto=format&fit=crop');
+  /* Placeholder city image */
   background-size: cover;
   background-position: center;
   border-radius: 8px;
@@ -139,7 +145,8 @@
 
 .input-wrapper input {
   width: 100%;
-  padding: 12px 16px 12px 40px; /* Padding for icon */
+  padding: 12px 16px 12px 40px;
+  /* Padding for icon */
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   font-size: 0.95rem;
@@ -192,7 +199,8 @@
 }
 
 .login-button {
-  background-color: #1d4ed8; /* Strong blue */
+  background-color: #1d4ed8;
+  /* Strong blue */
   color: white;
   border: none;
   padding: 12px;
@@ -222,4 +230,46 @@
   color: #000;
   font-weight: 700;
   text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+  .login-container {
+    flex-direction: column;
+    width: 90%;
+    height: auto;
+    min-height: auto;
+    max-width: 500px;
+  }
+
+  .login-left {
+    display: none;
+    /* Hide branding on smaller tablets/mobile to focus on login */
+  }
+
+  .login-right {
+    padding: 40px 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .login-right {
+    padding: 30px 20px;
+    justify-content: center;
+  }
+
+  .login-header h2 {
+    font-size: 1.8rem;
+  }
+
+  .login-header p {
+    font-size: 0.9rem;
+  }
 }
