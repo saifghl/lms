@@ -181,43 +181,7 @@
     color: var(--text-secondary);
 }
 
-/* Badges */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
 
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: currentColor;
-}
-
-.status-badge.active {
-    background: #e8f5e9;
-    color: #00b894;
-}
-
-.status-badge.maintenance {
-    background: #fff8e1;
-    color: #ffa000;
-}
-
-.status-badge.planning {
-    background: #e3f2fd;
-    color: #0984e3;
-}
-
-.status-badge.inactive {
-    background: #ffebee;
-    color: #ff7675;
-}
 
 /* Actions */
 .actions-cell {

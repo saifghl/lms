@@ -51,7 +51,7 @@ const TenantDetails = () => {
                         <div className="tenant-identity-info">
                             <h2>{tenant.name}</h2>
                             <div className="tenant-meta">
-                                <span className="status-badge-active">{tenant.status}</span>
+
                                 <span>ID: #{tenant.id}</span>
                             </div>
                         </div>

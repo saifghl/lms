@@ -204,33 +204,7 @@
     color: #4a5568;
 }
 
-.status-badge {
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: inline-block;
-}
 
-.status-badge.ready {
-    background-color: #c6f6d5;
-    color: #276749;
-}
-
-.status-badge.generating {
-    background-color: #feebc8;
-    color: #9c4221;
-}
-
-.status-badge.planning {
-    background-color: #bee3f8;
-    color: #2c5282;
-}
-
-.status-badge.failed {
-    background-color: #fed7d7;
-    color: #9b2c2c;
-}
 
 .action-btn {
     background: none;

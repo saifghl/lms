@@ -128,7 +128,7 @@ const AddTenant = () => {
                                     <span>1,200 sqft • floor 1</span>
                                 </div>
                             </div>
-                            <span className="status-tag occupied">Occupied</span>
+
                         </label>
 
                         <label className="unit-card">
@@ -139,7 +139,7 @@ const AddTenant = () => {
                                     <span>1,200 sqft • floor 1</span>
                                 </div>
                             </div>
-                            <span className="status-tag available">Available</span>
+
                         </label>
 
                         <label className="unit-card">

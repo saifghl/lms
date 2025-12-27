@@ -108,7 +108,7 @@ const LeaseValidation = () => {
                                     <th>Tenat Name and unit</th>
                                     <th>Rent amount</th>
                                     <th>ID</th>
-                                    <th>Status</th>
+
                                     <th>Expiry date</th>
                                     <th>Action</th>
                                 </tr>
@@ -126,9 +126,7 @@ const LeaseValidation = () => {
                                     </td>
                                     <td>₹12,500</td>
                                     <td>#1080</td>
-                                    <td>
-                                        <span className="status-pill notice-due">notice due</span>
-                                    </td>
+
                                     <td>7 may 2025 10.00am</td>
                                     <td>
                                         <button className="icon-btn">...</button>
@@ -148,9 +146,7 @@ const LeaseValidation = () => {
                                     </td>
                                     <td>₹12,500</td>
                                     <td>#2010</td>
-                                    <td>
-                                        <span className="status-pill renewed">renewed</span>
-                                    </td>
+
                                     <td>7 may 2025 10.00am</td>
                                     <td>
                                         <button className="icon-btn">...</button>
@@ -168,11 +164,7 @@ const LeaseValidation = () => {
                                     </td>
                                     <td>₹12,500</td>
                                     <td>#1050</td>
-                                    <td>
-                                        <span className="status-pill negotiating">
-                                            Negoshiating
-                                        </span>
-                                    </td>
+
                                     <td>7 may 2025 10.00am</td>
                                     <td>
                                         <button className="icon-btn">...</button>
@@ -192,9 +184,7 @@ const LeaseValidation = () => {
                                     </td>
                                     <td>₹12,500</td>
                                     <td>#2040</td>
-                                    <td>
-                                        <span className="status-pill notice-due">notice due</span>
-                                    </td>
+
                                     <td>7 may 2025 10.00am</td>
                                     <td>
                                         <button className="icon-btn">...</button>
@@ -212,11 +202,7 @@ const LeaseValidation = () => {
                                     </td>
                                     <td>₹12,500</td>
                                     <td>#1070</td>
-                                    <td>
-                                        <span className="status-pill terminating">
-                                            Terminating
-                                        </span>
-                                    </td>
+
                                     <td>7 may 2025 10.00am</td>
                                     <td>
                                         <button className="icon-btn">...</button>

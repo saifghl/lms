@@ -156,7 +156,7 @@ const OwnerDetails = () => {
                                     <tr>
                                         <th>Unit ID</th>
                                         <th>Address</th>
-                                        <th>Status</th>
+
                                         <th>Rent</th>
                                     </tr>
                                 </thead>
@@ -174,7 +174,7 @@ const OwnerDetails = () => {
                                                 <span>Springfield, IL</span>
                                             </div>
                                         </td>
-                                        <td><span className="status-badge-unit occupied">Occupied</span></td>
+
                                         <td className="rent-val">₹2,450</td>
                                     </tr>
 
@@ -191,7 +191,7 @@ const OwnerDetails = () => {
                                                 <span>Springfield, IL</span>
                                             </div>
                                         </td>
-                                        <td><span className="status-badge-unit vacant">Vacant</span></td>
+
                                         <td className="rent-val">₹1,800</td>
                                     </tr>
 
@@ -208,7 +208,7 @@ const OwnerDetails = () => {
                                                 <span>Springfield, IL</span>
                                             </div>
                                         </td>
-                                        <td><span className="status-badge-unit occupied">Occupied</span></td>
+
                                         <td className="rent-val">₹1,200</td>
                                     </tr>
                                 </tbody>

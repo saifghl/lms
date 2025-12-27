@@ -227,32 +227,7 @@
     color: #718096;
 }
 
-.status-tag {
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
 
-.status-tag.warning {
-    background: #feebc8;
-    color: #d69e2e;
-}
-
-.status-tag.danger {
-    background: #fed7d7;
-    color: #e53e3e;
-}
-
-.status-tag.success {
-    background: #c6f6d5;
-    color: #38a169;
-}
-
-.status-tag.neutral {
-    background: #e2e8f0;
-    color: #4a5568;
-}
 
 @media (max-width: 768px) {
     .metrics-grid {

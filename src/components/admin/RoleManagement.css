@@ -241,37 +241,7 @@ input:checked+.slider:before {
     transform: translateX(18px);
 }
 
-/* Status */
-.status-indicator {
-    font-size: 0.9rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
 
-.status-indicator.active {
-    color: #16a34a;
-}
-
-.status-indicator.inactive {
-    color: #dc2626;
-}
-
-.dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.active .dot {
-    background-color: #16a34a;
-}
-
-.inactive .dot {
-    background-color: #dc2626;
-}
 
 /* Actions */
 .action-btn {

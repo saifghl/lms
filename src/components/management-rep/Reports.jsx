@@ -75,7 +75,7 @@ const Reports = () => {
                                 <th>Project Name</th>
                                 <th>Date</th>
                                 <th>Type</th>
-                                <th>Status</th>
+
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -123,8 +123,7 @@ const Reports = () => {
     );
 };
 
-const ReportRow = ({ name, id, date, type, status, img }) => {
-    const getStatusClass = (s) => s.toLowerCase();
+const ReportRow = ({ name, id, date, type, img }) => {
 
     return (
         <tr>
@@ -139,7 +138,7 @@ const ReportRow = ({ name, id, date, type, status, img }) => {
             </td>
             <td><span className="date-text">{date}</span></td>
             <td><span className="type-text">{type}</span></td>
-            <td><span className={`status-badge ${getStatusClass(status)}`}>{status}</span></td>
+
             <td>
                 <button className="action-btn">👁️</button>
             </td>

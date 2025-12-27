@@ -120,7 +120,7 @@ const ListSection = ({ title, viewAllLink, children }) => (
     </div>
 );
 
-const ListItem = ({ date, month, title, subtitle, badge, badgeType, bgType }) => (
+const ListItem = ({ date, month, title, subtitle }) => (
     <div className="list-item">
         <div className="date-badge">
             <span className="month">{month}</span>
@@ -130,7 +130,7 @@ const ListItem = ({ date, month, title, subtitle, badge, badgeType, bgType }) =>
             <span className="item-title">{title}</span>
             <span className="item-subtitle">{subtitle}</span>
         </div>
-        <span className={`status-tag ${badgeType}`} style={bgType === 'neutral' ? { background: '#f7fafc', color: '#38a169' } : {}}>{badge}</span>
+
     </div>
 );
 

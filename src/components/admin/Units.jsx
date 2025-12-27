@@ -84,10 +84,7 @@ const Units = () => {
                                 <span>Unit Type: All</span>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </div>
-                            <div className="dropdown-filter">
-                                <span>Status: All</span>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </div>
+
                         </div>
                         <div className="view-actions">
                             <button className="icon-btn active">
@@ -108,7 +105,7 @@ const Units = () => {
                                     <th>Unit No</th>
                                     <th>Tower/Building</th>
                                     <th>Area (SQ FT)</th>
-                                    <th>Status</th>
+
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -118,15 +115,7 @@ const Units = () => {
                                         <td className="unit-id">{unit.id}</td>
                                         <td>{unit.building}</td>
                                         <td>{unit.area}</td>
-                                        <td>
-                                            <div className="status-cell">
-                                                <span className={`badge ${unit.statusType.split('-')[0]}`}>
-                                                    <span className="dot"></span>
-                                                    {unit.status}
-                                                </span>
-                                                <span className="status-desc">{unit.statusDesc}</span>
-                                            </div>
-                                        </td>
+
                                         <td>
                                             <div className="action-buttons">
                                                 <Link to={`/admin/view-unit/${unit.id}`} className="action-btn view" title="View">

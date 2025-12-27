@@ -434,41 +434,7 @@
     color: #888;
 }
 
-.status-badge-unit {
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
 
-.status-badge-unit::before {
-    content: '';
-    display: block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-}
-
-.status-badge-unit.occupied {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-}
-
-.status-badge-unit.occupied::before {
-    background-color: #2e7d32;
-}
-
-.status-badge-unit.vacant {
-    background-color: #fff3e0;
-    color: #ef6c00;
-}
-
-.status-badge-unit.vacant::before {
-    background-color: #ef6c00;
-}
 
 .rent-val {
     font-weight: 500;

@@ -160,25 +160,7 @@
     display: block;
 }
 
-/* Tags */
-.status-tag {
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
 
-.status-tag.occupied {
-    background-color: #fee2e2;
-    color: #ef4444;
-    border: 1px solid #fecaca;
-}
-
-.status-tag.available {
-    background-color: #dcfce7;
-    color: #16a34a;
-    border: 1px solid #bbf7d0;
-}
 
 /* Footer Actions */
 .form-actions {

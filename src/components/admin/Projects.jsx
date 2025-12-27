@@ -82,10 +82,7 @@ const Projects = () => {
                             <input type="text" placeholder="Search projects by key name, city, or ID..." />
                         </div>
                         <div className="filter-actions">
-                            <button className="filter-btn">
-                                Status: All
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </button>
+
                             <button className="filter-btn">
                                 Location: All
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -106,7 +103,7 @@ const Projects = () => {
                                     <th>Project Name</th>
                                     <th>Location</th>
                                     <th>Total Units</th>
-                                    <th>Status</th>
+
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -132,12 +129,7 @@ const Projects = () => {
                                                 <span className="occupancy-label">{project.occupancy}</span>
                                             </div>
                                         </td>
-                                        <td>
-                                            <span className={`status-badge ${project.status}`}>
-                                                <span className="status-dot"></span>
-                                                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                                            </span>
-                                        </td>
+
                                         <td>
                                             <div className="actions-cell">
                                                 <button className="action-btn view" title="View">

@@ -100,7 +100,7 @@ const Tenant = () => {
                         <div>Contact</div>
                         <div>Email</div>
                         <div>Area Occupied</div>
-                        <div style={{ textAlign: 'center' }}>KYC Status</div>
+
                         <div style={{ textAlign: 'center' }}>Actions</div>
                     </div>
 
@@ -113,9 +113,7 @@ const Tenant = () => {
                             <div className="contact-col">{tenant.contact}</div>
                             <div className="email-col">{tenant.email}</div>
                             <div className="area-col">{tenant.area}</div>
-                            <div style={{ textAlign: 'center' }}>
-                                <span className={`kyc-badge ${tenant.statusClass}`}>{tenant.status}</span>
-                            </div>
+
                             <div className="actions-col" style={{ justifyContent: 'center' }}>
                                 <button className="action-icon-btn" onClick={() => navigate(`/admin/tenant/${tenant.id}`)}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>

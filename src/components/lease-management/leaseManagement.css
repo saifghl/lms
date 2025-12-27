@@ -292,52 +292,7 @@ button {
   font-weight: 500;
 }
 
-/* Status Pills */
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  /* Bold pills */
-}
 
-.status-pill::before {
-  content: '';
-  display: block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  margin-right: 8px;
-}
-
-.pending {
-  background-color: #ecfdf5;
-  color: #166534;
-}
-
-.pending::before {
-  background-color: #16a34a;
-}
-
-.docs-submitted {
-  background-color: #fff7ed;
-  color: #9a3412;
-}
-
-.docs-submitted::before {
-  background-color: #ea580c;
-}
-
-.dispute {
-  background-color: #eff6ff;
-  color: #1e40af;
-}
-
-.dispute::before {
-  background-color: #2563eb;
-}
 
 /* Actions */
 .icon-btn {
@@ -586,42 +541,7 @@ button {
   color: #111827;
 }
 
-/* Additional Status Colors */
-.status-pill.notice-due {
-  background-color: #ecfdf5;
-  color: #166534;
-}
 
-.status-pill.notice-due::before {
-  background-color: #16a34a;
-}
-
-.status-pill.renewed {
-  background-color: #fff7ed;
-  color: #9a3412;
-}
-
-.status-pill.renewed::before {
-  background-color: #ea580c;
-}
-
-.status-pill.negotiating {
-  background-color: #eff6ff;
-  color: #1e40af;
-}
-
-.status-pill.negotiating::before {
-  background-color: #2563eb;
-}
-
-.status-pill.terminating {
-  background-color: #fef2f2;
-  color: #991b1b;
-}
-
-.status-pill.terminating::before {
-  background-color: #dc2626;
-}
 
 
 /* ====== REVIEW CENTER / LIFECYCLE UI ====== */

@@ -213,51 +213,7 @@
     font-weight: 500;
 }
 
-/* Badges */
-.kyc-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    gap: 6px;
-}
 
-.kyc-badge::before {
-    content: '';
-    display: block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-}
-
-.kyc-badge.verified {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-}
-
-.kyc-badge.verified::before {
-    background-color: #2e7d32;
-}
-
-.kyc-badge.pending {
-    background-color: #fff3e0;
-    color: #ef6c00;
-}
-
-.kyc-badge.pending::before {
-    background-color: #ef6c00;
-}
-
-.kyc-badge.rejected {
-    background-color: #ffebee;
-    color: #c62828;
-}
-
-.kyc-badge.rejected::before {
-    background-color: #c62828;
-}
 
 /* Actions */
 .actions-col {

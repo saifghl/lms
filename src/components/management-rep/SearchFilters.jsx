@@ -89,10 +89,7 @@ const SearchFilters = () => {
                             <label>Unit Number</label>
                             <input type="text" placeholder="e.g." />
                         </div>
-                        <div className="filter-group">
-                            <label>Status</label>
-                            <input type="text" placeholder="e.g." />
-                        </div>
+
                         <div className="filter-group">
                             <label>Lease dates</label>
                             <div className="date-inputs">
@@ -119,7 +116,7 @@ const SearchFilters = () => {
                                 <tr>
                                     <th style={{ width: '30%' }}>Project Name</th>
                                     <th>Name /ID</th>
-                                    <th>Status</th>
+
                                     <th>Category</th>
                                     <th>Actions</th>
                                 </tr>
@@ -137,7 +134,7 @@ const SearchFilters = () => {
                                             </div>
                                         </td>
                                         <td>{item.owner}</td>
-                                        <td><span className="status-text">{item.status}</span></td>
+
                                         <td>{item.category}</td>
                                         <td>
                                             {item.action === 'view' ? (

@@ -96,7 +96,7 @@ const OwnerList = () => {
                         <div>Contact Info</div>
                         <div>GST No</div>
                         <div>Total Area (sq ft)</div>
-                        <div>KYC Status</div>
+
                         <div>Actions</div>
                     </div>
 
@@ -125,9 +125,7 @@ const OwnerList = () => {
 
                             <div className="area-col">{owner.area}</div>
 
-                            <div>
-                                <span className={`kyc-badge ${owner.statusClass}`}>{owner.status}</span>
-                            </div>
+
 
                             <div className="actions-col">
                                 <button className="action-icon-btn" title="View" onClick={() => navigate(`/admin/owner/${owner.id}`)}>

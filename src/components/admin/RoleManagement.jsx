@@ -95,7 +95,7 @@ const RoleManagement = () => {
                         <div>User Info</div>
                         <div>Role</div>
                         <div>Module Access</div>
-                        <div>Status</div>
+
                         <div>Actions</div>
                     </div>
 
@@ -159,12 +159,7 @@ const RoleManagement = () => {
                                 )}
                             </div>
 
-                            <div>
-                                <div className={`status-indicator ${user.status.toLowerCase()}`}>
-                                    <span className="dot"></span>
-                                    {user.status}
-                                </div>
-                            </div>
+
 
                             <div>
                                 <button className="action-btn">

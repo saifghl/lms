@@ -38,17 +38,7 @@ const AddProject = () => {
                                     <label>Address</label>
                                     <textarea placeholder="Street address, P.O. Box..." rows="3"></textarea>
                                 </div>
-                                <div className="form-group status-group">
-                                    <label>Status</label>
-                                    <div className="status-toggle">
-                                        <button type="button" className="toggle-btn active">
-                                            <span className="dot"></span> Active
-                                        </button>
-                                        <button type="button" className="toggle-btn">
-                                            <span className="dot empty"></span> Inactive
-                                        </button>
-                                    </div>
-                                </div>
+
                             </div>
 
                             <div className="form-row three-cols">

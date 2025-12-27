@@ -105,7 +105,7 @@ const ActivityLogs = () => {
                         <div>Action</div>
                         <div>Module</div>
                         <div>Timestamp</div>
-                        <div>Status</div>
+
                     </div>
 
                     {logs.map((log, index) => (
@@ -128,9 +128,7 @@ const ActivityLogs = () => {
                                 <span>{log.date}</span>
                                 <span className="time">{log.time}</span>
                             </div>
-                            <div className="status-col">
-                                <span className={`status-badge ${log.statusClass}`}>{log.status}</span>
-                            </div>
+
                         </div>
                     ))}
 
