@@ -44,28 +44,28 @@ const Sidebar = () => {
                         <span className="icon">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M3 7v14M21 7v14M12 3L3 7l9 4 9-4-9-4z"></path></svg>
                         </span>
-                        project
+                        Projects
                     </NavLink>
 
                     <NavLink to="/admin/leases" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <span className="icon">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                         </span>
-                        leases
+                        Leases
                     </NavLink>
 
                     <NavLink to="/admin/owner" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <span className="icon">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
                         </span>
-                        Owner
+                        Owners
                     </NavLink>
 
                     <NavLink to="/admin/tenant" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <span className="icon">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M9 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="9" cy="7" r="4"></circle><circle cx="15" cy="12" r="3"></circle></svg>
                         </span>
-                        Tenant
+                        Tenants
                     </NavLink>
 
                     <NavLink to="/admin/role-management" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>

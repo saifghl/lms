@@ -247,5 +247,49 @@
     .tenant-row {
         grid-template-columns: 2fr 1.5fr 2fr 1fr 1fr 0.5fr;
         font-size: 0.9rem;
+        min-width: 800px;
+        /* Ensure table doesn't squash too much */
+    }
+
+    .tenant-table-container {
+        overflow-x: auto;
+        /* Enable horizontal scroll */
+    }
+}
+
+@media (max-width: 1024px) {
+    .tenant-content {
+        margin-left: 0;
+        padding: 85px 20px 20px;
+        /* Add top padding to clear hamburger */
+    }
+
+    .tenant-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .search-area {
+        width: 100%;
+    }
+
+    .filter-actions {
+        justify-content: space-between;
+    }
+
+    .table-footer {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .table-footer>span:first-child {
+        display: none;
+        /* Hide 'Showing X to Y' text on mobile to keep horizontal layout */
     }
 }

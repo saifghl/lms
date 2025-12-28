@@ -328,5 +328,47 @@ input:checked+.slider:before {
     .role-table-header,
     .user-row {
         grid-template-columns: 40px 2fr 1.2fr 1.8fr 1fr 0.5fr;
+        min-width: 900px;
+    }
+
+    .role-table-container {
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 1024px) {
+    .role-content {
+        margin-left: 0;
+        padding: 85px 20px 20px;
+    }
+
+    .top-search-bar {
+        position: static;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .role-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .table-footer {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .table-footer>span:first-child {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 }
