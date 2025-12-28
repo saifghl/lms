@@ -19,7 +19,7 @@ const RoleManagement = () => {
             id: 2,
             name: 'Sarah Jenkins',
             email: 'sarah.j@estateadmin.com',
-            role: 'Admin',
+            role: 'Administrator',
             roleClass: 'admin',
             access: { lease: true, fin: false, maint: true },
             status: 'Active'
@@ -28,7 +28,7 @@ const RoleManagement = () => {
             id: 3,
             name: 'Michael Chen',
             email: 'm.chen@estateadmin.com',
-            role: 'Lease Mgr',
+            role: 'Lease Manager',
             roleClass: 'lease-mgr',
             access: { lease: true, fin: false, maint: false },
             status: 'Inactive'
@@ -37,8 +37,8 @@ const RoleManagement = () => {
             id: 4,
             name: 'Emma Wilson',
             email: 'e.wilson@estateadmin.com',
-            role: 'Mgmt Rep',
-            roleClass: 'mgmt-rep',
+            role: 'Management Rep',
+            roleClass: 'management-rep',
             access: { lease: true, fin: true, maint: false },
             status: 'Active'
         }
@@ -75,7 +75,7 @@ const RoleManagement = () => {
                         <div className="stat-value">124</div>
                     </div>
                     <div className="stats-card">
-                        <h3>Active Admins</h3>
+                        <h3>Active Administrators</h3>
                         <div className="stat-value">4</div>
                     </div>
                     <div className="stats-card">
@@ -146,14 +146,14 @@ const RoleManagement = () => {
                                                 <input type="checkbox" defaultChecked={user.access.fin} />
                                                 <span className="slider"></span>
                                             </label>
-                                            <span className="toggle-label">Fin</span>
+                                            <span className="toggle-label">Finance</span>
                                         </div>
                                         <div className="toggle-group">
                                             <label className="switch">
                                                 <input type="checkbox" defaultChecked={user.access.maint} />
                                                 <span className="slider"></span>
                                             </label>
-                                            <span className="toggle-label">Maint</span>
+                                            <span className="toggle-label">Maintenance</span>
                                         </div>
                                     </>
                                 )}

@@ -97,7 +97,7 @@ const Reports = () => {
                                 img="https://images.unsplash.com/photo-1448630360428-65456885c650?w=50&h=50&fit=crop"
                             />
                             <ReportRow
-                                name="Miami Bay Villa" id="#P-1155" date="11des2025" type="lease mgmt" status="Failed"
+                                name="Miami Bay Villa" id="#P-1155" date="11des2025" type="lease management" status="Failed"
                                 img="https://images.unsplash.com/photo-1512453979798-5ea904ac66de?w=50&h=50&fit=crop"
                             />
                         </tbody>
