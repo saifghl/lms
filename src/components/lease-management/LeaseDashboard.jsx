@@ -2,7 +2,10 @@ import React from "react";
 import RepSidebar from "../management-rep/RepSidebar";
 import "./leaseManagement.css";
 
+import { useNavigate } from "react-router-dom";
+
 const LeaseDashboard = () => {
+  const navigate = useNavigate();
   return (
     <div className="dashboard-layout">
       <RepSidebar />
@@ -14,7 +17,7 @@ const LeaseDashboard = () => {
             <h2>Dashboard</h2>
             <p>Welcome back</p>
           </div>
-          <button className="primary-btn">
+          <button className="primary-btn" onClick={() => navigate('/admin/add-lease')}>
             <svg
               width="20"
               height="20"
@@ -98,7 +101,7 @@ const LeaseDashboard = () => {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Tentant</th>
+                  <th>Tenant</th>
                   <th>Date</th>
                   <th>Type</th>
                   <th>ID</th>
@@ -245,7 +248,7 @@ const LeaseDashboard = () => {
               <div className="qa-icon-circle orange">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
               </div>
-              <span>EMAIL TENTANT</span>
+              <span>EMAIL TENANT</span>
             </button>
 
           </div>

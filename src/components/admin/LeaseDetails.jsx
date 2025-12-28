@@ -7,6 +7,12 @@ import './dashboard.css';
 const LeaseDetails = () => {
     const { id } = useParams();
 
+    // Mock data state for demonstration - in real app would come from API
+    // Options: 'direct', 'sub_lease'
+    const leaseType = 'sub_lease';
+    // Options: 'fixed', 'revenue_share'
+    const rentModel = 'revenue_share';
+
     return (
         <div className="dashboard-container">
             <Sidebar />
@@ -19,10 +25,13 @@ const LeaseDetails = () => {
 
                 <div className="details-header">
                     <div className="header-title-section">
-                        <h1>
-                            Lease #{id || 'LSE-8921'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <h1>
+                                Lease #{id || 'LSE-8921'}
+                            </h1>
                             <span className="status-badge active">Active</span>
-                        </h1>
+                            {leaseType === 'sub_lease' && <span className="status-badge" style={{ background: '#ebf8ff', color: '#2b6cb0' }}>Sub Lease</span>}
+                        </div>
                         <p className="header-subtitle">Commercial Lease Agreement • Sunrise Apartments</p>
                     </div>
                     <div className="header-actions">
@@ -37,7 +46,7 @@ const LeaseDetails = () => {
                 <div className="info-grid">
                     {/* Tenant Information */}
                     <div className="info-card">
-                        <h3>Tenant Information</h3>
+                        <h3>{leaseType === 'sub_lease' ? 'Sub Tenant Information' : 'Tenant Information'}</h3>
                         <div className="tenant-info">
                             <div className="avatar-placeholder" style={{ backgroundColor: '#ebf8ff', color: '#3182ce' }}>AC</div>
                             <div className="info-text">
@@ -136,9 +145,15 @@ const LeaseDetails = () => {
 
                         <div className="rent-breakdown">
                             <div className="rent-item">
-                                <label>Base Rent</label>
+                                <label>{rentModel === 'revenue_share' ? 'Minimum Guarantee (MGR)' : 'Base Rent'}</label>
                                 <span className="amount">₹4,000.00</span>
                             </div>
+                            {rentModel === 'revenue_share' && (
+                                <div className="rent-item">
+                                    <label>Revenue Share</label>
+                                    <span className="amount">10% of Net Sales</span>
+                                </div>
+                            )}
                             <div className="rent-item">
                                 <label>CAM / Service</label>
                                 <span className="amount">₹350.00</span>
@@ -182,8 +197,8 @@ const LeaseDetails = () => {
                     </div>
                 </div>
 
-            </main>
-        </div>
+            </main >
+        </div >
     );
 };
 

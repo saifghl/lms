@@ -6,9 +6,19 @@ import './dashboard.css'; // Ensure dashboard styles are available
 
 const AddLease = () => {
     const navigate = useNavigate();
+    const [rentModel, setRentModel] = useState('fixed'); // 'fixed' | 'revenue_share'
+    const [isSubLease, setIsSubLease] = useState(false);
     const [escalationSteps, setEscalationSteps] = useState([
         { effectiveDate: '', increaseType: 'Percentage (%)', value: '5' }
     ]);
+
+    const handleLeaseTypeChange = (e) => {
+        const isSub = e.target.value === 'sub_lease';
+        setIsSubLease(isSub);
+        if (isSub) {
+            setRentModel('fixed'); // Sublease is always fixed rent per requirement
+        }
+    };
 
     const addEscalationStep = () => {
         setEscalationSteps([...escalationSteps, { effectiveDate: '', increaseType: 'Percentage (%)', value: '' }]);
@@ -36,6 +46,65 @@ const AddLease = () => {
                 </header>
 
                 <div className="form-layout">
+                    {/* Section: Lease Type Selection */}
+                    <div className="form-section">
+                        <h3>Lease Configuration</h3>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Lease Type</label>
+                                <div className="radio-group" style={{ display: 'flex', gap: '20px', marginTop: '8px' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                        <input
+                                            type="radio"
+                                            name="leaseType"
+                                            value="direct"
+                                            checked={!isSubLease}
+                                            onChange={handleLeaseTypeChange}
+                                        />
+                                        Direct Lease
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                        <input
+                                            type="radio"
+                                            name="leaseType"
+                                            value="sub_lease"
+                                            checked={isSubLease}
+                                            onChange={handleLeaseTypeChange}
+                                        />
+                                        Sub Lease
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="form-group" style={{ opacity: isSubLease ? 0.5 : 1, pointerEvents: isSubLease ? 'none' : 'auto' }}>
+                                <label>Rent Model</label>
+                                <div className="radio-group" style={{ display: 'flex', gap: '20px', marginTop: '8px' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                        <input
+                                            type="radio"
+                                            name="rentModel"
+                                            value="fixed"
+                                            checked={rentModel === 'fixed'}
+                                            onChange={(e) => setRentModel(e.target.value)}
+                                        />
+                                        Fixed Rent
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                        <input
+                                            type="radio"
+                                            name="rentModel"
+                                            value="revenue_share"
+                                            checked={rentModel === 'revenue_share'}
+                                            onChange={(e) => setRentModel(e.target.value)}
+                                        />
+                                        Revenue Share
+                                    </label>
+                                </div>
+                                {isSubLease && <small style={{ color: '#e53e3e' }}>Sublease supports Fixed Rent only.</small>}
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Section 1: Property & Parties */}
                     <div className="form-section">
                         <h3>Property & Parties</h3>
@@ -59,21 +128,29 @@ const AddLease = () => {
                         </div>
                         <div className="form-row">
                             <div className="form-group">
-                                <label>Tenant</label>
+                                <label>{isSubLease ? 'Sub Tenant' : 'Tenant'}</label>
                                 <select defaultValue="">
-                                    <option value="" disabled>Select Tenant</option>
+                                    <option value="" disabled>Select {isSubLease ? 'Sub Tenant' : 'Tenant'}</option>
                                     <option>John Smith</option>
                                     <option>TechCorp Inc</option>
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Owner (Landlord)</label>
+                                <label>{isSubLease ? 'Tenant (Lessor)' : 'Owner (Landlord)'}</label>
                                 <select defaultValue="">
-                                    <option value="" disabled>Select Owner</option>
+                                    <option value="" disabled>Select {isSubLease ? 'Tenant' : 'Owner'}</option>
                                     <option>Cusec Properties</option>
                                 </select>
                             </div>
                         </div>
+                        {isSubLease && (
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Sub Lease Area (sq ft)</label>
+                                    <input type="number" placeholder="e.g. 500" />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Section 2: Lease Period & Lockin */}
@@ -113,32 +190,50 @@ const AddLease = () => {
                     {/* Section 3: Rent & Financials */}
                     <div className="form-section">
                         <h3>Rent & Financials</h3>
+
+                        {/* Dynamic Fields based on Rent Model */}
                         <div className="form-row">
-                            <div className="form-group">
-                                <label>Base Monthly Rent</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" placeholder="0.00" />
-                                    <span className="currency-code">INR</span>
+                            {rentModel === 'fixed' ? (
+                                <div className="form-group">
+                                    <label>Fixed Rent Amount (Monthly)</label>
+                                    <div className="currency-input">
+                                        <span className="currency-symbol">₹</span>
+                                        <input type="number" placeholder="0.00" />
+                                        <span className="currency-code">INR</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Min. Guaranteed Rent (MGR)</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" placeholder="0.00" />
-                                    <span className="currency-code">INR</span>
+                            ) : (
+                                <div className="form-group">
+                                    <label>Minimum Guarantee (MGR)</label>
+                                    <div className="currency-input">
+                                        <span className="currency-symbol">₹</span>
+                                        <input type="number" placeholder="0.00" />
+                                        <span className="currency-code">INR</span>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
                             <div className="form-group">
-                                <label>CAM Charges (Monthly)</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" placeholder="0.00" />
-                                    <span className="currency-code">INR</span>
-                                </div>
+                                <label>Using Currency</label>
+                                <input type="text" defaultValue="INR" readOnly className="bg-input" />
                             </div>
                         </div>
+
+                        {rentModel === 'revenue_share' && (
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Revenue Share Percentage (%)</label>
+                                    <input type="number" placeholder="e.g. 10" />
+                                </div>
+                                <div className="form-group">
+                                    <label>Applicable On</label>
+                                    <select>
+                                        <option>Net Sales</option>
+                                        <option>Gross Sales</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="form-row">
                             <div className="form-group">
@@ -160,30 +255,12 @@ const AddLease = () => {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Late Payment Fee (%)</label>
-                                <input type="number" placeholder="e.g. 5%" />
-                            </div>
-                        </div>
-
-                        <h4 style={{ fontSize: '0.95rem', margin: '16px 0 12px 0', color: '#4a5568', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Revenue Share Details</h4>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Revenue Share Percentage (%)</label>
-                                <input type="number" placeholder="e.g. 10%" />
-                            </div>
-                            <div className="form-group">
-                                <label>Applicable On</label>
-                                <select>
-                                    <option>Net Sales</option>
-                                    <option>Gross Sales</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Reporting Frequency</label>
-                                <select>
-                                    <option>Monthly</option>
-                                    <option>Quarterly</option>
-                                </select>
+                                <label>CAM Charges (Monthly)</label>
+                                <div className="currency-input">
+                                    <span className="currency-symbol">₹</span>
+                                    <input type="number" placeholder="0.00" />
+                                    <span className="currency-code">INR</span>
+                                </div>
                             </div>
                         </div>
 
@@ -191,14 +268,6 @@ const AddLease = () => {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Security Deposit</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" placeholder="0.00" />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Utility Deposit</label>
                                 <div className="currency-input">
                                     <span className="currency-symbol">₹</span>
                                     <input type="number" placeholder="0.00" />

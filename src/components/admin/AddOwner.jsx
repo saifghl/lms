@@ -43,7 +43,7 @@ const AddOwner = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label>Email Address<span className="required">*</span></label>
+                            <label>Owner Email Address<span className="required">*</span></label>
                             <input
                                 type="email"
                                 className="form-input"
@@ -54,16 +54,7 @@ const AddOwner = () => {
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label>representatives name<span className="required">*</span></label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                placeholder="Name of authorized Rep"
-                            />
-                            <span className="helper-text">Authorized Person to contact if owner is unavailable.</span>
-                        </div>
-                        <div className="form-group">
-                            <label>Phone Number<span className="required">*</span></label>
+                            <label>Owner Phone Number<span className="required">*</span></label>
                             <div className="phone-input-wrapper">
                                 <input
                                     type="tel"
@@ -72,6 +63,34 @@ const AddOwner = () => {
                                     style={{ width: '100%' }}
                                 />
                             </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Representative Name<span className="required">*</span></label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Name of authorized Rep"
+                            />
+                            <span className="helper-text">Authorized Person to contact if owner is unavailable.</span>
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>Representative Phone<span className="required">*</span></label>
+                            <input
+                                type="tel"
+                                className="form-input"
+                                placeholder="+1 (555) 999-9999"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Representative Email</label>
+                            <input
+                                type="email"
+                                className="form-input"
+                                placeholder="rep@example.com"
+                            />
                         </div>
                     </div>
 

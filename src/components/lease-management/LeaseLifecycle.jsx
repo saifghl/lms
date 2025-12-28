@@ -35,7 +35,7 @@ const LeaseLifecycle = () => {
                         <span className="review-stat-value">1</span>
                     </div>
                     <div className="review-stat-card">
-                        <span className="review-stat-label">Tentant</span>
+                        <span className="review-stat-label">Tenant</span>
                         <span className="review-stat-value">4</span>
                     </div>
                 </div>
@@ -45,7 +45,7 @@ const LeaseLifecycle = () => {
                     <div className="nav-item">Project</div>
                     <div className="nav-item">Units</div>
                     <div className="nav-item">Owners</div>
-                    <div className="nav-item">Tetant</div>
+                    <div className="nav-item">Tenant</div>
                     <div className="nav-item active">Lease</div>
                 </div>
 
@@ -72,7 +72,7 @@ const LeaseLifecycle = () => {
                                 <div>
                                     <div className="approval-details-grid">
                                         <div className="detail-item">
-                                            <label>TENTENT</label>
+                                            <label>TENANT</label>
                                             <p>Raj Pawar</p>
                                         </div>
                                         <div className="detail-item">
@@ -80,7 +80,7 @@ const LeaseLifecycle = () => {
                                             <p>12 month</p>
                                         </div>
                                         <div className="detail-item">
-                                            <label>MONTHLY RENT</label>
+                                            <label>RENT / MGR</label>
                                             <p>₹12,000</p>
                                         </div>
                                         <div className="detail-item">
@@ -116,7 +116,7 @@ const LeaseLifecycle = () => {
                                 <div>
                                     <div className="approval-details-grid">
                                         <div className="detail-item">
-                                            <label>TENTENT</label>
+                                            <label>TENANT</label>
                                             <p>Raj Pawar</p>
                                         </div>
                                         <div className="detail-item">
@@ -124,7 +124,7 @@ const LeaseLifecycle = () => {
                                             <p>12 month</p>
                                         </div>
                                         <div className="detail-item">
-                                            <label>MONTHLY RENT</label>
+                                            <label>RENT / MGR</label>
                                             <p>₹12,000</p>
                                         </div>
                                         <div className="detail-item">

@@ -149,7 +149,7 @@ const TenantDetails = () => {
                             <h4 className="key-terms-title">Key Terms</h4>
 
                             <div className="rent-section">
-                                <label className="rent-label">Monthly Rent</label>
+                                <label className="rent-label">Rent Rate Minimum Guarantee and Revenue Share</label>
                                 <div className="rent-amount">
                                     ₹{keyTerms.monthlyRent} <span className="rent-period">(Fixed)</span>
                                 </div>
@@ -190,19 +190,6 @@ const TenantDetails = () => {
                                             <div style={{ fontSize: '0.85rem', color: '#718096' }}>
                                                 {st.email}
                                             </div>
-                                        </div>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <span style={{
-                                                display: 'inline-block',
-                                                padding: '2px 8px',
-                                                borderRadius: '12px',
-                                                backgroundColor: st.status === 'Active' ? '#c6f6d5' : '#feebc8',
-                                                color: st.status === 'Active' ? '#22543d' : '#744210',
-                                                fontSize: '0.75rem',
-                                                fontWeight: '600',
-                                                marginBottom: '4px'
-                                            }}>{st.status}</span>
-                                            <div style={{ fontSize: '0.9rem', fontWeight: '500' }}>{st.area} sqft</div>
                                         </div>
                                     </div>
                                 </div>

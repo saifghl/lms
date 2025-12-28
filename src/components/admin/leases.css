@@ -67,15 +67,21 @@
     border-bottom: 1px solid #f0f0f0;
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
+    /* Changed from flex-end */
     gap: 20px;
     background: #ffffff;
+    flex-wrap: wrap;
 }
 
-.filter-group {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
+.leases-filter-group {
+    display: flex !important;
+    align-items: center;
+    /* Align items vertically */
+    gap: 16px;
+    /* Reduced gap slightly */
+    flex-wrap: nowrap;
+    /* Force single line */
 }
 
 .filter-item {
@@ -94,7 +100,8 @@
 
 .select-wrapper {
     position: relative;
-    width: 160px;
+    width: 180px;
+    /* Slightly wider for better text fit */
 }
 
 .select-wrapper select {
@@ -108,6 +115,8 @@
     background: white;
     cursor: pointer;
     appearance: none;
+    height: 38px;
+    /* Fixed height for consistency */
 }
 
 .select-wrapper .chevron-down {
@@ -120,10 +129,9 @@
 }
 
 .more-filters-btn {
-    margin-top: auto;
-    /* align with inputs */
-    height: 35px;
-    /* match input height roughly */
+    /* removed margin-top: auto */
+    height: 38px;
+    /* Match select height */
     display: flex;
     align-items: center;
     gap: 8px;
@@ -134,6 +142,8 @@
     color: var(--text-primary);
     font-size: 0.9rem;
     cursor: pointer;
+    margin-top: 19px;
+    /* Optical alignment with input fields (label height + gap) */
 }
 
 .view-actions {

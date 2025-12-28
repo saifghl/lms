@@ -73,7 +73,7 @@ const Leases = () => {
                 <div className="content-card">
                     {/* Filters Bar */}
                     <div className="filters-bar">
-                        <div className="filter-group">
+                        <div className="leases-filter-group">
                             <div className="filter-item">
                                 <label>Status Filter</label>
                                 <div className="select-wrapper">
