@@ -4,6 +4,9 @@ import Sidebar from './Sidebar';
 import './dashboard.css';
 
 const Dashboard = () => {
+    // BACKEND: Fetch dashboard data (stats, charts, lists) here
+    // const { stats, revenueData, renewals, expiries, escalations } = useDashboardData();
+
     const navigate = useNavigate();
 
     return (
@@ -13,12 +16,15 @@ const Dashboard = () => {
                 <header className="dashboard-header">
                     <div className="search-bar">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        {/* BACKEND: Implement search functionality */}
                         <input type="text" placeholder="Search properties, tenants..." />
                     </div>
                     <div className="header-actions">
                         <button className="icon-btn notification-btn">
+                            {/* BACKEND: Fetch notification count */}
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                         </button>
+                        {/* BACKEND: Link to New Lease creation workflow */}
                         <button className="primary-btn" onClick={() => navigate('/admin/leases')}>+ New Lease</button>
                     </div>
                 </header>
@@ -33,7 +39,7 @@ const Dashboard = () => {
                         </div>
                         <div className="mini-chart green">
                             <svg width="100%" height="100%" viewBox="0 0 100 30" preserveAspectRatio="none">
-                                <path d="M0,25 Q10,20 20,25 T40,15 T60,20 T80,10 T100,5" fill="none" stroke="#00b894" strokeWidth="2" />
+                                <path mc_style="fill:none;stroke:#00b894;stroke-width:2" d="M0,25 Q10,20 20,25 T40,15 T60,20 T80,10 T100,5" fill="none" stroke="#00b894" strokeWidth="2" />
                             </svg>
                         </div>
                     </div>
@@ -131,31 +137,44 @@ const Dashboard = () => {
                             <span>Super / Leasable Area</span>
                         </div>
                     </div>
-                </section>
 
-                {/* Chart Section - Revenue Trends */}
-                <section className="chart-section">
-                    <div className="section-header">
-                        <h2>Revenue Trends <span className="text-muted">Gross revenue across all properties</span></h2>
-                        <div className="chart-legend">
-                            <span className="legend-item"><span className="dot current"></span> This year</span>
-                            <span className="legend-item"><span className="dot last"></span> Last year</span>
+                    <div className="secondary-stat-card">
+                        <div className="sec-stat-info">
+                            <h3>Total Leasable</h3>
+                            <p>Total Area across all properties</p>
                         </div>
-                    </div>
-                    <div className="chart-container">
-                        <svg viewBox="0 0 1000 300" className="mock-chart">
-                            <line x1="0" y1="250" x2="1000" y2="250" stroke="#f0f0f0" />
-                            <line x1="0" y1="200" x2="1000" y2="200" stroke="#f0f0f0" />
-                            <line x1="0" y1="150" x2="1000" y2="150" stroke="#f0f0f0" />
-
-                            <path d="M0,220 C100,210 200,180 300,190 S400,160 500,140 S700,120 800,130 S900,110 1000,100" fill="none" stroke="#3498db" strokeWidth="3" />
-                            <path d="M0,240 C100,230 200,210 300,220 S400,200 500,190 S700,180 800,190 S900,170 1000,160" fill="none" stroke="#b2bec3" strokeWidth="2" strokeDasharray="5,5" />
-                        </svg>
-                        <div className="chart-labels">
-                            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+                        <div className="sec-stat-value">
+                            287,000 sq ft
+                            <span>Super / Leasable Area</span>
                         </div>
                     </div>
                 </section>
+
+                <div className="dashboard-content-split">
+                    <section className="chart-section">
+                        <div className="section-header">
+                            <h2>Revenue Trends <span className="text-muted">Gross revenue across all properties</span></h2>
+                            <div className="chart-legend">
+                                <span className="legend-item"><span className="dot current"></span> This year</span>
+                                <span className="legend-item"><span className="dot last"></span> Last year</span>
+                            </div>
+                        </div>
+                        <div className="chart-container">
+                            {/* BACKEND: Integrate charting library (e.g. Recharts) with real data here */}
+                            <svg viewBox="0 0 1000 300" className="mock-chart">
+                                <line x1="0" y1="250" x2="1000" y2="250" stroke="#f0f0f0" />
+                                <line x1="0" y1="200" x2="1000" y2="200" stroke="#f0f0f0" />
+                                <line x1="0" y1="150" x2="1000" y2="150" stroke="#f0f0f0" />
+
+                                <path d="M0,220 C100,210 200,180 300,190 S400,160 500,140 S700,120 800,130 S900,110 1000,100" fill="none" stroke="#3498db" strokeWidth="3" />
+                                <path d="M0,240 C100,230 200,210 300,220 S400,200 500,190 S700,180 800,190 S900,170 1000,160" fill="none" stroke="#b2bec3" strokeWidth="2" strokeDasharray="5,5" />
+                            </svg>
+                            <div className="chart-labels">
+                                <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
 
                 <section className="lists-container">
                     <div className="list-card">
@@ -163,6 +182,7 @@ const Dashboard = () => {
                             <h3>Upcoming Renewals</h3>
                             <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
                         </div>
+                        {/* BACKEND: Map through upcomingRenewals data */}
                         <div className="list-item">
                             <div className="list-icon-circle">
                                 <span className="icon-text">Nov</span>
@@ -203,6 +223,7 @@ const Dashboard = () => {
                             <h3>Upcoming Expiries</h3>
                             <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
                         </div>
+                        {/* BACKEND: Map through upcomingExpiries data */}
                         <div className="list-item">
                             <div className="list-icon-circle">
                                 <span className="icon-text">Nov</span>
@@ -243,6 +264,7 @@ const Dashboard = () => {
                             <h3>Rent Escalations</h3>
                             <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
                         </div>
+                        {/* BACKEND: Map through rentEscalations data */}
                         <div className="list-item">
                             <div className="list-icon-circle gray">
                                 <span className="icon-initial">CPI</span>
