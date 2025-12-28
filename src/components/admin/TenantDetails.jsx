@@ -36,6 +36,26 @@ const TenantDetails = () => {
         areaOccupied: '1,250'
     };
 
+    // Mock Subtenant Data
+    const subTenants = [
+        {
+            name: 'Creative Solutions Ltd.',
+            contact: 'Sarah Jenkins',
+            email: 'sarah@creative.com',
+            phone: '+1 (555) 123-4567',
+            area: '450',
+            status: 'Active'
+        },
+        {
+            name: 'Bits & Bytes Cafe',
+            contact: 'Mike Ross',
+            email: 'mross@cafe.com',
+            phone: '+1 (555) 987-0000',
+            area: '300',
+            status: 'Pending Approval'
+        }
+    ];
+
     return (
         <div className="tenant-details-container">
             <Sidebar />
@@ -150,6 +170,43 @@ const TenantDetails = () => {
                                     <span>{keyTerms.areaOccupied} Sq. ft</span>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Subtenants Section */}
+                        <div className="info-card" style={{ marginTop: '20px' }}>
+                            <h3 className="card-title">Subtenants</h3>
+                            {subTenants.map((st, index) => (
+                                <div key={index} style={{
+                                    borderBottom: index !== subTenants.length - 1 ? '1px solid #eee' : 'none',
+                                    paddingBottom: '12px',
+                                    marginBottom: '12px'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div>
+                                            <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', color: '#2d3748' }}>{st.name}</h4>
+                                            <div style={{ fontSize: '0.85rem', color: '#718096' }}>
+                                                {st.contact} • {st.phone}
+                                            </div>
+                                            <div style={{ fontSize: '0.85rem', color: '#718096' }}>
+                                                {st.email}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <span style={{
+                                                display: 'inline-block',
+                                                padding: '2px 8px',
+                                                borderRadius: '12px',
+                                                backgroundColor: st.status === 'Active' ? '#c6f6d5' : '#feebc8',
+                                                color: st.status === 'Active' ? '#22543d' : '#744210',
+                                                fontSize: '0.75rem',
+                                                fontWeight: '600',
+                                                marginBottom: '4px'
+                                            }}>{st.status}</span>
+                                            <div style={{ fontSize: '0.9rem', fontWeight: '500' }}>{st.area} sqft</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

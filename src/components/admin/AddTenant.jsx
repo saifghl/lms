@@ -1,13 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './AddTenant.css';
 
 const AddTenant = () => {
     const navigate = useNavigate();
+    const [subTenants, setSubTenants] = useState([]);
 
     const handleCancel = () => {
         navigate('/admin/tenant');
+    };
+
+    const addSubTenant = () => {
+        setSubTenants([
+            ...subTenants,
+            {
+                companyName: '',
+                regNo: '',
+                industry: '',
+                contactPerson: '',
+                email: '',
+                phone: '',
+                allottedArea: ''
+            }
+        ]);
+    };
+
+    const removeSubTenant = (index) => {
+        const updated = subTenants.filter((_, i) => i !== index);
+        setSubTenants(updated);
+    };
+
+    const updateSubTenant = (index, field, value) => {
+        const updated = [...subTenants];
+        updated[index][field] = value;
+        setSubTenants(updated);
     };
 
     return (
@@ -153,6 +180,99 @@ const AddTenant = () => {
                             <span className="status-tag available">Available</span>
                         </label>
                     </div>
+                </section>
+
+                {/* Subtenant Information */}
+                <section className="form-card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                        <h3>Subtenant Management</h3>
+                        <button className="add-tenant-btn" style={{ fontSize: '0.85rem', padding: '6px 12px' }} onClick={addSubTenant}>
+                            + Add Subtenant
+                        </button>
+                    </div>
+                    <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '20px' }}>
+                        Add subtenants if the main tenant plans to sublease parts of the property.
+                    </p>
+
+                    {subTenants.map((st, index) => (
+                        <div key={index} style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                <h4 style={{ margin: 0, color: '#3182ce' }}>Subtenant #{index + 1}</h4>
+                                <button
+                                    onClick={() => removeSubTenant(index)}
+                                    style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '0.85rem' }}
+                                >
+                                    Remove
+                                </button>
+                            </div>
+
+                            <div className="form-grid-3">
+                                <div className="form-field">
+                                    <label>Company Name</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Sub Co."
+                                        value={st.companyName}
+                                        onChange={(e) => updateSubTenant(index, 'companyName', e.target.value)}
+                                    />
+                                </div>
+                                <div className="form-field">
+                                    <label>Registration No.</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Reg No."
+                                        value={st.regNo}
+                                        onChange={(e) => updateSubTenant(index, 'regNo', e.target.value)}
+                                    />
+                                </div>
+                                <div className="form-field">
+                                    <label>Allotted Area (sqft)</label>
+                                    <input
+                                        type="number"
+                                        placeholder="Area"
+                                        value={st.allottedArea}
+                                        onChange={(e) => updateSubTenant(index, 'allottedArea', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-grid-3">
+                                <div className="form-field">
+                                    <label>Contact Person</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Name"
+                                        value={st.contactPerson}
+                                        onChange={(e) => updateSubTenant(index, 'contactPerson', e.target.value)}
+                                    />
+                                </div>
+                                <div className="form-field">
+                                    <label>Email</label>
+                                    <input
+                                        type="email"
+                                        placeholder="Email"
+                                        value={st.email}
+                                        onChange={(e) => updateSubTenant(index, 'email', e.target.value)}
+                                    />
+                                </div>
+                                <div className="form-field">
+                                    <label>Phone</label>
+                                    <input
+                                        type="tel"
+                                        placeholder="Phone"
+                                        value={st.phone}
+                                        onChange={(e) => updateSubTenant(index, 'phone', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+
+                    {subTenants.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '20px', border: '1px dashed #cbd5e0', borderRadius: '8px', color: '#718096' }}>
+                            No subtenants added yet. Click &quot;Add Subtenant&quot; to begin.
+                        </div>
+                    )}
                 </section>
 
                 <div className="form-actions">
