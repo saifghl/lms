@@ -37,6 +37,10 @@ import Logout from "./components/Logout/Logout";
 import './App.css';
 
 // Force Rebuild
+import CreateUser from './components/admin/CreateUser';
+import EditTenant from './components/admin/EditTenant';
+import EditOwner from './components/admin/EditOwner';
+
 function App() {
   return (
     <BrowserRouter>
@@ -47,6 +51,7 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
+        <Route path="/create-user" element={<CreateUser />} />
 
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<Dashboard />} />
@@ -67,11 +72,14 @@ function App() {
         {/* Other Admin Modules */}
         <Route path="/admin/settings" element={<Settings />} />
         <Route path="/admin/role-management" element={<RoleManagement />} />
+        <Route path="/admin/create-user" element={<CreateUser />} />
         <Route path="/admin/tenant" element={<Tenant />} />
         <Route path="/admin/tenant/add" element={<AddTenant />} />
+        <Route path="/admin/tenant/edit/:id" element={<EditTenant />} />
         <Route path="/admin/tenant/:id" element={<TenantDetails />} />
         <Route path="/admin/owner" element={<OwnerList />} />
         <Route path="/admin/owner/add" element={<AddOwner />} />
+        <Route path="/admin/owner/edit/:id" element={<EditOwner />} />
         <Route path="/admin/owner/:id" element={<OwnerDetails />} />
         <Route path="/admin/activity-logs" element={<ActivityLogs />} />
 

@@ -93,6 +93,9 @@ const Settings = () => {
                     </div>
                 </section>
 
+                <footer className="settings-footer">
+                    <button className="btn-save">Save Changes</button>
+                </footer>
             </main>
         </div>
     );

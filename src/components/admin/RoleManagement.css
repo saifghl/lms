@@ -6,7 +6,7 @@
 
 .role-content {
     flex: 1;
-    padding: 30px 40px;
+    padding: 85px 40px 30px;
     margin-left: 250px;
     font-family: 'Inter', sans-serif;
 }
@@ -83,7 +83,7 @@
 
 .role-table-header {
     display: grid;
-    grid-template-columns: 50px 2.5fr 1.5fr 2fr 1fr 0.5fr;
+    grid-template-columns: 50px 2.5fr 1.5fr 2fr;
     padding: 15px 20px;
     color: #666;
     font-weight: 600;
@@ -94,7 +94,7 @@
 
 .user-row {
     display: grid;
-    grid-template-columns: 50px 2.5fr 1.5fr 2fr 1fr 0.5fr;
+    grid-template-columns: 50px 2.5fr 1.5fr 2fr;
     background: white;
     border-radius: 12px;
     padding: 15px 20px;
@@ -105,12 +105,13 @@
 }
 
 /* Checkbox */
-.checkbox-wrapper input[type="radio"],
-.checkbox-wrapper input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: #ddd;
-    cursor: pointer;
+/* Bullet Point */
+.role-row-bullet {
+    width: 8px;
+    height: 8px;
+    background-color: #333;
+    border-radius: 50%;
+    margin: 0 auto;
 }
 
 /* User Info Column */
@@ -308,6 +309,43 @@ input:checked+.slider:before {
     align-items: center;
 }
 
+/* Header Actions */
+.header-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-filter,
+.btn-create {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-filter {
+    background: white;
+    border: 1px solid #e0e0e0;
+    color: #333;
+}
+
+.btn-create {
+    background: #155eef;
+    border: none;
+    color: white;
+}
+
+.btn-create:hover {
+    background: #1d4ed8;
+}
+
+
 .search-input-wrapper input {
     background: transparent;
     border: none;
@@ -327,7 +365,7 @@ input:checked+.slider:before {
 
     .role-table-header,
     .user-row {
-        grid-template-columns: 40px 2fr 1.2fr 1.8fr 1fr 0.5fr;
+        grid-template-columns: 40px 2fr 1.2fr 1.8fr;
         min-width: 900px;
     }
 

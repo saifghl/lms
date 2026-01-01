@@ -73,15 +73,15 @@
 
 /* Filters */
 .filters-container {
-    background: white;
-    padding: 15px 20px;
-    border-radius: 8px;
+    padding: 0;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 25px;
-    border: 1px solid #e0e0e0;
-    flex-wrap: wrap;
+    background: transparent;
+    border: none;
+    flex-wrap: nowrap;
     gap: 15px;
 }
 
@@ -104,14 +104,9 @@
     gap: 8px;
 }
 
-.filter-dropdown::after {
-    content: '';
-    display: inline-block;
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4px solid #888;
+.filter-dropdown svg {
+    color: #999;
+    margin-top: 2px;
 }
 
 .btn-add-filter {

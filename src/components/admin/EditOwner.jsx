@@ -1,20 +1,40 @@
-import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import './AddOwner.css';
+import './AddOwner.css'; // Reuse existing styles
 
-const AddOwner = () => {
+const EditOwner = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
 
-
+    // Mock initial data - in a real app this would come from an API based on ID
+    const [formData, setFormData] = useState({
+        fullName: 'John Doe',
+        email: 'john@example.com',
+        phone: '+1 (555) 000-0000',
+        repName: 'Michael Scott',
+        repPhone: '+1 (555) 999-9999',
+        repEmail: 'michael.s@example.com',
+        altContact: '',
+        units: ['u1'], // Mock selected units
+        streetAddress: '123 Main St, Apt 4B'
+    });
 
     const handleCancel = () => {
+        navigate(-1); // Go back
+    };
+
+    const handleUpdate = () => {
+        // Logic to update owner would go here
         navigate('/admin/owner');
     };
 
-    const handleSave = () => {
-        // Logic to save owner would go here
-        navigate('/admin/owner');
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     return (
@@ -22,12 +42,12 @@ const AddOwner = () => {
             <Sidebar />
             <main className="add-owner-content">
                 <div className="breadcrumb">
-                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/owner" style={{ textDecoration: 'none', color: 'inherit' }}>OWNER</Link> &gt; ADD NEW
+                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/owner" style={{ textDecoration: 'none', color: 'inherit' }}>OWNER</Link> &gt; EDIT
                 </div>
 
                 <header className="add-owner-header">
-                    <h2>Add New Property Owner</h2>
-                    <p>Register a new property owner by filling out the details below. Ensure all KYC documents are verified before submission.</p>
+                    <h2>Edit Property Owner</h2>
+                    <p>Update property owner details, contact information, and assigned units.</p>
                 </header>
 
                 <div className="form-section">
@@ -41,6 +61,9 @@ const AddOwner = () => {
                             <input
                                 type="text"
                                 className="form-input"
+                                name="fullName"
+                                value={formData.fullName}
+                                onChange={handleChange}
                                 placeholder="e.g. John Doe"
                             />
                         </div>
@@ -49,6 +72,9 @@ const AddOwner = () => {
                             <input
                                 type="email"
                                 className="form-input"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
                                 placeholder="john@example.com"
                             />
                         </div>
@@ -61,6 +87,9 @@ const AddOwner = () => {
                                 <input
                                     type="tel"
                                     className="form-input"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
                                     placeholder="+1 (555) 000-0000"
                                     style={{ width: '100%' }}
                                 />
@@ -71,6 +100,9 @@ const AddOwner = () => {
                             <input
                                 type="text"
                                 className="form-input"
+                                name="repName"
+                                value={formData.repName}
+                                onChange={handleChange}
                                 placeholder="Name of authorized Rep"
                             />
                             <span className="helper-text">Authorized Person to contact if owner is unavailable.</span>
@@ -83,6 +115,9 @@ const AddOwner = () => {
                             <input
                                 type="tel"
                                 className="form-input"
+                                name="repPhone"
+                                value={formData.repPhone}
+                                onChange={handleChange}
                                 placeholder="+1 (555) 999-9999"
                             />
                         </div>
@@ -91,6 +126,9 @@ const AddOwner = () => {
                             <input
                                 type="email"
                                 className="form-input"
+                                name="repEmail"
+                                value={formData.repEmail}
+                                onChange={handleChange}
                                 placeholder="rep@example.com"
                             />
                         </div>
@@ -102,6 +140,9 @@ const AddOwner = () => {
                             <input
                                 type="text"
                                 className="form-input"
+                                name="altContact"
+                                value={formData.altContact}
+                                onChange={handleChange}
                                 placeholder="Optional"
                             />
                         </div>
@@ -111,15 +152,15 @@ const AddOwner = () => {
                 <div className="form-section">
                     <div className="section-header">
                         <h3>Property Units</h3>
-                        <span className="total-area-badge">Total Owned Area : 0 sqft</span>
+                        <span className="total-area-badge">Total Owned Area : 2,400 sqft</span>
                     </div>
 
                     <div className="form-group">
                         <label>Select Units<span className="required">*</span></label>
-                        <div className="unit-selection-box">
-                            Select at least one unit
+                        <div className="unit-selection-box" style={{ color: '#333', background: '#f8fafc', fontWeight: '500' }}>
+                            U-101, U-102 selected
                         </div>
-                        <span className="helper-text">Select All unites owned by this individual.</span>
+                        <span className="helper-text">Select All units owned by this individual.</span>
                     </div>
                 </div>
 
@@ -133,6 +174,9 @@ const AddOwner = () => {
                         <input
                             type="text"
                             className="form-input"
+                            name="streetAddress"
+                            value={formData.streetAddress}
+                            onChange={handleChange}
                             placeholder="123 Main St, Apt 4B"
                         />
                     </div>
@@ -140,11 +184,11 @@ const AddOwner = () => {
 
                 <div className="form-actions">
                     <button className="btn-cancel" onClick={handleCancel}>Cancel</button>
-                    <button className="btn-submit" onClick={handleSave}>Create Owner</button>
+                    <button className="btn-submit" onClick={handleUpdate}>Update Owner</button>
                 </div>
             </main>
         </div>
     );
 };
 
-export default AddOwner;
+export default EditOwner;

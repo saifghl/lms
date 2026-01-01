@@ -1,14 +1,44 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import './AddTenant.css';
+import './AddTenant.css'; // Reuse existing styles
 
-const AddTenant = () => {
+const EditTenant = () => {
     const navigate = useNavigate();
-    const [subTenants, setSubTenants] = useState([]);
+    const { id } = useParams();
+
+    // Mock State - In a real app, this would be fetched based on {id}
+    const [subTenants, setSubTenants] = useState([
+        {
+            companyName: 'Creative Solutions Ltd.',
+            regNo: '987654321',
+            industry: 'Technology',
+            contactPerson: 'Sarah Jenkins',
+            email: 'sarah@creative.com',
+            phone: '+1 (555) 123-4567',
+            allottedArea: '450'
+        }
+    ]);
+
+    // Mock initial form data
+    const [formData, setFormData] = useState({
+        companyName: 'Acme Corp',
+        regNo: '123456789',
+        industry: 'Technology',
+        taxId: 'TAX-998877',
+        contactName: 'John Doe',
+        contactEmail: 'john@acme.com',
+        contactPhone: '+1 (555) 000-1111',
+        website: 'www.acme.com',
+        street: '123 Business Rd',
+        city: 'Metropolis',
+        state: 'NY',
+        zip: '10001',
+        country: 'United States'
+    });
 
     const handleCancel = () => {
-        navigate('/admin/tenant');
+        navigate(-1); // Go back
     };
 
     const addSubTenant = () => {
@@ -37,17 +67,25 @@ const AddTenant = () => {
         setSubTenants(updated);
     };
 
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
     return (
         <div className="add-tenant-container">
             <Sidebar />
             <main className="add-tenant-content">
                 <div className="breadcrumb">
-                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/tenant" style={{ textDecoration: 'none', color: 'inherit' }}>TENANT LIST</Link> &gt; ADD NEW
+                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/tenant" style={{ textDecoration: 'none', color: 'inherit' }}>TENANT LIST</Link> &gt; EDIT
                 </div>
 
                 <header className="add-tenant-header">
-                    <h2>Add New Tenant</h2>
-                    <p>Register a new corporate tenant, assign units, and set contact details.</p>
+                    <h2>Edit Tenant</h2>
+                    <p>Update tenant details, manage units, and configure subtenants.</p>
                 </header>
 
                 {/* Corporate Information */}
@@ -56,15 +94,15 @@ const AddTenant = () => {
                     <div className="form-grid-3">
                         <div className="form-field">
                             <label>Company Name</label>
-                            <input type="text" placeholder="e.g. abc" />
+                            <input type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} />
                         </div>
                         <div className="form-field">
                             <label>Company Registration No.</label>
-                            <input type="text" placeholder="e.g. 123456789" />
+                            <input type="text" name="regNo" value={formData.regNo} onChange={handleInputChange} />
                         </div>
                         <div className="form-field">
                             <label>Industry</label>
-                            <select>
+                            <select name="industry" value={formData.industry} onChange={handleInputChange}>
                                 <option>Select Industry</option>
                                 <option>Technology</option>
                                 <option>Finance</option>
@@ -76,26 +114,26 @@ const AddTenant = () => {
                     <div className="form-grid-3">
                         <div className="form-field">
                             <label>Tax ID/ VAT Number</label>
-                            <input type="text" placeholder="e.g. 123456789" />
+                            <input type="text" name="taxId" value={formData.taxId} onChange={handleInputChange} />
                         </div>
                         <div className="form-field">
                             <label>Contact person name</label>
-                            <input type="text" placeholder="e.g. John" />
+                            <input type="text" name="contactName" value={formData.contactName} onChange={handleInputChange} />
                         </div>
                         <div className="form-field">
                             <label>Contact person Email</label>
-                            <input type="email" placeholder="e.g. jabc@gmail.com" />
+                            <input type="email" name="contactEmail" value={formData.contactEmail} onChange={handleInputChange} />
                         </div>
                     </div>
 
                     <div className="form-grid-2">
                         <div className="form-field">
                             <label>Contact Person Phone</label>
-                            <input type="text" placeholder="e.g. 123456789" />
+                            <input type="text" name="contactPhone" value={formData.contactPhone} onChange={handleInputChange} />
                         </div>
                         <div className="form-field">
                             <label>Website( optional)</label>
-                            <input type="text" placeholder="e.g. #//www.compony.com" />
+                            <input type="text" name="website" value={formData.website} onChange={handleInputChange} />
                         </div>
                     </div>
                 </section>
@@ -105,28 +143,28 @@ const AddTenant = () => {
                     <h3>Registered Address</h3>
                     <div className="form-field" style={{ marginBottom: '20px' }}>
                         <label>Street Address</label>
-                        <input type="text" placeholder="e.g. street address" />
+                        <input type="text" name="street" value={formData.street} onChange={handleInputChange} />
                     </div>
 
                     <div className="form-grid-2">
                         <div className="form-field">
                             <label>City</label>
-                            <input type="text" placeholder="e.g. city" />
+                            <input type="text" name="city" value={formData.city} onChange={handleInputChange} />
                         </div>
                         <div className="form-field">
                             <label>State</label>
-                            <input type="text" placeholder="e.g. State" />
+                            <input type="text" name="state" value={formData.state} onChange={handleInputChange} />
                         </div>
                     </div>
 
                     <div className="form-grid-2">
                         <div className="form-field">
                             <label>Zip/ portal code</label>
-                            <input type="text" placeholder="e.g. zip code" />
+                            <input type="text" name="zip" value={formData.zip} onChange={handleInputChange} />
                         </div>
                         <div className="form-field">
                             <label>Country</label>
-                            <select>
+                            <select name="country" value={formData.country} onChange={handleInputChange}>
                                 <option>e.g. country</option>
                                 <option>United States</option>
                                 <option>Canada</option>
@@ -139,25 +177,24 @@ const AddTenant = () => {
                 {/* Unit Selection */}
                 <section className="form-card">
                     <h3>Unit Selection</h3>
-                    <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '15px' }}>Select the unit(s) to assign to this corporate tenant. At least one unit is required.</p>
+                    <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '15px' }}>Manage assigned units.</p>
 
                     <div className="form-field" style={{ maxWidth: '300px', marginBottom: '20px' }}>
                         <label>Project</label>
                         <select>
-                            <option>Select project</option>
+                            <option>Downtown Plaza</option>
                         </select>
                     </div>
 
                     <div className="unit-list">
-                        <label className="unit-card">
+                        <label className="unit-card" style={{ borderColor: '#3b82f6', background: '#eff6ff' }}>
                             <div className="unit-info">
-                                <input type="radio" name="unit" disabled />
+                                <input type="radio" name="unit" checked readOnly />
                                 <div className="unit-details">
                                     <h4>Unit 101-A</h4>
                                     <span>1,200 sqft • floor 1</span>
                                 </div>
                             </div>
-
                         </label>
 
                         <label className="unit-card">
@@ -168,18 +205,6 @@ const AddTenant = () => {
                                     <span>1,200 sqft • floor 1</span>
                                 </div>
                             </div>
-
-                        </label>
-
-                        <label className="unit-card">
-                            <div className="unit-info">
-                                <input type="radio" name="unit" />
-                                <div className="unit-details">
-                                    <h4>Unit 301-C</h4>
-                                    <span>1,200 sqft • floor 1</span>
-                                </div>
-                            </div>
-                            <span className="status-tag available">Available</span>
                         </label>
                     </div>
                 </section>
@@ -193,7 +218,7 @@ const AddTenant = () => {
                         </button>
                     </div>
                     <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '20px' }}>
-                        Add subtenants if the main tenant plans to sublease parts of the property.
+                        Manage corporate subtenants.
                     </p>
 
                     {subTenants.map((st, index) => (
@@ -279,11 +304,11 @@ const AddTenant = () => {
 
                 <div className="form-actions">
                     <button className="btn-cancel" onClick={handleCancel}>Cancel</button>
-                    <button className="btn-create">Create tenant</button>
+                    <button className="btn-create">Update Tenant</button>
                 </div>
             </main>
         </div>
     );
 };
 
-export default AddTenant;
+export default EditTenant;

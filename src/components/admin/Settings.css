@@ -229,3 +229,28 @@
     position: absolute;
     right: 15px;
 }
+
+/* Settings Footer */
+.settings-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.btn-save {
+    background-color: #155eef;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #1d4ed8;
+}

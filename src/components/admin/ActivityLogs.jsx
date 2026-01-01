@@ -57,7 +57,7 @@ const ActivityLogs = () => {
 
     return (
         <div className="activity-logs-container">
-            <Sidebar />
+            <Sidebar /> {/* Navigation Sidebar */}
             <main className="activity-logs-content">
                 <header className="activity-header">
                     <div className="activity-title">
@@ -78,10 +78,22 @@ const ActivityLogs = () => {
 
                 <div className="filters-container">
                     <div className="filter-group">
-                        <div className="filter-dropdown">All Modules</div>
-                        <div className="filter-dropdown">User Management</div>
-                        <div className="filter-dropdown">Lease Terms</div>
-                        <div className="filter-dropdown">Financials</div>
+                        <div className="filter-dropdown">
+                            All Modules
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div className="filter-dropdown">
+                            User Management
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div className="filter-dropdown">
+                            Lease Terms
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div className="filter-dropdown">
+                            Financials
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
                         <button className="btn-add-filter">+ Add Filter</button>
                     </div>
 
