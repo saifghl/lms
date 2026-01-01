@@ -197,3 +197,29 @@
         grid-template-columns: 1fr 1fr;
     }
 }
+
+@media (max-width: 768px) {
+    .add-tenant-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .form-grid-3,
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .add-tenant-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 15px;
+    }
+
+    .btn-create,
+    .btn-cancel {
+        width: 100%;
+    }
+}
