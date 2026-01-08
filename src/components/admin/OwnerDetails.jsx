@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './OwnerDetails.css';
 
 const OwnerDetails = () => {
+    const navigate = useNavigate();
+
     return (
         <div className="owner-details-container">
             <Sidebar />
@@ -241,7 +244,7 @@ const OwnerDetails = () => {
                         {/* Documents Section */}
                         <div className="kyc-header">
                             <h3>KYC & Documents</h3>
-                            <button className="view-all-docs" style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>View All</button>
+                            <button className="view-all-docs" style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }} onClick={() => navigate('/admin/kyc')}>View All</button>
                         </div>
 
                         <div className="docs-grid">
