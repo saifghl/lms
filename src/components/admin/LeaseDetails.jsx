@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './LeaseDetails.css';
@@ -6,12 +6,53 @@ import './dashboard.css';
 
 const LeaseDetails = () => {
     const { id } = useParams();
+    const [lease, setLease] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Mock data state for demonstration - in real app would come from API
-    // Options: 'direct', 'sub_lease'
-    const leaseType = 'sub_lease';
-    // Options: 'fixed', 'revenue_share'
-    const rentModel = 'revenue_share';
+    useEffect(() => {
+        if (id) {
+            fetchLease();
+        }
+    }, [id]);
+
+    const fetchLease = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const res = await fetch(`http://localhost:5000/api/leases/${id}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setLease(data);
+            } else {
+                setLease(null);
+            }
+        } catch (err) {
+            console.error('Failed to fetch lease:', err);
+            setLease(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+    };
+
+    const formatCurrency = (amount) => {
+        if (!amount) return '₹0.00';
+        return `₹${parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
+    if (!lease) return <div style={{ padding: 20 }}>Lease not found</div>;
+
+    const leaseType = lease.lease_type === 'Subtenant lease' ? 'sub_lease' : 'direct';
+    const rentModel = lease.rent_model === 'RevenueShare' ? 'revenue_share' : 'fixed';
 
     return (
         <div className="dashboard-container">

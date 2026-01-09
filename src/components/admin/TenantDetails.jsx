@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './TenantDetails.css';
@@ -7,201 +7,85 @@ const TenantDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    // Mock Data based on the provided screenshot
-    const tenant = {
-        id: id || 'T-2023-894',
-        name: 'Elena Drago',
-        email: 'elena.drago@example.com',
-        phone: '+1 (555) 012-3456',
-        dob: 'March 15, 1988',
-        occupation: 'Software Engineer',
-        emergencyContact: 'Marco Drago (Spouse) +1 (555) 987-6543',
-        status: 'Active Tenant',
-        initials: 'ED',
-        avatarColor: '#e91e63'
-    };
+    const [tenant, setTenant] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    const leaseData = {
-        propertyName: 'Sunrise Apartments – Unit A-101',
-        address: '123 Market St, San Francisco, CA 94103',
-        leaseStart: 'Jan 01, 2023',
-        leaseEnd: 'Dec 31, 2024',
-        image: 'https://images.unsplash.com/photo-1600596542815-2a4d04799295?q=80&w=2675&auto=format&fit=crop'
-    };
+    const fetchTenant = async () => {
+        try {
+            setLoading(true);
+            const res = await fetch(`http://localhost:5000/api/tenants/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (!res.ok) throw new Error('Failed to fetch tenant');
 
-    const keyTerms = {
-        monthlyRent: '2,450.00',
-        revenueShare: '+ 5% Revenue Share > ₹50K',
-        dateOfLease: 'Jan 01, 24',
-        lockinDate: 'Jan 01, 24',
-        areaOccupied: '1,250'
-    };
-
-    // Mock Subtenant Data
-    const subTenants = [
-        {
-            name: 'Creative Solutions Ltd.',
-            contact: 'Sarah Jenkins',
-            email: 'sarah@creative.com',
-            phone: '+1 (555) 123-4567',
-            area: '450',
-            status: 'Active'
-        },
-        {
-            name: 'Bits & Bytes Cafe',
-            contact: 'Mike Ross',
-            email: 'mross@cafe.com',
-            phone: '+1 (555) 987-0000',
-            area: '300',
-            status: 'Pending Approval'
+            const data = await res.json();
+            setTenant(data);
+        } catch (err) {
+            console.error(err);
+            setTenant(null);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    useEffect(() => {
+        if (id) {
+            fetchTenant();
+        }
+    }, [id]);
+
+
+    if (loading) return <p style={{ padding: 20 }}>Loading...</p>;
+    if (!tenant) return <p style={{ padding: 20 }}>Tenant not found</p>;
 
     return (
         <div className="tenant-details-container">
             <Sidebar />
             <main className="tenant-details-content">
                 <div className="breadcrumb">
-                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/tenant" style={{ textDecoration: 'none', color: 'inherit' }}>TENANT LIST</Link> &gt; DETAILS
+                    <Link to="/admin/tenant">TENANT LIST</Link> &gt; DETAILS
                 </div>
 
-                {/* Header Card */}
                 <div className="tenant-header-card">
-                    <div className="tenant-identity">
-                        <div className="tenant-avatar-large">
-                            {tenant.initials}
-                        </div>
-                        <div className="tenant-identity-info">
-                            <h2>{tenant.name}</h2>
-                            <div className="tenant-meta">
-
-                                <span>ID: #{tenant.id}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button className="btn-edit-tenant" onClick={() => navigate(`/admin/tenant/edit/${tenant.id}`)}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        Edit
-                    </button>
+                    <h2>{tenant.company_name}</h2>
+                    <span>ID: TN-{tenant.id}</span>
+                    <button onClick={() => navigate(`/admin/tenant/edit/${tenant.id}`)}>Edit</button>
                 </div>
 
-                <div className="details-grid">
-                    {/* Left Column */}
-                    <div className="details-left">
-                        {/* Personal Information */}
-                        <section className="info-card">
-                            <h3 className="card-title">Personal Information</h3>
-                            <div className="personal-info-grid">
-                                <div className="info-item">
-                                    <label>Full Name</label>
-                                    <p>{tenant.name}</p>
-                                </div>
-                                <div className="info-item">
-                                    <label>Email Address</label>
-                                    <p>{tenant.email}</p>
-                                </div>
-                                <div className="info-item">
-                                    <label>Phone Number</label>
-                                    <p>{tenant.phone}</p>
-                                </div>
-                                <div className="info-item">
-                                    <label>Date of Birth</label>
-                                    <p>{tenant.dob}</p>
-                                </div>
-                                <div className="info-item">
-                                    <label>Occupation</label>
-                                    <p>{tenant.occupation}</p>
-                                </div>
-                                <div className="info-item">
-                                    <label>Emergency Contact</label>
-                                    <p>{tenant.emergencyContact}</p>
-                                </div>
-                            </div>
-                        </section>
+                <section className="info-card">
+                    <h3>Corporate Info</h3>
+                    <p>Email: {tenant.contact_person_email}</p>
+                    <p>Phone: {tenant.contact_person_phone}</p>
+                    <p>Industry: {tenant.industry}</p>
+                    <p>Area Occupied: {tenant.area_occupied} sqft</p>
+                </section>
 
-                        {/* Current Lease */}
-                        <section className="info-card">
-                            <div className="card-title">
-                                <h3>Current Lease</h3>
-                                <span className="view-contract-link">View Contract</span>
-                            </div>
-                            <div className="lease-card-content">
-                                <img src={leaseData.image} alt="Property" className="property-image" />
-                                <div className="lease-details">
-                                    <h4>{leaseData.propertyName}</h4>
-                                    <span className="property-address">{leaseData.address}</span>
+                <section className="info-card">
+                    <h3>Registered Address</h3>
+                    <p>
+                        {tenant.street_address}, {tenant.city}, {tenant.state},{" "}
+                        {tenant.country} - {tenant.zip_code}
+                    </p>
+                </section>
 
-                                    <div className="lease-dates">
-                                        <div className="date-item">
-                                            <label>Lease Start:</label>
-                                            <span>{leaseData.leaseStart}</span>
-                                        </div>
-                                        <div className="date-item">
-                                            <label>Lease End:</label>
-                                            <span>{leaseData.leaseEnd}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
+                <section className="info-card">
+                    <h3>Subtenants</h3>
 
-                    {/* Right Column - Key Terms */}
-                    <div className="details-right">
-                        <div className="key-terms-card">
-                            <h4 className="key-terms-title">Key Terms</h4>
+                    {tenant.subtenants?.length === 0 && <p>No subtenants</p>}
 
-                            <div className="rent-section">
-                                <label className="rent-label">Rent Rate Minimum Guarantee and Revenue Share</label>
-                                <div className="rent-amount">
-                                    ₹{keyTerms.monthlyRent} <span className="rent-period">(Fixed)</span>
-                                </div>
-                                <span className="revenue-share">{keyTerms.revenueShare}</span>
-                            </div>
-
-                            <div className="terms-grid">
-                                <div className="term-item">
-                                    <label>Date of Lease</label>
-                                    <span>{keyTerms.dateOfLease}</span>
-                                </div>
-                                <div className="term-item">
-                                    <label>Lockin Date</label>
-                                    <span>{keyTerms.lockinDate}</span>
-                                </div>
-                                <div className="term-item">
-                                    <label>Area Occupied</label>
-                                    <span>{keyTerms.areaOccupied} Sq. ft</span>
-                                </div>
-                            </div>
+                    {tenant.subtenants?.map((st, i) => (
+                        <div key={i} style={{ marginBottom: 12 }}>
+                            <strong>{st.company_name}</strong>
+                            <div>{st.contact_person_name}</div>
+                            <div>{st.contact_person_email}</div>
+                            <div>{st.allotted_area_sqft} sqft</div>
                         </div>
-
-                        {/* Subtenants Section */}
-                        <div className="info-card" style={{ marginTop: '20px' }}>
-                            <h3 className="card-title">Subtenants</h3>
-                            {subTenants.map((st, index) => (
-                                <div key={index} style={{
-                                    borderBottom: index !== subTenants.length - 1 ? '1px solid #eee' : 'none',
-                                    paddingBottom: '12px',
-                                    marginBottom: '12px'
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <div>
-                                            <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', color: '#2d3748' }}>{st.name}</h4>
-                                            <div style={{ fontSize: '0.85rem', color: '#718096' }}>
-                                                {st.contact} • {st.phone}
-                                            </div>
-                                            <div style={{ fontSize: '0.85rem', color: '#718096' }}>
-                                                {st.email}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </main >
-        </div >
+                    ))}
+                </section>
+            </main>
+        </div>
     );
 };
 
