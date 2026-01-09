@@ -31,6 +31,7 @@ import LeaseValidation from "./components/lease-management/LeaseValidation";
 import LeaseLifecycle from "./components/lease-management/LeaseLifecycle";
 import LeaseReports from "./components/lease-management/LeaseReports";
 import LeaseReminders from "./components/lease-management/LeaseReminders";
+import KycPage from "./components/admin/KycPage";
 import DocRepo from "./components/management-rep/doc-repo";
 import Login from "./components/Login/Login";
 import Logout from "./components/Logout/Logout";
@@ -82,6 +83,7 @@ function App() {
         <Route path="/admin/owner/edit/:id" element={<EditOwner />} />
         <Route path="/admin/owner/:id" element={<OwnerDetails />} />
         <Route path="/admin/activity-logs" element={<ActivityLogs />} />
+        <Route path="/admin/kyc" element={<KycPage />} />
 
         {/* Management Rep Routes */}
         <Route path="/doc-repo" element={<DocRepo />} />
