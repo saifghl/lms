@@ -1,40 +1,13 @@
-import { useNavigate, Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getOwners } from '../../services/api';
 import './OwnerList.css';
 
 const OwnerList = () => {
     const navigate = useNavigate();
-    const [owners, setOwners] = useState([]);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchOwners = async () => {
-            try {
-                const response = await getOwners();
-                setOwners(response.data);
-            } catch (error) {
-                console.error("Error fetching owners:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchOwners();
-    }, []);
-
-    if (loading) {
-        return (
-            <div className="owner-list-container">
-                <Sidebar />
-                <main className="owner-content">
-                    <div>Loading...</div>
-                </main>
-            </div>
-        );
-    }
-
-    const mockOwners = [
+    // Mock Data based on the screenshot
+    const owners = [
         {
             id: 'OWN-001',
             name: 'Sunset Apartments',
@@ -85,9 +58,7 @@ const OwnerList = () => {
         <div className="owner-list-container">
             <Sidebar />
             <main className="owner-content">
-                <div className="breadcrumb">
-                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; OWNER LIST
-                </div>
+                <div className="breadcrumb">HOME &gt; OWNER LIST</div>
 
                 <header className="owner-header">
                     <div className="owner-title">
@@ -129,36 +100,30 @@ const OwnerList = () => {
                         <div>Actions</div>
                     </div>
 
-                    {owners.length > 0 ? owners.map((owner, index) => (
+                    {owners.map((owner, index) => (
                         <div className="owner-row" key={index}>
                             <div className="owner-info-col">
-                                {owner.image ? (
-                                    <img src={owner.image} alt={owner.name} className="owner-avatar" />
-                                ) : (
-                                    <div className="owner-avatar" style={{ backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-                                        {owner.name?.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
+                                <img src={owner.image} alt={owner.name} className="owner-avatar" />
                                 <div className="owner-details">
                                     <h4>{owner.name}</h4>
-                                    <span className="owner-id">ID: OWN-{owner.id}</span>
+                                    <span className="owner-id">ID: #{owner.id}</span>
                                 </div>
                             </div>
 
                             <div className="contact-info-col">
                                 <div className="contact-item">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                                    {owner.phone || 'N/A'}
+                                    {owner.phone}
                                 </div>
                                 <div className="contact-item">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                    {owner.email || 'N/A'}
+                                    {owner.email}
                                 </div>
                             </div>
 
-                            <div className="gst-col">{owner.gst_number || 'N/A'}</div>
+                            <div className="gst-col">{owner.gst}</div>
 
-                            <div className="area-col">{owner.total_area_owned?.toLocaleString() || owner.total_area?.toLocaleString() || '0'} sq ft</div>
+                            <div className="area-col">{owner.area}</div>
 
 
 
@@ -166,7 +131,7 @@ const OwnerList = () => {
                                 <button className="action-icon-btn" title="View" onClick={() => navigate(`/admin/owner/${owner.id}`)}>
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                 </button>
-                                <button className="action-icon-btn" title="Edit" onClick={() => navigate(`/admin/owner/edit/${owner.id}`)}>
+                                <button className="action-icon-btn" title="Edit">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                 </button>
                                 <button className="action-icon-btn" title="Delete">
@@ -174,13 +139,7 @@ const OwnerList = () => {
                                 </button>
                             </div>
                         </div>
-                    )) : (
-                        <div className="owner-row">
-                            <div style={{ textAlign: 'center', padding: '20px', width: '100%' }}>
-                                No owners found
-                            </div>
-                        </div>
-                    )}
+                    ))}
                 </div>
 
                 <footer className="table-footer">

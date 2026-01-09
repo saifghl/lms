@@ -1,39 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getUnits } from '../../services/api';
 import './units.css';
 
 const Units = () => {
-    const [units, setUnits] = useState([]);
-    const [loading, setLoading] = useState(true);
+    // Mock Data based on the    // TODO: Backend - Fetch units list from API with pagination
+    // useEffect(() => {
+    //   fetch('/api/units?page=1&limit=10').then(...)
+    // }, []);
 
-    useEffect(() => {
-        const fetchUnits = async () => {
-            try {
-                const response = await getUnits();
-                setUnits(response.data);
-            } catch (error) {
-                console.error("Error fetching units:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUnits();
-    }, []);
-
-    if (loading) {
-        return (
-            <div className="dashboard-container">
-                <Sidebar />
-                <main className="main-content">
-                    <div>Loading...</div>
-                </main>
-            </div>
-        );
-    }
-
-    const mockUnits = [
+    // Mock Data
+    const units = [
         {
             id: 'A-101',
             building: 'Sunset Heights',
@@ -133,11 +110,11 @@ const Units = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {units.length > 0 ? units.map((unit) => (
+                                {units.map((unit) => (
                                     <tr key={unit.id}>
-                                        <td className="unit-id">{unit.unit_number}</td>
-                                        <td>{unit.project_name || 'N/A'}</td>
-                                        <td>{unit.super_area?.toLocaleString() || '0'} sq ft</td>
+                                        <td className="unit-id">{unit.id}</td>
+                                        <td>{unit.building}</td>
+                                        <td>{unit.area}</td>
 
                                         <td>
                                             <div className="action-buttons">
@@ -150,13 +127,7 @@ const Units = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                )) : (
-                                    <tr>
-                                        <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>
-                                            No units found
-                                        </td>
-                                    </tr>
-                                )}
+                                ))}
                             </tbody>
                         </table>
                     </div>

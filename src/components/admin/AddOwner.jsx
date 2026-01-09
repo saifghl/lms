@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './AddOwner.css';
 
@@ -21,9 +21,7 @@ const AddOwner = () => {
         <div className="add-owner-container">
             <Sidebar />
             <main className="add-owner-content">
-                <div className="breadcrumb">
-                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/owner" style={{ textDecoration: 'none', color: 'inherit' }}>OWNER</Link> &gt; ADD NEW
-                </div>
+                <div className="breadcrumb">HOME &gt; OWNER &gt; ADD NEW</div>
 
                 <header className="add-owner-header">
                     <h2>Add New Property Owner</h2>

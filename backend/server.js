@@ -7,13 +7,9 @@ const pool = require("./config/db");
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require("./routes/projectRoutes");
-const unitRoutes = require("./routes/unitRoutes");
-const leaseRoutes = require("./routes/leaseRoutes");
-const tenantRoutes = require("./routes/tenantRoutes");
-const ownerRoutes = require("./routes/ownerRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
-
+const managementRepRoutes = require("./routes/managementRepRoutes");
 const app = express();
 
 // Middleware
@@ -35,13 +31,9 @@ pool.getConnection()
 // Routes
 app.use('/api/auth', authRoutes);
 app.use("/api", projectRoutes);
-app.use("/api", unitRoutes);
-app.use("/api", leaseRoutes);
-app.use("/api", tenantRoutes);
-app.use("/api", ownerRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api", activityLogRoutes);
-
+app.use("/api", managementRepRoutes);
 // Test routes (for development only - remove in production)
 if (process.env.NODE_ENV !== 'production') {
     const testRoutes = require('./routes/testRoutes');

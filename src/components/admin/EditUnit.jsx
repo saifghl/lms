@@ -1,102 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getUnitById, updateUnit, getProjects } from '../../services/api';
 import './EditUnit.css';
 
 const EditUnit = () => {
-    const { id } = useParams();
+    const { id } = useParams(); // Get unit ID from URL
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-    const [projects, setProjects] = useState([]);
-    const [formData, setFormData] = useState({
-        unit_number: '',
-        floor_number: '',
-        project_id: '',
-        super_area: '',
-        carpet_area: '',
-        covered_area: '',
-        unit_status: 'vacant',
-        unit_plc: 'front_facing',
-        projected_rent: '',
-        images: '',
-        owner_id: null,
-        current_tenant_id: null
-    });
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [unitResponse, projectsResponse] = await Promise.all([
-                    getUnitById(id),
-                    getProjects()
-                ]);
-                const unit = unitResponse.data;
-                setFormData({
-                    unit_number: unit.unit_number || '',
-                    floor_number: unit.floor_number || '',
-                    project_id: unit.project_id || '',
-                    super_area: unit.super_area || '',
-                    carpet_area: unit.carpet_area || '',
-                    covered_area: unit.covered_area || '',
-                    unit_status: unit.unit_status || 'vacant',
-                    unit_plc: unit.unit_plc || 'front_facing',
-                    projected_rent: unit.projected_rent || '',
-                    images: unit.images || '',
-                    owner_id: unit.owner_id || null,
-                    current_tenant_id: unit.current_tenant_id || null
-                });
-                setProjects(projectsResponse.data);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [id]);
+    // TODO: Backend - Fetch unit details by ID
+    // useEffect(() => { fetch(`/api/units/${id}`).then(...) }, [id]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+    // Mock data based on design
+    const unitId = id || "104-B";
 
-    const handleUpdate = async (e) => {
+    const handleUpdate = (e) => {
         e.preventDefault();
-        try {
-            const updateData = {
-                ...formData,
-                floor_number: parseInt(formData.floor_number) || null,
-                project_id: parseInt(formData.project_id) || null,
-                super_area: parseFloat(formData.super_area) || 0,
-                carpet_area: parseFloat(formData.carpet_area) || 0,
-                covered_area: parseFloat(formData.covered_area) || 0,
-                projected_rent: parseFloat(formData.projected_rent) || 0,
-                owner_id: formData.owner_id ? parseInt(formData.owner_id) : null,
-                current_tenant_id: formData.current_tenant_id ? parseInt(formData.current_tenant_id) : null
-            };
-            await updateUnit(id, updateData);
-            alert("Unit Updated Successfully");
-            navigate('/admin/units');
-        } catch (error) {
-            console.error("Error updating unit:", error);
-            alert("Failed to update unit");
-        }
+        // TODO: Backend - Collect updated data and PUT to /api/units/${id}
+        console.log("Updating unit...");
+        navigate('/admin/units');
     };
-
-    if (loading) {
-        return (
-            <div className="dashboard-container">
-                <Sidebar />
-                <main className="main-content">
-                    <div>Loading...</div>
-                </main>
-            </div>
-        );
-    }
 
     return (
         <div className="dashboard-container">
@@ -104,135 +26,125 @@ const EditUnit = () => {
             <main className="main-content">
                 <div className="edit-unit-container">
                     <div className="unit-form-card">
+                        {/* Header */}
                         <div className="edit-header">
                             <div className="header-content">
                                 <div className="breadcrumb">
-                                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/units" style={{ textDecoration: 'none', color: 'inherit' }}>UNITS</Link> &gt; <span className="active">UNIT {formData.unit_number}</span>
+                                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/units" style={{ textDecoration: 'none', color: 'inherit' }}>UNITS</Link> &gt; <span className="active">UNIT {unitId}</span>
                                 </div>
                                 <div className="title-row">
-                                    <h2>Edit Unit: {formData.unit_number}</h2>
+                                    <h2>Edit Unit: {unitId}</h2>
+                                    <button className="view-history-btn">View History</button>
                                 </div>
                                 <p className="subtitle">Update current lease details, status, pricing, and amenities for this unit.</p>
                             </div>
                         </div>
 
                         <form className="unit-form" onSubmit={handleUpdate}>
+                            {/* Unit Identification */}
                             <section className="form-section">
                                 <h3>Unit Identification</h3>
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label>Unit Number</label>
-                                        <input 
-                                            type="text" 
-                                            name="unit_number"
-                                            value={formData.unit_number}
-                                            onChange={handleChange}
-                                            required
-                                        />
+                                        <input type="text" defaultValue={unitId} />
                                     </div>
                                     <div className="form-group">
-                                        <label>Project</label>
-                                        <select 
-                                            name="project_id"
-                                            value={formData.project_id}
-                                            onChange={handleChange}
-                                        >
-                                            <option value="">Select Project</option>
-                                            {projects.map(project => (
-                                                <option key={project.id} value={project.id}>{project.project_name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Floor Number</label>
-                                        <input 
-                                            type="number" 
-                                            name="floor_number"
-                                            value={formData.floor_number}
-                                            onChange={handleChange}
-                                        />
+                                        <label>Property Name</label>
+                                        <input type="text" defaultValue="Sunset Apartments (locked)" disabled className="locked-input" />
                                     </div>
                                 </div>
-                            </section>
-
-                            <section className="form-section">
-                                <h3>Dimensions</h3>
-                                <div className="form-row three-cols">
-                                    <div className="form-group">
-                                        <label>Super Area (sq ft)</label>
-                                        <input 
-                                            type="number" 
-                                            name="super_area"
-                                            value={formData.super_area}
-                                            onChange={handleChange}
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Carpet Area (sq ft)</label>
-                                        <input 
-                                            type="number" 
-                                            name="carpet_area"
-                                            value={formData.carpet_area}
-                                            onChange={handleChange}
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Covered Area (sq ft)</label>
-                                        <input 
-                                            type="number" 
-                                            name="covered_area"
-                                            value={formData.covered_area}
-                                            onChange={handleChange}
-                                        />
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section className="form-section">
-                                <h3>Status & Pricing</h3>
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label>Unit Status</label>
-                                        <select 
-                                            name="unit_status"
-                                            value={formData.unit_status}
-                                            onChange={handleChange}
-                                        >
-                                            <option value="vacant">Vacant</option>
-                                            <option value="fully_fitted">Fully fitted</option>
-                                            <option value="warm_shell">Warm Shell</option>
-                                            <option value="bare_shell">Bare Shell</option>
-                                            <option value="leased">Leased</option>
-                                            <option value="fitout">Fitout</option>
-                                        </select>
+                                        <div className="select-wrapper">
+                                            <select defaultValue="2_bed_deluxe">
+                                                <option value="2_bed_deluxe">2 Bed / 2 Bath - Deluxe</option>
+                                                <option value="1_bed">1 Bed / 1 Bath</option>
+                                                <option value="studio">Studio</option>
+                                            </select>
+                                            <svg className="chevron-down" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        </div>
                                     </div>
                                     <div className="form-group">
-                                        <label>Unit PLC</label>
-                                        <select 
-                                            name="unit_plc"
-                                            value={formData.unit_plc}
-                                            onChange={handleChange}
-                                        >
-                                            <option value="front_facing">Front facing</option>
-                                            <option value="corner">Corner unit</option>
-                                            <option value="plaza_view">Plaza view</option>
-                                        </select>
+                                        <label>Square Footage</label>
+                                        <div className="input-with-suffix">
+                                            <input type="text" defaultValue="1150" />
+                                            <span className="suffix">sq ft</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Rent & Tenant */}
+                            <section className="form-section">
+                                <h3>Rent & Tenant</h3>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Monthly Base Rent</label>
+                                        <input type="text" defaultValue="₹2,400.00" className="blue-text-input" />
                                     </div>
                                     <div className="form-group">
-                                        <label>Projected Rent (₹/month)</label>
-                                        <input 
-                                            type="number" 
-                                            name="projected_rent"
-                                            value={formData.projected_rent}
-                                            onChange={handleChange}
-                                        />
+                                        <label>Security Deposit</label>
+                                        <input type="text" defaultValue="₹2,400.00" className="blue-text-input" />
                                     </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Current Status</label>
+                                        <div className="select-wrapper">
+                                            <select defaultValue="Vacant" className="status-select vacant">
+                                                <option value="Vacant">Vacant</option>
+                                                <option value="Leased">Leased</option>
+                                                <option value="Reserved">Reserved</option>
+                                            </select>
+                                            <svg className="chevron-down" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Available From</label>
+                                        <input type="date" defaultValue="2023-11-01" />
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Specifications & Dimensions */}
+                            <section className="form-section">
+                                <h3>Specifications & Dimensions</h3>
+                                <div className="specs-grid">
+                                    <label className="checkbox-item">
+                                        <input type="checkbox" defaultChecked />
+                                        <span>Front facing</span>
+                                    </label>
+                                    <label className="checkbox-item">
+                                        <input type="checkbox" defaultChecked />
+                                        <span>corner shop</span>
+                                    </label>
+                                    <label className="checkbox-item">
+                                        <input type="checkbox" />
+                                        <span>double hight</span>
+                                    </label>
+                                    <label className="checkbox-item">
+                                        <input type="checkbox" defaultChecked />
+                                        <span>boulevard facing</span>
+                                    </label>
+                                    <label className="checkbox-item">
+                                        <input type="checkbox" defaultChecked />
+                                        <span>Central AC</span>
+                                    </label>
+                                    <label className="checkbox-item">
+                                        <input type="checkbox" />
+                                        <span>assigned Parking</span>
+                                    </label>
                                 </div>
                             </section>
 
                             <div className="form-footer">
                                 <Link to="/admin/units" className="cancel-btn">Cancel</Link>
-                                <button type="submit" className="update-btn">Update Unit</button>
+                                <button type="submit" className="update-btn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                    Update Unit
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -243,4 +155,3 @@ const EditUnit = () => {
 };
 
 export default EditUnit;
-

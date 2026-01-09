@@ -1,44 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getTenants } from '../../services/api';
 import './Tenant.css';
 
 const Tenant = () => {
     const navigate = useNavigate();
-    const [tenants, setTenants] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchTenants = async () => {
-            try {
-                const response = await getTenants();
-                setTenants(response.data);
-            } catch (error) {
-                console.error("Error fetching tenants:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchTenants();
-    }, []);
 
     const handleAddTenant = () => {
         navigate('/admin/tenant/add');
     };
 
-    if (loading) {
-        return (
-            <div className="tenant-container">
-                <Sidebar />
-                <main className="tenant-content">
-                    <div>Loading...</div>
-                </main>
-            </div>
-        );
-    }
-
-    const mockTenants = [
+    const tenants = [
         {
             id: 'TN-2023-001',
             name: 'John Smith',
@@ -132,32 +104,26 @@ const Tenant = () => {
                         <div style={{ textAlign: 'center' }}>Actions</div>
                     </div>
 
-                    {tenants.length > 0 ? tenants.map((tenant, index) => (
+                    {tenants.map((tenant, index) => (
                         <div className="tenant-row" key={index}>
                             <div className="tenant-name-col">
                                 <h4>{tenant.name}</h4>
-                                <span className="tenant-id">ID: TN-{tenant.id}</span>
+                                <span className="tenant-id">ID: {tenant.id}</span>
                             </div>
-                            <div className="contact-col">{tenant.contact || 'N/A'}</div>
-                            <div className="email-col">{tenant.email || 'N/A'}</div>
-                            <div className="area-col">{tenant.area_occupied?.toLocaleString() || '0'} sq ft</div>
+                            <div className="contact-col">{tenant.contact}</div>
+                            <div className="email-col">{tenant.email}</div>
+                            <div className="area-col">{tenant.area}</div>
 
                             <div className="actions-col" style={{ justifyContent: 'center' }}>
                                 <button className="action-icon-btn" onClick={() => navigate(`/admin/tenant/${tenant.id}`)}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                 </button>
-                                <button className="action-icon-btn" onClick={() => navigate(`/admin/tenant/edit/${tenant.id}`)}>
+                                <button className="action-icon-btn">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                 </button>
                             </div>
                         </div>
-                    )) : (
-                        <div className="tenant-row">
-                            <div style={{ textAlign: 'center', padding: '20px', width: '100%' }}>
-                                No tenants found
-                            </div>
-                        </div>
-                    )}
+                    ))}
                 </section>
 
                 <footer className="table-footer">
