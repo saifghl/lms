@@ -9,7 +9,8 @@ const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require("./routes/projectRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
-const managementRepRoutes = require("./routes/managementRepRoutes");
+const leaseRoutes = require("./routes/leaseRoutes");
+const managementRoutes = require("./routes/managementRoutes");
 const app = express();
 
 // Middleware
@@ -33,7 +34,8 @@ app.use('/api/auth', authRoutes);
 app.use("/api", projectRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api", activityLogRoutes);
-app.use("/api", managementRepRoutes);
+app.use("/api/management", managementRoutes);
+app.use("/api/leases", leaseRoutes);
 // Test routes (for development only - remove in production)
 if (process.env.NODE_ENV !== 'production') {
     const testRoutes = require('./routes/testRoutes');

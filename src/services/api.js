@@ -45,12 +45,11 @@ export const getDashboardStats = () => API.get("/dashboard/stats");
 export const getActivityLogs = (page = 1, limit = 50) => 
   API.get(`/activity-logs?page=${page}&limit=${limit}`);
 
-// Management Rep API
-//export const getRepDashboardStats = () => api.get('/management/dashboard/stats');
-//export const getRepReports = (params = {}) => api.get('/management/reports', { params });
-//export const getRepNotifications = (params = {}) => api.get('/management/notifications', { params });
-//export const getDocuments = (params = {}) => api.get('/management/documents', { params });
-//export const uploadDocument = (data) => api.post('/management/documents', data);
-
+// Lease Management//
+export const getLeaseStats = () => API.get("/leases/stats");
+export const getPendingLeases = () => API.get("/leases/pending");
+export const approveLease = (id) => API.put(`/leases/approve/${id}`);
+export const getExpiringLeases = () => API.get("/leases/expiring");
+export const getNotifications = () => API.get("/leases/notifications");
 
 export default API;
