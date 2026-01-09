@@ -8,7 +8,9 @@ const EditLease = () => {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    // Mock State for Form Fields
+    const [saving, setSaving] = useState(false);
+
+    // Form Fields
     const [formData, setFormData] = useState({
         project: '',
         unit: '',
@@ -37,39 +39,58 @@ const EditLease = () => {
     const [escalationSteps, setEscalationSteps] = useState([]);
 
     useEffect(() => {
-        // TODO: Backend - Fetch lease details by ID
-        // const data = await fetch(`/api/leases/${id}`).then(res => res.json());
+        if (!id) return;
 
-        // Mock Data Pre-fill
-        setFormData({
-            project: 'Sunrise Apartments',
-            unit: 'Unit 101',
-            tenant: 'John Smith',
-            owner: 'Cusec Properties',
-            startDate: '2023-01-01',
-            endDate: '2023-12-31',
-            rentCommencementDate: '2023-02-01',
-            duration: '12 Months',
-            lockinPeriod: '12',
-            noticePeriod: '3',
-            baseRent: '1200.00',
-            mgr: '1000.00',
-            camCharges: '150.00',
-            paymentDueDay: '1st of Month',
-            billingFrequency: 'Monthly',
-            latePaymentFee: '5',
-            revenueShare: '10',
-            applicableOn: 'Net Sales',
-            reportingFrequency: 'Monthly',
-            securityDeposit: '2400.00',
-            utilityDeposit: '500.00',
-            depositType: 'Cash / Check'
-        });
+        const fetchLease = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`http://localhost:5000/api/leases/${id}`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
 
-        setEscalationSteps([
-            { effectiveDate: '2024-01-01', increaseType: 'Percentage (%)', value: '5' }
-        ]);
+                if (!res.ok) throw new Error('Failed to fetch lease');
 
+                const data = await res.json();
+
+                setFormData({
+                    project: data.project_name || '',
+                    unit: data.unit_number || '',
+                    tenant: data.tenant_name || '',
+                    owner: data.owner_name || '',
+                    startDate: data.lease_start ? data.lease_start.substring(0, 10) : '',
+                    endDate: data.lease_end ? data.lease_end.substring(0, 10) : '',
+                    rentCommencementDate: data.rent_commencement_date ? data.rent_commencement_date.substring(0, 10) : '',
+                    duration: data.tenure_months ? `${data.tenure_months} Months` : '',
+                    lockinPeriod: data.lockin_period_months || '',
+                    noticePeriod: data.notice_period_months || '',
+                    baseRent: data.monthly_rent || '',
+                    mgr: data.monthly_rent || '',
+                    camCharges: data.cam_charges || '',
+                    paymentDueDay: data.payment_due_day || '1st of Month',
+                    billingFrequency: data.billing_frequency || 'Monthly',
+                    latePaymentFee: '',
+                    revenueShare: data.revenue_share_percentage || '',
+                    applicableOn: data.revenue_share_applicable_on || 'Net Sales',
+                    reportingFrequency: 'Monthly',
+                    securityDeposit: data.security_deposit || '',
+                    utilityDeposit: data.utility_deposit || '',
+                    depositType: data.deposit_type || 'Cash / Check'
+                });
+
+                setEscalationSteps(
+                    (data.escalations || []).map(esc => ({
+                        effectiveDate: esc.effective_from ? esc.effective_from.substring(0, 10) : '',
+                        increaseType: esc.increase_type === 'Fixed Amount' ? 'Fixed Amount (₹)' : 'Percentage (%)',
+                        value: esc.value
+                    }))
+                );
+            } catch (err) {
+                console.error(err);
+                alert('Failed to load lease details');
+            }
+        };
+
+        fetchLease();
     }, [id]);
 
     const handleChange = (e) => {
@@ -330,7 +351,69 @@ const EditLease = () => {
 
                     <div className="form-actions">
                         <button className="cancel-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>
-                        <button className="create-btn" onClick={() => navigate('/admin/leases')}>Update Lease</button>
+                        <button
+                            className="create-btn"
+                            disabled={saving}
+                            onClick={async () => {
+                                try {
+                                    setSaving(true);
+
+                                    const payload = {
+                                        lease_start: formData.startDate,
+                                        lease_end: formData.endDate,
+                                        rent_commencement_date: formData.rentCommencementDate,
+                                        lockin_period_months: parseInt(formData.lockinPeriod, 10) || 12,
+                                        notice_period_months: parseInt(formData.noticePeriod, 10) || 3,
+                                        monthly_rent: parseFloat(formData.baseRent) || 0,
+                                        cam_charges: parseFloat(formData.camCharges) || 0,
+                                        security_deposit: parseFloat(formData.securityDeposit) || 0,
+                                        utility_deposit: parseFloat(formData.utilityDeposit) || 0,
+                                        billing_frequency: formData.billingFrequency,
+                                        payment_due_day: formData.paymentDueDay,
+                                        revenue_share_percentage: formData.revenueShare
+                                            ? parseFloat(formData.revenueShare)
+                                            : null,
+                                        revenue_share_applicable_on: formData.revenueShare
+                                            ? formData.applicableOn
+                                            : null,
+                                        escalations: escalationSteps
+                                            .filter(step => step.effectiveDate && step.value)
+                                            .map(step => ({
+                                                effective_from: step.effectiveDate,
+                                                increase_type: step.increaseType.startsWith('Fixed')
+                                                    ? 'Fixed Amount'
+                                                    : 'Percentage',
+                                                value: parseFloat(step.value)
+                                            }))
+                                    };
+
+                                    const token = localStorage.getItem('token');
+                                    const res = await fetch(`http://localhost:5000/api/leases/${id}`, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            ...(token ? { Authorization: `Bearer ${token}` } : {})
+                                        },
+                                        body: JSON.stringify(payload)
+                                    });
+
+                                    const data = await res.json().catch(() => null);
+                                    if (!res.ok) {
+                                        throw new Error(data?.message || 'Failed to update lease');
+                                    }
+
+                                    alert('Lease updated successfully');
+                                    navigate('/admin/leases');
+                                } catch (err) {
+                                    console.error(err);
+                                    alert(err.message || 'Failed to update lease');
+                                } finally {
+                                    setSaving(false);
+                                }
+                            }}
+                        >
+                            {saving ? 'Saving...' : 'Update Lease'}
+                        </button>
                     </div>
                 </div>
             </main>

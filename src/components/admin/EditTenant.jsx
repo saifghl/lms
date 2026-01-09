@@ -7,38 +7,83 @@ const EditTenant = () => {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    // Mock State - In a real app, this would be fetched based on {id}
-    const [subTenants, setSubTenants] = useState([
-        {
-            companyName: 'Creative Solutions Ltd.',
-            regNo: '987654321',
-            industry: 'Technology',
-            contactPerson: 'Sarah Jenkins',
-            email: 'sarah@creative.com',
-            phone: '+1 (555) 123-4567',
-            allottedArea: '450'
-        }
-    ]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock initial form data
+    // Subtenants
+    const [subTenants, setSubTenants] = useState([]);
+
+    // Form data
     const [formData, setFormData] = useState({
-        companyName: 'Acme Corp',
-        regNo: '123456789',
-        industry: 'Technology',
-        taxId: 'TAX-998877',
-        contactName: 'John Doe',
-        contactEmail: 'john@acme.com',
-        contactPhone: '+1 (555) 000-1111',
-        website: 'www.acme.com',
-        street: '123 Business Rd',
-        city: 'Metropolis',
-        state: 'NY',
-        zip: '10001',
-        country: 'United States'
+        companyName: '',
+        regNo: '',
+        industry: '',
+        taxId: '',
+        contactName: '',
+        contactEmail: '',
+        contactPhone: '',
+        website: '',
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: ''
     });
 
+    /* ============================
+       FETCH TENANT BY ID
+    ============================ */
+    useEffect(() => {
+        if (!id) return;
+        
+        fetch(`http://localhost:5000/api/tenants/${id}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch tenant');
+                return res.json();
+            })
+            .then(data => {
+                setFormData({
+                    companyName: data.company_name || '',
+                    regNo: data.company_registration_number || '',
+                    industry: data.industry || '',
+                    taxId: data.tax_id || '',
+                    contactName: data.contact_person_name || '',
+                    contactEmail: data.contact_person_email || '',
+                    contactPhone: data.contact_person_phone || '',
+                    website: data.website || '',
+                    street: data.street_address || '',
+                    city: data.city || '',
+                    state: data.state || '',
+                    zip: data.zip_code || '',
+                    country: data.country || ''
+                });
+
+                setSubTenants(
+                    data.subtenants?.map(st => ({
+                        companyName: st.company_name || '',
+                        regNo: st.registration_number || '',
+                        industry: st.industry || '',
+                        contactPerson: st.contact_person_name || '',
+                        email: st.contact_person_email || '',
+                        phone: st.contact_person_phone || '',
+                        allottedArea: st.allotted_area_sqft || ''
+                    })) || []
+                );
+
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to load tenant details');
+                setLoading(false);
+            });
+    }, [id]);
+
     const handleCancel = () => {
-        navigate(-1); // Go back
+        navigate(-1);
     };
 
     const addSubTenant = () => {
@@ -74,6 +119,60 @@ const EditTenant = () => {
             [name]: value
         }));
     };
+
+    /* ============================
+       UPDATE TENANT
+    ============================ */
+    const handleUpdateTenant = async () => {
+        try {
+            const res = await fetch(`http://localhost:5000/api/tenants/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    company_name: formData.companyName,
+                    company_registration_number: formData.regNo,
+                    industry: formData.industry,
+                    tax_id: formData.taxId,
+                    contact_person_name: formData.contactName,
+                    contact_person_email: formData.contactEmail,
+                    contact_person_phone: formData.contactPhone,
+                    website: formData.website,
+                    street_address: formData.street,
+                    city: formData.city,
+                    state: formData.state,
+                    zip_code: formData.zip,
+                    country: formData.country,
+                    subtenants: subTenants.map(st => ({
+                        company_name: st.companyName,
+                        registration_number: st.regNo,
+                        allotted_area_sqft: st.allottedArea,
+                        contact_person_name: st.contactPerson,
+                        contact_person_email: st.email,
+                        contact_person_phone: st.phone
+                    }))
+                })
+            });
+
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                throw new Error(data?.message || 'Update failed');
+            }
+
+            alert('Tenant updated successfully');
+            navigate('/admin/tenant');
+        } catch (err) {
+            console.error(err);
+            alert(err.message || 'Failed to update tenant');
+        }
+    };
+
+    if (loading) {
+        return <p style={{ padding: 20 }}>Loading tenant details...</p>;
+    }
 
     return (
         <div className="add-tenant-container">
@@ -174,41 +273,6 @@ const EditTenant = () => {
                     </div>
                 </section>
 
-                {/* Unit Selection */}
-                <section className="form-card">
-                    <h3>Unit Selection</h3>
-                    <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '15px' }}>Manage assigned units.</p>
-
-                    <div className="form-field" style={{ maxWidth: '300px', marginBottom: '20px' }}>
-                        <label>Project</label>
-                        <select>
-                            <option>Downtown Plaza</option>
-                        </select>
-                    </div>
-
-                    <div className="unit-list">
-                        <label className="unit-card" style={{ borderColor: '#3b82f6', background: '#eff6ff' }}>
-                            <div className="unit-info">
-                                <input type="radio" name="unit" checked readOnly />
-                                <div className="unit-details">
-                                    <h4>Unit 101-A</h4>
-                                    <span>1,200 sqft • floor 1</span>
-                                </div>
-                            </div>
-                        </label>
-
-                        <label className="unit-card">
-                            <div className="unit-info">
-                                <input type="radio" name="unit" />
-                                <div className="unit-details">
-                                    <h4>Unit 201-B</h4>
-                                    <span>1,200 sqft • floor 1</span>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-                </section>
-
                 {/* Subtenant Information */}
                 <section className="form-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
@@ -217,9 +281,6 @@ const EditTenant = () => {
                             + Add Subtenant
                         </button>
                     </div>
-                    <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '20px' }}>
-                        Manage corporate subtenants.
-                    </p>
 
                     {subTenants.map((st, index) => (
                         <div key={index} style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
@@ -304,7 +365,9 @@ const EditTenant = () => {
 
                 <div className="form-actions">
                     <button className="btn-cancel" onClick={handleCancel}>Cancel</button>
-                    <button className="btn-create">Update Tenant</button>
+                    <button className="btn-create" onClick={handleUpdateTenant}>
+                        Update Tenant
+                    </button>
                 </div>
             </main>
         </div>
