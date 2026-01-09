@@ -1,80 +1,125 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { getLeaseById, updateLease, getProjects, getUnits, getTenants, getOwners } from '../../services/api';
 import './EditLease.css';
 import './dashboard.css';
 
 const EditLease = () => {
     const navigate = useNavigate();
     const { id } = useParams();
-
-    // Mock State for Form Fields
+    const [loading, setLoading] = useState(true);
+    const [projects, setProjects] = useState([]);
+    const [units, setUnits] = useState([]);
+    const [tenants, setTenants] = useState([]);
+    const [owners, setOwners] = useState([]);
     const [formData, setFormData] = useState({
-        project: '',
-        unit: '',
-        tenant: '',
-        owner: '',
-        startDate: '',
-        endDate: '',
-        rentCommencementDate: '',
-        duration: '',
-        lockinPeriod: '',
-        noticePeriod: '',
-        baseRent: '',
+        lease_type: 'direct',
+        rent_model: 'fixed',
+        project_id: '',
+        unit_id: '',
+        tenant_id: '',
+        owner_id: '',
+        sub_lease_area: '',
+        lease_start_date: '',
+        lease_end_date: '',
+        rent_commencement_date: '',
+        duration_months: '',
+        lockin_period_months: '',
+        notice_period_months: '',
+        monthly_rent: '',
         mgr: '',
-        camCharges: '',
-        paymentDueDay: '1st of Month',
-        billingFrequency: 'Monthly',
-        latePaymentFee: '',
-        revenueShare: '',
-        applicableOn: 'Net Sales',
-        reportingFrequency: 'Monthly',
-        securityDeposit: '',
-        utilityDeposit: '',
-        depositType: 'Cash / Check'
+        revenue_share_percentage: '',
+        applicable_on: 'Net Sales',
+        payment_due_day: '1',
+        billing_frequency: 'Monthly',
+        cam_charges: '',
+        security_deposit: '',
+        deposit_type: 'Cash / Check',
+        currency: 'INR',
+        status: 'active'
     });
-
     const [escalationSteps, setEscalationSteps] = useState([]);
 
     useEffect(() => {
-        // TODO: Backend - Fetch lease details by ID
-        // const data = await fetch(`/api/leases/${id}`).then(res => res.json());
-
-        // Mock Data Pre-fill
-        setFormData({
-            project: 'Sunrise Apartments',
-            unit: 'Unit 101',
-            tenant: 'John Smith',
-            owner: 'Cusec Properties',
-            startDate: '2023-01-01',
-            endDate: '2023-12-31',
-            rentCommencementDate: '2023-02-01',
-            duration: '12 Months',
-            lockinPeriod: '12',
-            noticePeriod: '3',
-            baseRent: '1200.00',
-            mgr: '1000.00',
-            camCharges: '150.00',
-            paymentDueDay: '1st of Month',
-            billingFrequency: 'Monthly',
-            latePaymentFee: '5',
-            revenueShare: '10',
-            applicableOn: 'Net Sales',
-            reportingFrequency: 'Monthly',
-            securityDeposit: '2400.00',
-            utilityDeposit: '500.00',
-            depositType: 'Cash / Check'
-        });
-
-        setEscalationSteps([
-            { effectiveDate: '2024-01-01', increaseType: 'Percentage (%)', value: '5' }
-        ]);
-
+        const fetchData = async () => {
+            try {
+                const [leaseRes, projectsRes, tenantsRes, ownersRes] = await Promise.all([
+                    getLeaseById(id),
+                    getProjects(),
+                    getTenants(),
+                    getOwners()
+                ]);
+                
+                const lease = leaseRes.data;
+                setFormData({
+                    lease_type: lease.lease_type || 'direct',
+                    rent_model: lease.rent_model || 'fixed',
+                    project_id: lease.project_id || '',
+                    unit_id: lease.unit_id || '',
+                    tenant_id: lease.tenant_id || '',
+                    owner_id: lease.owner_id || '',
+                    sub_lease_area: lease.sub_lease_area || '',
+                    lease_start_date: lease.lease_start_date || '',
+                    lease_end_date: lease.lease_end_date || '',
+                    rent_commencement_date: lease.rent_commencement_date || '',
+                    duration_months: lease.duration_months || '',
+                    lockin_period_months: lease.lockin_period_months || '',
+                    notice_period_months: lease.notice_period_months || '',
+                    monthly_rent: lease.monthly_rent || '',
+                    mgr: lease.mgr || '',
+                    revenue_share_percentage: lease.revenue_share_percentage || '',
+                    applicable_on: lease.applicable_on || 'Net Sales',
+                    payment_due_day: lease.payment_due_day?.toString() || '1',
+                    billing_frequency: lease.billing_frequency || 'Monthly',
+                    cam_charges: lease.cam_charges || '',
+                    security_deposit: lease.security_deposit || '',
+                    deposit_type: lease.deposit_type || 'Cash / Check',
+                    currency: lease.currency || 'INR',
+                    status: lease.status || 'active'
+                });
+                
+                if (lease.escalations) {
+                    setEscalationSteps(lease.escalations.map(esc => ({
+                        effectiveDate: esc.effective_date,
+                        increaseType: esc.increase_type,
+                        value: esc.value.toString()
+                    })));
+                }
+                
+                setProjects(projectsRes.data);
+                setTenants(tenantsRes.data);
+                setOwners(ownersRes.data);
+                
+                if (lease.project_id) {
+                    const unitsRes = await getUnits();
+                    setUnits(unitsRes.data.filter(unit => unit.project_id == lease.project_id));
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, [id]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'project_id') {
+            setFormData(prev => ({ ...prev, project_id: value, unit_id: '' }));
+            const fetchUnits = async () => {
+                try {
+                    const response = await getUnits();
+                    setUnits(response.data.filter(unit => unit.project_id == value));
+                } catch (error) {
+                    console.error("Error fetching units:", error);
+                }
+            };
+            if (value) fetchUnits();
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const addEscalationStep = () => {
@@ -82,9 +127,49 @@ const EditLease = () => {
     };
 
     const removeEscalationStep = (index) => {
-        const newSteps = escalationSteps.filter((_, i) => i !== index);
-        setEscalationSteps(newSteps);
+        setEscalationSteps(escalationSteps.filter((_, i) => i !== index));
     };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const updateData = {
+                ...formData,
+                project_id: parseInt(formData.project_id),
+                unit_id: parseInt(formData.unit_id),
+                tenant_id: parseInt(formData.tenant_id),
+                owner_id: parseInt(formData.owner_id),
+                sub_lease_area: formData.sub_lease_area ? parseFloat(formData.sub_lease_area) : null,
+                duration_months: parseInt(formData.duration_months) || null,
+                lockin_period_months: parseInt(formData.lockin_period_months) || null,
+                notice_period_months: parseInt(formData.notice_period_months) || null,
+                monthly_rent: parseFloat(formData.monthly_rent) || 0,
+                mgr: parseFloat(formData.mgr) || 0,
+                revenue_share_percentage: parseFloat(formData.revenue_share_percentage) || 0,
+                payment_due_day: parseInt(formData.payment_due_day) || 1,
+                cam_charges: parseFloat(formData.cam_charges) || 0,
+                security_deposit: parseFloat(formData.security_deposit) || 0,
+                escalations: escalationSteps
+            };
+            await updateLease(id, updateData);
+            alert("Lease Updated Successfully");
+            navigate('/admin/leases');
+        } catch (error) {
+            console.error("Error updating lease:", error);
+            alert("Failed to update lease");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar />
+                <main className="main-content">
+                    <div>Loading...</div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -102,82 +187,83 @@ const EditLease = () => {
                     </div>
                 </header>
 
-                <div className="form-layout">
-                    {/* Section 1: Property & Parties */}
+                <form className="form-layout" onSubmit={handleSubmit}>
                     <div className="form-section">
                         <h3>Property & Parties</h3>
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Project</label>
-                                <select name="project" value={formData.project} onChange={handleChange}>
-                                    <option value="" disabled>Select Project</option>
-                                    <option>Sunrise Apartments</option>
-                                    <option>Oakwood Residency</option>
+                                <select name="project_id" value={formData.project_id} onChange={handleChange} required>
+                                    <option value="">Select Project</option>
+                                    {projects.map(project => (
+                                        <option key={project.id} value={project.id}>{project.project_name}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Unit</label>
-                                <select name="unit" value={formData.unit} onChange={handleChange}>
-                                    <option value="" disabled>Select Unit</option>
-                                    <option>Unit 101</option>
-                                    <option>Unit 102</option>
+                                <select name="unit_id" value={formData.unit_id} onChange={handleChange} required>
+                                    <option value="">Select Unit</option>
+                                    {units.map(unit => (
+                                        <option key={unit.id} value={unit.id}>{unit.unit_number}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Tenant</label>
-                                <select name="tenant" value={formData.tenant} onChange={handleChange}>
-                                    <option value="" disabled>Select Tenant</option>
-                                    <option>John Smith</option>
-                                    <option>TechCorp Inc</option>
+                                <select name="tenant_id" value={formData.tenant_id} onChange={handleChange} required>
+                                    <option value="">Select Tenant</option>
+                                    {tenants.map(tenant => (
+                                        <option key={tenant.id} value={tenant.id}>{tenant.name}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Owner (Landlord)</label>
-                                <select name="owner" value={formData.owner} onChange={handleChange}>
-                                    <option value="" disabled>Select Owner</option>
-                                    <option>Cusec Properties</option>
+                                <select name="owner_id" value={formData.owner_id} onChange={handleChange} required>
+                                    <option value="">Select Owner</option>
+                                    {owners.map(owner => (
+                                        <option key={owner.id} value={owner.id}>{owner.name}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    {/* Section 2: Lease Period & Lockin */}
                     <div className="form-section">
                         <h3>Lease Period & Lockin</h3>
                         <div className="form-row date-row">
                             <div className="form-group">
                                 <label>Lease Start Date</label>
-                                <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} />
+                                <input type="date" name="lease_start_date" value={formData.lease_start_date} onChange={handleChange} required />
                             </div>
                             <div className="form-group">
                                 <label>Lease End Date</label>
-                                <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} />
+                                <input type="date" name="lease_end_date" value={formData.lease_end_date} onChange={handleChange} required />
                             </div>
                             <div className="form-group">
                                 <label>Rent Commencement Date</label>
-                                <input type="date" name="rentCommencementDate" value={formData.rentCommencementDate} onChange={handleChange} />
-                                <small style={{ color: '#718096', fontSize: '0.8rem' }}>Fit-out period ends</small>
+                                <input type="date" name="rent_commencement_date" value={formData.rent_commencement_date} onChange={handleChange} />
                             </div>
                         </div>
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Duration (Months)</label>
-                                <input type="text" name="duration" value={formData.duration} readOnly style={{ backgroundColor: '#f7fafc' }} />
+                                <input type="text" value={formData.duration_months} readOnly style={{ backgroundColor: '#f7fafc' }} />
                             </div>
                             <div className="form-group">
                                 <label>Lockin Period (Months)</label>
-                                <input type="number" name="lockinPeriod" value={formData.lockinPeriod} onChange={handleChange} />
+                                <input type="number" name="lockin_period_months" value={formData.lockin_period_months} onChange={handleChange} />
                             </div>
                             <div className="form-group">
                                 <label>Notice Period (Months)</label>
-                                <input type="number" name="noticePeriod" value={formData.noticePeriod} onChange={handleChange} />
+                                <input type="number" name="notice_period_months" value={formData.notice_period_months} onChange={handleChange} />
                             </div>
                         </div>
                     </div>
 
-                    {/* Section 3: Rent & Financials */}
                     <div className="form-section">
                         <h3>Rent & Financials</h3>
                         <div className="form-row">
@@ -185,7 +271,7 @@ const EditLease = () => {
                                 <label>Base Monthly Rent</label>
                                 <div className="currency-input">
                                     <span className="currency-symbol">₹</span>
-                                    <input type="number" name="baseRent" value={formData.baseRent} onChange={handleChange} />
+                                    <input type="number" name="monthly_rent" value={formData.monthly_rent} onChange={handleChange} />
                                     <span className="currency-code">INR</span>
                                 </div>
                             </div>
@@ -201,7 +287,7 @@ const EditLease = () => {
                                 <label>CAM Charges (Monthly)</label>
                                 <div className="currency-input">
                                     <span className="currency-symbol">₹</span>
-                                    <input type="number" name="camCharges" value={formData.camCharges} onChange={handleChange} />
+                                    <input type="number" name="cam_charges" value={formData.cam_charges} onChange={handleChange} />
                                     <span className="currency-code">INR</span>
                                 </div>
                             </div>
@@ -210,16 +296,16 @@ const EditLease = () => {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Payment Due Day</label>
-                                <select name="paymentDueDay" value={formData.paymentDueDay} onChange={handleChange}>
-                                    <option>1st of Month</option>
-                                    <option>5th of Month</option>
-                                    <option>10th of Month</option>
-                                    <option>End of Month</option>
+                                <select name="payment_due_day" value={formData.payment_due_day} onChange={handleChange}>
+                                    <option value="1">1st of Month</option>
+                                    <option value="5">5th of Month</option>
+                                    <option value="10">10th of Month</option>
+                                    <option value="31">End of Month</option>
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Billing Frequency</label>
-                                <select name="billingFrequency" value={formData.billingFrequency} onChange={handleChange}>
+                                <select name="billing_frequency" value={formData.billing_frequency} onChange={handleChange}>
                                     <option>Monthly</option>
                                     <option>Quarterly</option>
                                     <option>Half-Yearly</option>
@@ -227,66 +313,41 @@ const EditLease = () => {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Late Payment Fee (%)</label>
-                                <input type="number" name="latePaymentFee" value={formData.latePaymentFee} onChange={handleChange} />
-                            </div>
-                        </div>
-
-                        <h4 style={{ fontSize: '0.95rem', margin: '16px 0 12px 0', color: '#4a5568', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Revenue Share Details</h4>
-                        <div className="form-row">
-                            <div className="form-group">
                                 <label>Revenue Share Percentage (%)</label>
-                                <input type="number" name="revenueShare" value={formData.revenueShare} onChange={handleChange} />
-                            </div>
-                            <div className="form-group">
-                                <label>Applicable On</label>
-                                <select name="applicableOn" value={formData.applicableOn} onChange={handleChange}>
-                                    <option>Net Sales</option>
-                                    <option>Gross Sales</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Reporting Frequency</label>
-                                <select name="reportingFrequency" value={formData.reportingFrequency} onChange={handleChange}>
-                                    <option>Monthly</option>
-                                    <option>Quarterly</option>
-                                </select>
+                                <input type="number" name="revenue_share_percentage" value={formData.revenue_share_percentage} onChange={handleChange} />
                             </div>
                         </div>
 
-                        <h4 style={{ fontSize: '0.95rem', margin: '16px 0 12px 0', color: '#4a5568', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Security Deposits</h4>
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Security Deposit</label>
                                 <div className="currency-input">
                                     <span className="currency-symbol">₹</span>
-                                    <input type="number" name="securityDeposit" value={formData.securityDeposit} onChange={handleChange} />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Utility Deposit</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" name="utilityDeposit" value={formData.utilityDeposit} onChange={handleChange} />
+                                    <input type="number" name="security_deposit" value={formData.security_deposit} onChange={handleChange} />
                                     <span className="currency-code">INR</span>
                                 </div>
                             </div>
                             <div className="form-group">
                                 <label>Deposit Type</label>
-                                <select name="depositType" value={formData.depositType} onChange={handleChange}>
+                                <select name="deposit_type" value={formData.deposit_type} onChange={handleChange}>
                                     <option>Cash / Check</option>
                                     <option>Bank Guarantee</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Status</label>
+                                <select name="status" value={formData.status} onChange={handleChange}>
+                                    <option value="active">Active</option>
+                                    <option value="expired">Expired</option>
+                                    <option value="terminated">Terminated</option>
+                                    <option value="pending">Pending</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    {/* Section 4: Rent Escalations */}
                     <div className="form-section">
                         <h3>Rent Escalations</h3>
-                        <p style={{ fontSize: '0.9rem', color: '#718096', marginBottom: '16px' }}>Define specific dates for rent increases instead of a fixed cycle.</p>
-
                         {escalationSteps.map((step, index) => (
                             <div className="escalation-row" key={index}>
                                 <div className="form-group">
@@ -316,23 +377,22 @@ const EditLease = () => {
                                         setEscalationSteps(newSteps);
                                     }} />
                                 </div>
-                                <button className="remove-step-btn" onClick={() => removeEscalationStep(index)}>
+                                <button type="button" className="remove-step-btn" onClick={() => removeEscalationStep(index)}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                 </button>
                             </div>
                         ))}
-
-                        <button className="add-step-btn" onClick={addEscalationStep}>
+                        <button type="button" className="add-step-btn" onClick={addEscalationStep}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             Add Escalation Step
                         </button>
                     </div>
 
                     <div className="form-actions">
-                        <button className="cancel-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>
-                        <button className="create-btn" onClick={() => navigate('/admin/leases')}>Update Lease</button>
+                        <button type="button" className="cancel-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>
+                        <button type="submit" className="create-btn">Update Lease</button>
                     </div>
-                </div>
+                </form>
             </main>
         </div>
     );

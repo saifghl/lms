@@ -1,10 +1,67 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { addUnit, getProjects } from '../../services/api';
 import './AddUnit.css';
 
 const AddUnit = () => {
     const navigate = useNavigate();
+    const [projects, setProjects] = useState([]);
+    const [formData, setFormData] = useState({
+        unit_number: '',
+        floor_number: '',
+        project_id: '',
+        super_area: '',
+        carpet_area: '',
+        covered_area: '',
+        unit_status: 'vacant',
+        unit_plc: 'front_facing',
+        projected_rent: '',
+        images: '',
+        owner_id: null
+    });
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const response = await getProjects();
+                setProjects(response.data);
+            } catch (error) {
+                console.error("Error fetching projects:", error);
+            }
+        };
+        fetchProjects();
+    }, []);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const submitData = {
+                ...formData,
+                floor_number: parseInt(formData.floor_number) || null,
+                project_id: parseInt(formData.project_id) || null,
+                super_area: parseFloat(formData.super_area) || 0,
+                carpet_area: parseFloat(formData.carpet_area) || 0,
+                covered_area: parseFloat(formData.covered_area) || 0,
+                projected_rent: parseFloat(formData.projected_rent) || 0,
+                owner_id: formData.owner_id ? parseInt(formData.owner_id) : null
+            };
+            await addUnit(submitData);
+            alert("Unit Added Successfully");
+            navigate('/admin/units');
+        } catch (error) {
+            console.error("Error adding unit:", error);
+            alert("Failed to add unit");
+        }
+    };
 
     return (
         <div className="dashboard-container">
@@ -22,25 +79,45 @@ const AddUnit = () => {
                             </Link>
                         </div>
 
-                        {/* TODO: Backend - Add onSubmit handler to form element */}
-                        <form className="unit-form" onSubmit={(e) => {
-                            e.preventDefault();
-                            // TODO: Backend - Collect form data and POST to /api/units
-                            console.log("Submitting new unit...");
-                            navigate('/admin/units');
-                        }}>
-
+                        <form className="unit-form" onSubmit={handleSubmit}>
                             {/* Section 1: Location & Identification */}
                             <section className="form-section">
                                 <h3>Location & Identification</h3>
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label>Unit Number</label>
-                                        <input type="text" placeholder="e.g., 1st floor-unit 101" />
+                                        <input 
+                                            type="text" 
+                                            name="unit_number"
+                                            value={formData.unit_number}
+                                            onChange={handleChange}
+                                            placeholder="e.g., 1st floor-unit 101" 
+                                            required
+                                        />
                                     </div>
                                     <div className="form-group">
                                         <label>Floor Number</label>
-                                        <input type="text" placeholder="e.g., 5" />
+                                        <input 
+                                            type="number" 
+                                            name="floor_number"
+                                            value={formData.floor_number}
+                                            onChange={handleChange}
+                                            placeholder="e.g., 5" 
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Project</label>
+                                        <select 
+                                            name="project_id"
+                                            value={formData.project_id}
+                                            onChange={handleChange}
+                                            required
+                                        >
+                                            <option value="">Select Project</option>
+                                            {projects.map(project => (
+                                                <option key={project.id} value={project.id}>{project.project_name}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
                             </section>
@@ -51,25 +128,50 @@ const AddUnit = () => {
                                 <div className="form-row three-cols">
                                     <div className="form-group">
                                         <label>Super Area (sq ft)</label>
-                                        <input type="text" placeholder="0" />
+                                        <input 
+                                            type="number" 
+                                            name="super_area"
+                                            value={formData.super_area}
+                                            onChange={handleChange}
+                                            placeholder="0" 
+                                        />
                                     </div>
                                     <div className="form-group">
                                         <label>Carpet Area (sq ft)</label>
-                                        <input type="text" placeholder="0" />
+                                        <input 
+                                            type="number" 
+                                            name="carpet_area"
+                                            value={formData.carpet_area}
+                                            onChange={handleChange}
+                                            placeholder="0" 
+                                        />
                                     </div>
                                     <div className="form-group">
                                         <label>Covered Area (sq ft)</label>
-                                        <input type="text" placeholder="0" />
+                                        <input 
+                                            type="number" 
+                                            name="covered_area"
+                                            value={formData.covered_area}
+                                            onChange={handleChange}
+                                            placeholder="0" 
+                                        />
                                     </div>
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group half-width">
                                         <label>Unit Status</label>
                                         <div className="select-wrapper">
-                                            <select defaultValue="fully_fitted">
+                                            <select 
+                                                name="unit_status"
+                                                value={formData.unit_status}
+                                                onChange={handleChange}
+                                            >
+                                                <option value="vacant">Vacant</option>
                                                 <option value="fully_fitted">Fully fitted</option>
                                                 <option value="warm_shell">Warm Shell</option>
                                                 <option value="bare_shell">Bare Shell</option>
+                                                <option value="leased">Leased</option>
+                                                <option value="fitout">Fitout</option>
                                             </select>
                                             <svg className="chevron-down" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                         </div>
@@ -84,7 +186,11 @@ const AddUnit = () => {
                                     <div className="form-group">
                                         <label>Unit PLC</label>
                                         <div className="select-wrapper">
-                                            <select defaultValue="front_facing">
+                                            <select 
+                                                name="unit_plc"
+                                                value={formData.unit_plc}
+                                                onChange={handleChange}
+                                            >
                                                 <option value="front_facing">Front facing</option>
                                                 <option value="corner">Corner unit</option>
                                                 <option value="plaza_view">Plaza view</option>
@@ -95,21 +201,27 @@ const AddUnit = () => {
                                     <div className="form-group">
                                         <label>Projected Rent (₹/month)</label>
                                         <div className="input-with-suffix">
-                                            <input type="text" placeholder="₹0.00 INR" />
+                                            <input 
+                                                type="number" 
+                                                name="projected_rent"
+                                                value={formData.projected_rent}
+                                                onChange={handleChange}
+                                                placeholder="0.00" 
+                                            />
                                             <span className="suffix">INR</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Unit Images</label>
-                                    <div className="upload-box dashed">
-                                        <div className="upload-content">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                            <span>Upload a file or drag and drop</span>
-                                            <span className="upload-hint">Recommended: PNG, JPG, GIF up to 10MB</span>
-                                        </div>
-                                    </div>
+                                    <label>Unit Images (URLs - comma separated)</label>
+                                    <input 
+                                        type="text" 
+                                        name="images"
+                                        value={formData.images}
+                                        onChange={handleChange}
+                                        placeholder="Enter image URLs separated by commas" 
+                                    />
                                 </div>
                             </section>
 
@@ -117,7 +229,6 @@ const AddUnit = () => {
                                 <button type="button" className="cancel-btn" onClick={() => navigate('/admin/units')}>cancel</button>
                                 <button type="submit" className="create-btn">Create Unit</button>
                             </div>
-
                         </form>
                     </div>
                 </div>

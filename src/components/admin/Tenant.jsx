@@ -1,16 +1,44 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { getTenants } from '../../services/api';
 import './Tenant.css';
 
 const Tenant = () => {
     const navigate = useNavigate();
+    const [tenants, setTenants] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTenants = async () => {
+            try {
+                const response = await getTenants();
+                setTenants(response.data);
+            } catch (error) {
+                console.error("Error fetching tenants:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTenants();
+    }, []);
 
     const handleAddTenant = () => {
         navigate('/admin/tenant/add');
     };
 
-    const tenants = [
+    if (loading) {
+        return (
+            <div className="tenant-container">
+                <Sidebar />
+                <main className="tenant-content">
+                    <div>Loading...</div>
+                </main>
+            </div>
+        );
+    }
+
+    const mockTenants = [
         {
             id: 'TN-2023-001',
             name: 'John Smith',
@@ -104,15 +132,15 @@ const Tenant = () => {
                         <div style={{ textAlign: 'center' }}>Actions</div>
                     </div>
 
-                    {tenants.map((tenant, index) => (
+                    {tenants.length > 0 ? tenants.map((tenant, index) => (
                         <div className="tenant-row" key={index}>
                             <div className="tenant-name-col">
                                 <h4>{tenant.name}</h4>
-                                <span className="tenant-id">ID: {tenant.id}</span>
+                                <span className="tenant-id">ID: TN-{tenant.id}</span>
                             </div>
-                            <div className="contact-col">{tenant.contact}</div>
-                            <div className="email-col">{tenant.email}</div>
-                            <div className="area-col">{tenant.area}</div>
+                            <div className="contact-col">{tenant.contact || 'N/A'}</div>
+                            <div className="email-col">{tenant.email || 'N/A'}</div>
+                            <div className="area-col">{tenant.area_occupied?.toLocaleString() || '0'} sq ft</div>
 
                             <div className="actions-col" style={{ justifyContent: 'center' }}>
                                 <button className="action-icon-btn" onClick={() => navigate(`/admin/tenant/${tenant.id}`)}>
@@ -123,7 +151,13 @@ const Tenant = () => {
                                 </button>
                             </div>
                         </div>
-                    ))}
+                    )) : (
+                        <div className="tenant-row">
+                            <div style={{ textAlign: 'center', padding: '20px', width: '100%' }}>
+                                No tenants found
+                            </div>
+                        </div>
+                    )}
                 </section>
 
                 <footer className="table-footer">

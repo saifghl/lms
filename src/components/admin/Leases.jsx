@@ -1,17 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { getLeases } from '../../services/api';
 import './dashboard.css';
 import './leases.css';
 
 const Leases = () => {
-    // TODO: Backend - Fetch leases list from API with pagination
-    // useEffect(() => {
-    //   fetch('/api/leases?page=1&limit=10').then(...)
-    // }, []);
+    const [leases, setLeases] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock Data based on the design image
-    const leases = [
+    useEffect(() => {
+        const fetchLeases = async () => {
+            try {
+                const response = await getLeases();
+                setLeases(response.data);
+            } catch (error) {
+                console.error("Error fetching leases:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLeases();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar />
+                <main className="main-content">
+                    <div>Loading...</div>
+                </main>
+            </div>
+        );
+    }
+
+    const mockLeases = [
         {
             id: '#L-2023-001',
             project: 'Sunrise Apartments',
@@ -140,26 +163,26 @@ const Leases = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {leases.map((lease, index) => (
+                                {leases.length > 0 ? leases.map((lease, index) => (
                                     <tr key={index}>
                                         <td className="id-cell">
                                             <Link to={`/admin/view-lease/${encodeURIComponent(lease.id)}`} style={{ textDecoration: 'none', color: '#4299e1', fontWeight: 500 }}>
-                                                {lease.id}
+                                                {lease.lease_number || `#L-${lease.id}`}
                                             </Link>
                                         </td>
                                         <td>
                                             <div className="cell-stacked">
-                                                <span className="primary-text">{lease.project}</span>
-                                                <span className="secondary-text">{lease.unit}</span>
+                                                <span className="primary-text">{lease.project_name || 'N/A'}</span>
+                                                <span className="secondary-text">{lease.unit_number || 'N/A'}</span>
                                             </div>
                                         </td>
-                                        <td>{lease.tenant}</td>
-                                        <td>{lease.rent}</td>
-                                        <td>{lease.deposit}</td>
+                                        <td>{lease.tenant_name || 'N/A'}</td>
+                                        <td>₹{lease.monthly_rent?.toLocaleString() || '0'}</td>
+                                        <td>₹{lease.security_deposit?.toLocaleString() || '0'}</td>
                                         <td>
                                             <div className="cell-stacked">
-                                                <span className="primary-text">{lease.termStart}</span>
-                                                <span className="secondary-text">to {lease.termEnd}</span>
+                                                <span className="primary-text">{lease.lease_start_date || 'N/A'}</span>
+                                                <span className="secondary-text">to {lease.lease_end_date || 'N/A'}</span>
                                             </div>
                                         </td>
                                         <td>
@@ -168,7 +191,13 @@ const Leases = () => {
                                             </Link>
                                         </td>
                                     </tr>
-                                ))}
+                                )) : (
+                                    <tr>
+                                        <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
+                                            No leases found
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
