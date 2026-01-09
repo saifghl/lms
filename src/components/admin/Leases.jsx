@@ -1,58 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './dashboard.css';
 import './leases.css';
 
 const Leases = () => {
-    // TODO: Backend - Fetch leases list from API with pagination
-    // useEffect(() => {
-    //   fetch('/api/leases?page=1&limit=10').then(...)
-    // }, []);
+    const [leases, setLeases] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState('');
 
-    // Mock Data based on the design image
-    const leases = [
-        {
-            id: '#L-2023-001',
-            project: 'Sunrise Apartments',
-            unit: 'Unit A-101',
-            tenant: 'John Smith',
-            rent: '₹1,200.00',
-            deposit: '₹2,400.00',
-            termStart: 'Jan 01, 2023',
-            termEnd: 'Dec 31, 2023'
-        },
-        {
-            id: '#L-2023-045',
-            project: 'Oakwood Residency',
-            unit: 'Unit D-304',
-            tenant: 'Emma Wilson',
-            rent: '₹1,850.00',
-            deposit: '₹3,700.00',
-            termStart: 'Mar 15, 2023',
-            termEnd: 'Mar 14, 2024'
-        },
-        {
-            id: '#L-2022-892',
-            project: 'Marina Heights',
-            unit: 'Unit P-501',
-            tenant: 'Robert Johnson',
-            rent: '₹2,500.00',
-            deposit: '₹5,000.00',
-            termStart: 'Jun 01, 2022',
-            termEnd: 'May 31, 2023'
-        },
-        {
-            id: '#L-2023-112',
-            project: 'Sunrise Apartments',
-            unit: 'Unit C-202',
-            tenant: 'Maria Lopez',
-            rent: '₹1,350.00',
-            deposit: '₹2,700.00',
-            termStart: 'Aug 01, 2023',
-            termEnd: 'Jul 31, 2024'
+    useEffect(() => {
+        fetchLeases();
+    }, [statusFilter]);
+
+    const fetchLeases = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const url = statusFilter 
+                ? `http://localhost:5000/api/leases?status=${statusFilter}`
+                : 'http://localhost:5000/api/leases';
+            
+            const res = await fetch(url, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setLeases(data);
+            } else {
+                setLeases([]);
+            }
+        } catch (err) {
+            console.error('Failed to fetch leases:', err);
+            setLeases([]);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+    };
+
+    const formatCurrency = (amount) => {
+        if (!amount) return '₹0.00';
+        return `₹${parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
 
     return (
         <div className="dashboard-container">
@@ -77,11 +73,13 @@ const Leases = () => {
                             <div className="filter-item">
                                 <label>Status Filter</label>
                                 <div className="select-wrapper">
-                                    <select defaultValue="All Statuses">
-                                        <option>All Statuses</option>
-                                        <option>Active</option>
-                                        <option>Expiring</option>
-                                        <option>Terminated</option>
+                                    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                                        <option value="">All Statuses</option>
+                                        <option value="draft">Draft</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="active">Active</option>
+                                        <option value="expired">Expired</option>
+                                        <option value="terminated">Terminated</option>
                                     </select>
                                     <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </div>
@@ -140,30 +138,40 @@ const Leases = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {leases.map((lease, index) => (
-                                    <tr key={index}>
+                                {loading && (
+                                    <tr>
+                                        <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>Loading...</td>
+                                    </tr>
+                                )}
+                                {!loading && leases.length === 0 && (
+                                    <tr>
+                                        <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>No leases found</td>
+                                    </tr>
+                                )}
+                                {!loading && leases.map((lease) => (
+                                    <tr key={lease.id}>
                                         <td className="id-cell">
-                                            <Link to={`/admin/view-lease/${encodeURIComponent(lease.id)}`} style={{ textDecoration: 'none', color: '#4299e1', fontWeight: 500 }}>
-                                                {lease.id}
+                                            <Link to={`/admin/view-lease/${lease.id}`} style={{ textDecoration: 'none', color: '#4299e1', fontWeight: 500 }}>
+                                                L-{lease.id}
                                             </Link>
                                         </td>
                                         <td>
                                             <div className="cell-stacked">
-                                                <span className="primary-text">{lease.project}</span>
-                                                <span className="secondary-text">{lease.unit}</span>
+                                                <span className="primary-text">{lease.project_name || 'N/A'}</span>
+                                                <span className="secondary-text">{lease.unit_number || 'N/A'}</span>
                                             </div>
                                         </td>
-                                        <td>{lease.tenant}</td>
-                                        <td>{lease.rent}</td>
-                                        <td>{lease.deposit}</td>
+                                        <td>{lease.tenant_name || lease.sub_tenant_name || 'N/A'}</td>
+                                        <td>{formatCurrency(lease.monthly_rent)}</td>
+                                        <td>{formatCurrency(lease.security_deposit)}</td>
                                         <td>
                                             <div className="cell-stacked">
-                                                <span className="primary-text">{lease.termStart}</span>
-                                                <span className="secondary-text">to {lease.termEnd}</span>
+                                                <span className="primary-text">{formatDate(lease.lease_start)}</span>
+                                                <span className="secondary-text">to {formatDate(lease.lease_end)}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <Link to={`/admin/edit-lease/${encodeURIComponent(lease.id)}`} className="action-btn" title="Edit">
+                                            <Link to={`/admin/edit-lease/${lease.id}`} className="action-btn" title="Edit">
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                             </Link>
                                         </td>
