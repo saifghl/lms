@@ -176,3 +176,15 @@
         width: 100%;
     }
 }
+/* ===== FIX ROLE DROPDOWN VISIBILITY ===== */
+
+/* FIX OPTION TEXT VISIBILITY */
+select {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
+select option {
+  color: #000 !important;
+  background-color: #fff !important;
+}

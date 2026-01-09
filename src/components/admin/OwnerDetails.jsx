@@ -1,31 +1,98 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { ownerAPI } from '../../services/api'; // Ensure this path is correct
 import './OwnerDetails.css';
 
 const OwnerDetails = () => {
     const navigate = useNavigate();
     const { id } = useParams();
+    const [owner, setOwner] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchOwnerData = async () => {
+            try {
+                if (!id) throw new Error("No ID provided");
+
+                // Use getById as defined in the provided api.js
+                const response = await ownerAPI.getById(id);
+                console.log("Full API Response:", response);
+
+                // Try to find the actual data object
+                let data = response.data || response;
+
+                // If data is wrapped in a 'data' or 'user' or 'owner' property, unwrap it
+                if (data && data.data) data = data.data;
+                else if (data && data.owner) data = data.owner;
+                else if (data && data.user) data = data.user;
+
+                console.log("Resolved Owner Data:", data);
+
+                if (!data) throw new Error("No data received");
+
+                setOwner(data);
+                setLoading(false);
+            } catch (err) {
+                console.error("Error fetching owner:", err);
+                setError(err.message || "Failed to load owner");
+                setLoading(false);
+            }
+        };
+
+        fetchOwnerData();
+    }, [id]);
+
+    if (loading) return <div className="owner-details-container">Loading...</div>;
+
+    if (error) {
+        return (
+            <div className="owner-details-container">
+                <div style={{ padding: '20px', color: 'red' }}>
+                    <h3>Error</h3>
+                    <p>{error}</p>
+                    <button onClick={() => navigate('/admin/owner')}>Back to List</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!owner) return <div className="owner-details-container">Owner not found</div>;
+
+    // Helper to safely get name
+    const displayName = owner.name || 'Unknown Owner';
+    const displayId = owner.id || id;
+    const joinedDate = owner.created_at ? new Date(owner.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A';
+    const email = owner.email || 'N/A';
+    const phone = owner.phone || 'N/A';
+    const address = owner.address || 'N/A';
+    const profileImage = owner.profile_image || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=2574&auto=format&fit=crop";
+
+    // Representative Details
+    const repName = owner.representative_name || 'N/A';
+    const repPhone = owner.representative_phone || 'N/A';
+    // const repEmail = owner.representative_email || 'N/A'; // Available if needed
 
     return (
         <div className="owner-details-container">
             <Sidebar />
             <main className="owner-details-content">
                 <div className="breadcrumb">
-                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/owner" style={{ textDecoration: 'none', color: 'inherit' }}>OWNER</Link> &gt; JOHN DOE
+                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/owner" style={{ textDecoration: 'none', color: 'inherit' }}>OWNER</Link> &gt; {displayName.toUpperCase()}
                 </div>
 
                 {/* Profile Header */}
                 <header className="owner-profile-header">
                     <div className="profile-main">
                         <img
-                            src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=2574&auto=format&fit=crop"
-                            alt="John Doe"
+                            src={profileImage}
+                            alt={displayName}
                             className="profile-avatar-large"
                         />
                         <div className="profile-info">
-                            <h2>John Doe</h2>
-                            <p>ID: #OWN-8392 | Owner since Jan 2021</p>
+                            <h2>{displayName}</h2>
+                            <p>ID: #OWN-{displayId} | Owner since {joinedDate}</p>
                         </div>
                     </div>
                     <div className="header-actions">
@@ -33,7 +100,7 @@ const OwnerDetails = () => {
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                             Message
                         </button>
-                        <button className="btn-edit" onClick={() => navigate(`/admin/owner/edit/${id ? id : 'OWN-8392'}`)}>
+                        <button className="btn-edit" onClick={() => navigate(`/admin/owner/edit/${displayId}`)}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             Edit
                         </button>
@@ -56,7 +123,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Owner Email Address</label>
-                                    <p>john.doe@example.com</p>
+                                    <p>{email}</p>
                                 </div>
                             </div>
 
@@ -66,7 +133,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Owner Phone Number</label>
-                                    <p>+1 (555) 019-2834</p>
+                                    <p>{phone}</p>
                                 </div>
                             </div>
 
@@ -79,7 +146,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Rep. Name</label>
-                                    <p>Michael Scott</p>
+                                    <p>{repName}</p>
                                 </div>
                             </div>
                             <div className="contact-item">
@@ -88,7 +155,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Rep. Phone</label>
-                                    <p>+1 (555) 987-6543</p>
+                                    <p>{repPhone}</p>
                                 </div>
                             </div>
 
@@ -98,7 +165,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Primary Address</label>
-                                    <p>123 Maple Ave, Springfield, IL 62704</p>
+                                    <p>{address}</p>
                                 </div>
                             </div>
 
@@ -121,7 +188,7 @@ const OwnerDetails = () => {
                                     </div>
                                     <div className="info-content">
                                         <label>Full Name<span>*</span></label>
-                                        <p>John Doe</p>
+                                        <p>{displayName}</p>
                                     </div>
                                 </div>
                             </div>
@@ -142,6 +209,12 @@ const OwnerDetails = () => {
 
                     {/* Right Column */}
                     <div className="right-column">
+                        {/* Status Row */}
+                        {!loading && owner && (
+                            <div style={{ marginBottom: '20px', display: 'none' }}>
+                                {/* Hidden debug block placeholder */}
+                            </div>
+                        )}
                         {/* Stats Row */}
                         <div className="stats-row">
                             <div className="stat-widget">

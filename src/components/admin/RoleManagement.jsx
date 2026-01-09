@@ -1,192 +1,189 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import './RoleManagement.css';
+import React, { useEffect, useState } from "react";
+import Sidebar from "./Sidebar";
+import "./RoleManagement.css";
 
 const RoleManagement = () => {
-    // Mock Data based on the screenshot
-    const users = [
-        {
-            id: 1,
-            name: 'David Ross',
-            email: 'd.ross@estateadmin.com',
-            role: 'Data Entry',
-            roleClass: 'data-entry',
-            access: { lease: true, fin: false, maint: false }, // "All" is simulated by just one toggle active in UI or custom logic
-            isAll: true,
-            status: 'Active'
-        },
-        {
-            id: 2,
-            name: 'Sarah Jenkins',
-            email: 'sarah.j@estateadmin.com',
-            role: 'Administrator',
-            roleClass: 'admin',
-            access: { lease: true, fin: false, maint: true },
-            status: 'Active'
-        },
-        {
-            id: 3,
-            name: 'Michael Chen',
-            email: 'm.chen@estateadmin.com',
-            role: 'Lease Manager',
-            roleClass: 'lease-mgr',
-            access: { lease: true, fin: false, maint: false },
-            status: 'Inactive'
-        },
-        {
-            id: 4,
-            name: 'Emma Wilson',
-            email: 'e.wilson@estateadmin.com',
-            role: 'Management Rep',
-            roleClass: 'management-rep',
-            access: { lease: true, fin: true, maint: false },
-            status: 'Active'
-        }
-    ];
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState("");
 
-    return (
-        <div className="role-management-container">
-            <Sidebar />
+  /* =============================
+     LOAD USERS FROM DATABASE
+  ============================== */
+  useEffect(() => {
+    fetch("http://localhost:5000/api/users")
+      .then(res => res.json())
+      .then(data => {
+        const formattedUsers = data.map(user => ({
+          id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          email: user.email,
+          role: user.role_name,
+          roleClass: user.role_name?.toLowerCase().replace(/\s+/g, "-"),
+          isAll: ["admin", "administrator", "super admin"]
+            .includes(user.role_name?.toLowerCase()),
+          status: (user.status || "active").toLowerCase()
+        }));
 
-            {/* Top Search Bar Mock (Visual only to match design placement) */}
-            <div className="top-search-bar">
-                <div className="search-wrapper">
-                    <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" placeholder="Search users by name, role..." />
-                </div>
-            </div>
+        setUsers(formattedUsers);
+      })
+      .catch(err => console.error("Failed to load users", err));
+  }, []);
 
-            <main className="role-content">
-                <header className="role-header">
-                    <div className="role-title">
-                        <h2>Role Management</h2>
-                        <p>Manage user access, assign roles, and configure module permissions.</p>
-                    </div>
-                    <div className="header-actions">
-                        <button className="btn-filter">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                            Filters
-                        </button>
-                        <Link to="/admin/create-user" className="btn-create">
-                            + Create New User
-                        </Link>
-                    </div>
-                </header>
+  /* =============================
+     SEARCH FILTER
+  ============================== */
+  const filteredUsers = users.filter(u =>
+    u.name.toLowerCase().includes(search.toLowerCase()) ||
+    u.email.toLowerCase().includes(search.toLowerCase())
+  );
 
-                {/* Stats Cards */}
-                <section className="stats-grid">
-                    <div className="stats-card">
-                        <h3>Total Users</h3>
-                        <div className="stat-value">124</div>
-                    </div>
-                    <div className="stats-card">
-                        <h3>Active Administrators</h3>
-                        <div className="stat-value">4</div>
-                    </div>
-                    <div className="stats-card">
-                        <h3>Lease Managers</h3>
-                        <div className="stat-value">18</div>
-                    </div>
-                    <div className="stats-card">
-                        <h3>Pending Invites</h3>
-                        <div className="stat-value">2</div>
-                    </div>
-                </section>
+  return (
+    <div className="role-management-container">
+      <Sidebar />
 
-                {/* Users Table */}
-                <section className="role-table-container">
-                    <div className="role-table-header">
-                        <div className="checkbox-wrapper"></div> {/* Header Checkbox placeholder */}
-                        <div>User Info</div>
-                        <div>Role</div>
-                        <div>Module Access</div>
-
-
-                    </div>
-
-                    {users.map(user => (
-                        <div className="user-row" key={user.id}>
-                            <div className="checkbox-wrapper">
-                                <div className="role-row-bullet"></div>
-                            </div>
-
-                            <div className="user-info">
-                                <img
-                                    src={`https://i.pravatar.cc/150?u=${user.id}`}
-                                    alt={user.name}
-                                    className="user-avatar"
-                                />
-                                <div className="user-details">
-                                    <h4>{user.name}</h4>
-                                    <span>{user.email}</span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <span className={`role-badge ${user.roleClass}`}>{user.role}</span>
-                            </div>
-
-                            <div className="module-access">
-                                {user.isAll ? (
-                                    <div className="toggle-group">
-                                        <label className="switch">
-                                            <input type="checkbox" defaultChecked />
-                                            <span className="slider"></span>
-                                        </label>
-                                        <span className="toggle-label">All</span>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className="toggle-group">
-                                            <label className="switch">
-                                                <input type="checkbox" defaultChecked={user.access.lease} />
-                                                <span className="slider"></span>
-                                            </label>
-                                            <span className="toggle-label">Lease</span>
-                                        </div>
-                                        <div className="toggle-group">
-                                            <label className="switch">
-                                                <input type="checkbox" defaultChecked={user.access.fin} />
-                                                <span className="slider"></span>
-                                            </label>
-                                            <span className="toggle-label">Finance</span>
-                                        </div>
-                                        <div className="toggle-group">
-                                            <label className="switch">
-                                                <input type="checkbox" defaultChecked={user.access.maint} />
-                                                <span className="slider"></span>
-                                            </label>
-                                            <span className="toggle-label">Maintenance</span>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-
-
-
-                        </div>
-                    ))}
-                </section>
-
-                <footer className="table-footer">
-                    <span>Showing 1–4 of 124 users</span>
-                    <div className="pagination">
-                        <span className="page-arrow">&lt;</span>
-                        <span className="page-item active">1</span>
-                        <span className="page-item">2</span>
-                        <span className="page-item">3</span>
-                        <span className="page-item">4</span>
-                        <span className="page-item">5</span>
-                        <span>...</span>
-                        <span className="page-item">124</span>
-                        <span className="page-arrow">&gt;</span>
-                    </div>
-                </footer>
-            </main>
+      {/* SEARCH BAR */}
+      <div className="top-search-bar">
+        <div className="search-input-wrapper">
+          <input
+            type="text"
+            placeholder="Search by name, email or mobile..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-    );
+      </div>
+
+      <main className="role-content">
+
+        {/* HEADER */}
+        <header className="role-header">
+          <div className="role-title">
+            <h2>Role Management</h2>
+            <p>Manage user access, assign roles, and configure module permissions.</p>
+          </div>
+
+          <button className="create-user-btn">
+            + Create New User
+          </button>
+        </header>
+
+        {/* ✅ STATS SECTION (RESTORED) */}
+        <section className="stats-grid">
+          <div className="stats-card">
+            <h3>Total Users</h3>
+            <div className="stat-value">{users.length}</div>
+          </div>
+
+          <div className="stats-card">
+            <h3>Active Administrators</h3>
+            <div className="stat-value">
+              {users.filter(
+                u => u.role?.toLowerCase().includes("admin") && u.status === "active"
+              ).length}
+            </div>
+          </div>
+
+          <div className="stats-card">
+            <h3>Lease Managers</h3>
+            <div className="stat-value">
+              {users.filter(u => u.role?.toLowerCase().includes("manager")).length}
+            </div>
+          </div>
+
+          <div className="stats-card">
+            <h3>Pending Invites</h3>
+            <div className="stat-value">0</div>
+          </div>
+        </section>
+
+        {/* USERS TABLE */}
+        <section className="role-table-container">
+
+          {/* TABLE HEADER */}
+          <div className="role-table-header">
+            <div></div>
+            <div>User Info</div>
+            <div>Role</div>
+            <div>Module Access</div>
+            <div>Status</div>
+            <div>Actions</div>
+          </div>
+
+          {filteredUsers.map(user => (
+            <div className="user-row" key={user.id}>
+
+              {/* RADIO */}
+              <div className="checkbox-wrapper">
+                <input type="radio" />
+              </div>
+
+              {/* USER INFO */}
+              <div className="user-info">
+                <img
+                  src={`https://i.pravatar.cc/150?u=${user.id}`}
+                  alt={user.name}
+                  className="user-avatar"
+                />
+                <div className="user-details">
+                  <h4>{user.name}</h4>
+                  <span>{user.email}</span>
+                </div>
+              </div>
+
+              {/* ROLE */}
+              <div>
+                <span className={`role-badge ${user.roleClass}`}>
+                  {user.role}
+                </span>
+              </div>
+
+              {/* MODULE ACCESS */}
+              <div className="module-access">
+                {user.isAll ? (
+                  <div className="toggle-group">
+                    <label className="switch">
+                      <input type="checkbox" defaultChecked />
+                      <span className="slider"></span>
+                    </label>
+                    <span>All</span>
+                  </div>
+                ) : (
+                  ["Lease", "Finance", "Maintenance"].map((m, i) => (
+                    <div className="toggle-group" key={i}>
+                      <label className="switch">
+                        <input type="checkbox" />
+                        <span className="slider"></span>
+                      </label>
+                      <span>{m}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* ✅ STATUS AFTER MODULE ACCESS */}
+              <div className="status-column">
+                <span className={`status ${user.status}`}>
+                  {user.status === "inactive" ? "Inactive" : "Active"}
+                </span>
+              </div>
+
+              {/* ACTIONS */}
+              <div>
+                <button className="action-btn">⋮</button>
+              </div>
+
+            </div>
+          ))}
+        </section>
+
+        {/* FOOTER */}
+        <footer className="table-footer">
+          Showing {filteredUsers.length} of {users.length} users
+        </footer>
+
+      </main>
+    </div>
+  );
 };
 
 export default RoleManagement;

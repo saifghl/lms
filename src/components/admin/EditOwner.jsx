@@ -1,194 +1,207 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import './AddOwner.css'; // Reuse existing styles
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import Sidebar from "./Sidebar";
+import "./AddOwner.css";
+import { ownerAPI } from "../../services/api";
 
 const EditOwner = () => {
-    const navigate = useNavigate();
-    const { id } = useParams();
+  const navigate = useNavigate();
+  const { id } = useParams();
 
-    // Mock initial data - in a real app this would come from an API based on ID
-    const [formData, setFormData] = useState({
-        fullName: 'John Doe',
-        email: 'john@example.com',
-        phone: '+1 (555) 000-0000',
-        repName: 'Michael Scott',
-        repPhone: '+1 (555) 999-9999',
-        repEmail: 'michael.s@example.com',
-        altContact: '',
-        units: ['u1'], // Mock selected units
-        streetAddress: '123 Main St, Apt 4B'
-    });
+  const [loading, setLoading] = useState(true);
 
-    const handleCancel = () => {
-        navigate(-1); // Go back
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    alternative_contact: "",
+    representative_name: "",
+    representative_phone: "",
+    representative_email: "",
+    address: "",
+  });
+
+  /* ================= FETCH OWNER ================= */
+  useEffect(() => {
+    const fetchOwner = async () => {
+      try {
+        const res = await ownerAPI.getById(id);
+        const owner = res.data.owner;
+
+        setFormData({
+          name: owner.name || "",
+          email: owner.email || "",
+          phone: owner.phone || "",
+          alternative_contact: owner.alternative_contact || "",
+          representative_name: owner.representative_name || "",
+          representative_phone: owner.representative_phone || "",
+          representative_email: owner.representative_email || "",
+          address: owner.address || "",
+        });
+
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load owner");
+        navigate("/admin/owner");
+      }
     };
 
-    const handleUpdate = () => {
-        // Logic to update owner would go here
-        navigate('/admin/owner');
-    };
+    fetchOwner();
+  }, [id, navigate]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+  /* ================= HANDLERS ================= */
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    return (
-        <div className="add-owner-container">
-            <Sidebar />
-            <main className="add-owner-content">
-                <div className="breadcrumb">
-                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/owner" style={{ textDecoration: 'none', color: 'inherit' }}>OWNER</Link> &gt; EDIT
-                </div>
+  const handleCancel = () => navigate(-1);
 
-                <header className="add-owner-header">
-                    <h2>Edit Property Owner</h2>
-                    <p>Update property owner details, contact information, and assigned units.</p>
-                </header>
+  const handleUpdate = async () => {
+    try {
+      await ownerAPI.update(id, formData);
+      alert("Owner updated successfully");
+      navigate("/admin/owner");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update owner");
+    }
+  };
 
-                <div className="form-section">
-                    <div className="section-header">
-                        <h3>Personal Information</h3>
-                    </div>
+  if (loading) return <p style={{ padding: 20 }}>Loading...</p>;
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Full Name<span className="required">*</span></label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                name="fullName"
-                                value={formData.fullName}
-                                onChange={handleChange}
-                                placeholder="e.g. John Doe"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Owner Email Address<span className="required">*</span></label>
-                            <input
-                                type="email"
-                                className="form-input"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                placeholder="john@example.com"
-                            />
-                        </div>
-                    </div>
+  return (
+    <div className="add-owner-container">
+      <Sidebar />
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Owner Phone Number<span className="required">*</span></label>
-                            <div className="phone-input-wrapper">
-                                <input
-                                    type="tel"
-                                    className="form-input"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    placeholder="+1 (555) 000-0000"
-                                    style={{ width: '100%' }}
-                                />
-                            </div>
-                        </div>
-                        <div className="form-group">
-                            <label>Representative Name<span className="required">*</span></label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                name="repName"
-                                value={formData.repName}
-                                onChange={handleChange}
-                                placeholder="Name of authorized Rep"
-                            />
-                            <span className="helper-text">Authorized Person to contact if owner is unavailable.</span>
-                        </div>
-                    </div>
-
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Representative Phone<span className="required">*</span></label>
-                            <input
-                                type="tel"
-                                className="form-input"
-                                name="repPhone"
-                                value={formData.repPhone}
-                                onChange={handleChange}
-                                placeholder="+1 (555) 999-9999"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Representative Email</label>
-                            <input
-                                type="email"
-                                className="form-input"
-                                name="repEmail"
-                                value={formData.repEmail}
-                                onChange={handleChange}
-                                placeholder="rep@example.com"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Alternative Contact</label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                name="altContact"
-                                value={formData.altContact}
-                                onChange={handleChange}
-                                placeholder="Optional"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="form-section">
-                    <div className="section-header">
-                        <h3>Property Units</h3>
-                        <span className="total-area-badge">Total Owned Area : 2,400 sqft</span>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Select Units<span className="required">*</span></label>
-                        <div className="unit-selection-box" style={{ color: '#333', background: '#f8fafc', fontWeight: '500' }}>
-                            U-101, U-102 selected
-                        </div>
-                        <span className="helper-text">Select All units owned by this individual.</span>
-                    </div>
-                </div>
-
-                <div className="form-section">
-                    <div className="section-header">
-                        <h3>Correspondence Address</h3>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Street Address</label>
-                        <input
-                            type="text"
-                            className="form-input"
-                            name="streetAddress"
-                            value={formData.streetAddress}
-                            onChange={handleChange}
-                            placeholder="123 Main St, Apt 4B"
-                        />
-                    </div>
-                </div>
-
-                <div className="form-actions">
-                    <button className="btn-cancel" onClick={handleCancel}>Cancel</button>
-                    <button className="btn-submit" onClick={handleUpdate}>Update Owner</button>
-                </div>
-            </main>
+      <main className="add-owner-content">
+        <div className="breadcrumb">
+          <Link to="/admin/dashboard">HOME</Link> &gt;
+          <Link to="/admin/owner"> OWNER</Link> &gt; EDIT
         </div>
-    );
+
+        <header className="add-owner-header">
+          <h2>Edit Property Owner</h2>
+          <p>Update property owner details and contact information.</p>
+        </header>
+
+        {/* PERSONAL INFO */}
+        <div className="form-section">
+          <div className="section-header">
+            <h3>Personal Information</h3>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Full Name *</label>
+              <input
+                className="form-input"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Email *</label>
+              <input
+                className="form-input"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Phone *</label>
+              <input
+                className="form-input"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Alternative Contact</label>
+              <input
+                className="form-input"
+                name="alternative_contact"
+                value={formData.alternative_contact}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* REPRESENTATIVE */}
+        <div className="form-section">
+          <div className="section-header">
+            <h3>Representative Details</h3>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Representative Name</label>
+              <input
+                className="form-input"
+                name="representative_name"
+                value={formData.representative_name}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Representative Phone</label>
+              <input
+                className="form-input"
+                name="representative_phone"
+                value={formData.representative_phone}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Representative Email</label>
+            <input
+              className="form-input"
+              name="representative_email"
+              value={formData.representative_email}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+
+        {/* ADDRESS */}
+        <div className="form-section">
+          <div className="section-header">
+            <h3>Address</h3>
+          </div>
+
+          <input
+            className="form-input"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+          />
+        </div>
+
+        {/* ACTIONS */}
+        <div className="form-actions">
+          <button className="btn-cancel" onClick={handleCancel}>
+            Cancel
+          </button>
+          <button className="btn-submit" onClick={handleUpdate}>
+            Update Owner
+          </button>
+        </div>
+      </main>
+    </div>
+  );
 };
 
 export default EditOwner;
