@@ -1,57 +1,108 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './units.css';
 
 const Units = () => {
-    // Mock Data based on the    // TODO: Backend - Fetch units list from API with pagination
-    // useEffect(() => {
-    //   fetch('/api/units?page=1&limit=10').then(...)
-    // }, []);
+    const [units, setUnits] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedBuilding, setSelectedBuilding] = useState('All');
+    const [selectedUnitType, setSelectedUnitType] = useState('All');
 
-    // Mock Data
-    const units = [
-        {
-            id: 'A-101',
-            building: 'Sunset Heights',
-            area: '1,200',
-            status: 'Vacant',
-            statusDesc: 'Available for leasing',
-            statusType: 'vacant'
-        },
-        {
-            id: 'A-102',
-            building: 'Sunset Heights',
-            area: '1,200',
-            status: 'Leased',
-            statusDesc: 'Expiring in 20 days',
-            statusType: 'leased-expiring'
-        },
-        {
-            id: 'B-405',
-            building: 'Skyline Tower',
-            area: '850',
-            status: 'Leased',
-            statusDesc: 'Active lease',
-            statusType: 'leased-active'
-        },
-        {
-            id: 'B-406',
-            building: 'Skyline Tower',
-            area: '850',
-            status: 'Vacant',
-            statusDesc: 'Available from 01 Dec 2024',
-            statusType: 'vacant'
-        },
-        {
-            id: 'G-001',
-            building: 'Mall Plaza',
-            area: '2,400',
-            status: 'Fitout',
-            statusDesc: 'Interior work in progress',
-            statusType: 'fitout'
-        }
-    ];
+    // Fetch units from API on component mount
+    useEffect(() => {
+        const fetchUnits = async () => {
+            try {
+                console.log('Fetching units from API...');
+                const response = await fetch('http://localhost:5000/api/units');  // Updated to port 5000
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`);
+                }
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Response is not JSON (likely HTML error page)');
+                }
+                const data = await response.json();
+                console.log('API Response:', data);
+
+                if (!Array.isArray(data)) {
+                    throw new Error('API response is not an array');
+                }
+
+                const mappedUnits = data.map(unit => ({
+                    id: unit.id,
+                    unitNo: unit.unit_number || 'N/A',
+                    building: unit.building || 'N/A',
+                    area: unit.area || 'N/A',
+                    status: unit.status || 'unknown',
+                    statusType: unit.status || 'unknown',
+                    statusDesc: unit.status === 'vacant' ? 'Available for leasing' : 'Occupied'
+                }));
+                setUnits(mappedUnits);
+                setError(null);
+            } catch (err) {
+                console.error('Fetch error:', err);
+                setError(err.message);
+                setUnits([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUnits();
+    }, []);
+
+    // Filter units based on search and filters
+    const filteredUnits = units.filter(unit => {
+        const matchesSearch = searchTerm === '' ||
+            unit.unitNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            unit.building.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            unit.area.toString().includes(searchTerm);
+        const matchesBuilding = selectedBuilding === 'All' || unit.building === selectedBuilding;
+        const matchesUnitType = selectedUnitType === 'All' || unit.status === selectedUnitType.toLowerCase();
+        return matchesSearch && matchesBuilding && matchesUnitType;
+    });
+
+    // Get unique buildings for dropdown
+    const buildings = ['All', ...new Set(units.map(unit => unit.building))];
+
+    // Get unique statuses for unit type dropdown (as proxy)
+    const unitTypes = ['All', ...new Set(units.map(unit => unit.status))];
+
+    // Handlers
+    const handleSearchChange = (e) => setSearchTerm(e.target.value);
+    const handleBuildingChange = (e) => setSelectedBuilding(e.target.value);
+    const handleUnitTypeChange = (e) => setSelectedUnitType(e.target.value);
+    const handleClearFilters = () => {
+        setSearchTerm('');
+        setSelectedBuilding('All');
+        setSelectedUnitType('All');
+    };
+
+    if (loading) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar />
+                <main className="main-content">
+                    <p>Loading units...</p>
+                </main>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar />
+                <main className="main-content">
+                    <p>Error fetching units: {error}</p>
+                    <p>Check if the backend server is running on port 5000 and the route is mounted.</p>
+                    <button onClick={() => window.location.reload()}>Retry</button>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
@@ -73,18 +124,25 @@ const Units = () => {
                     <div className="filters-bar">
                         <div className="search-wrapper">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            <input type="text" placeholder="Search by Unit No, Tenant, or Building..." />
+                            <input type="text" placeholder="Search by Unit No, Tenant, or Building..." value={searchTerm} onChange={handleSearchChange} />
                         </div>
                         <div className="filter-group">
                             <div className="dropdown-filter">
-                                <span>Building: All</span>
+                                <select value={selectedBuilding} onChange={handleBuildingChange}>
+                                    {buildings.map(building => (
+                                        <option key={building} value={building}>Building: {building}</option>
+                                    ))}
+                                </select>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </div>
                             <div className="dropdown-filter">
-                                <span>Unit Type: All</span>
+                                <select value={selectedUnitType} onChange={handleUnitTypeChange}>
+                                    {unitTypes.map(type => (
+                                        <option key={type} value={type}>Unit Type: {type}</option>
+                                    ))}
+                                </select>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </div>
-
                         </div>
                         <div className="view-actions">
                             <button className="icon-btn active">
@@ -93,7 +151,7 @@ const Units = () => {
                             <button className="icon-btn">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                             </button>
-                            <button className="text-btn">Clear filters</button>
+                            <button className="text-btn" onClick={handleClearFilters}>Clear filters</button>
                         </div>
                     </div>
 
@@ -105,44 +163,43 @@ const Units = () => {
                                     <th>Unit No</th>
                                     <th>Tower/Building</th>
                                     <th>Area (SQ FT)</th>
-
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {units.map((unit) => (
-                                    <tr key={unit.id}>
-                                        <td className="unit-id">{unit.id}</td>
-                                        <td>{unit.building}</td>
-                                        <td>{unit.area}</td>
-
-                                        <td>
-                                            <div className="action-buttons">
-                                                <Link to={`/admin/view-unit/${unit.id}`} className="action-btn view" title="View">
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                                </Link>
-                                                <Link to={`/admin/edit-unit/${unit.id}`} className="action-btn edit" title="Edit">
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                </Link>
-                                            </div>
-                                        </td>
+                                {filteredUnits.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="4">No units found.</td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    filteredUnits.map((unit) => (
+                                        <tr key={unit.id}>
+                                            <td className="unit-id">{unit.unitNo}</td>
+                                            <td>{unit.building}</td>
+                                            <td>{unit.area}</td>
+                                            <td>
+                                                <div className="action-buttons">
+                                                    <Link to={`/admin/view-unit/${unit.id}`} className="action-btn view" title="View">
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                    </Link>
+                                                    <Link to={`/admin/edit-unit/${unit.id}`} className="action-btn edit" title="Edit">
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                    </Link>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
 
                     <div className="pagination">
                         <span>Rows per page: 10 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
-                        <span>1—5 of 124</span>
+                        <span>1—{filteredUnits.length} of {units.length}</span>
                         <div className="page-nav">
                             <button disabled>&lt;</button>
                             <span>1</span>
-                            <span>2</span>
-                            <span>3</span>
-                            <span>4</span>
-                            <span>...</span>
-                            <span>12</span>
                             <button>&gt;</button>
                         </div>
                     </div>

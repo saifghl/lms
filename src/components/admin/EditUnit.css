@@ -120,3 +120,22 @@
     color: var(--text-secondary);
     text-transform: capitalize;
 }
+
+.success-msg {
+    background: #e6fffa;
+    color: #047857;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+
+.error-msg {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+

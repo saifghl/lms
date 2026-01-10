@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { ownerAPI } from '../../services/api'; // Ensure this path is correct
 import './OwnerDetails.css';
 
 const OwnerDetails = () => {
@@ -16,13 +17,13 @@ const OwnerDetails = () => {
                 <header className="owner-profile-header">
                     <div className="profile-main">
                         <img
-                            src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=2574&auto=format&fit=crop"
-                            alt="John Doe"
+                            src={profileImage}
+                            alt={displayName}
                             className="profile-avatar-large"
                         />
                         <div className="profile-info">
-                            <h2>John Doe</h2>
-                            <p>ID: #OWN-8392 | Owner since Jan 2021</p>
+                            <h2>{displayName}</h2>
+                            <p>ID: #OWN-{displayId} | Owner since {joinedDate}</p>
                         </div>
                     </div>
                     <div className="header-actions">
@@ -53,7 +54,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Owner Email Address</label>
-                                    <p>john.doe@example.com</p>
+                                    <p>{email}</p>
                                 </div>
                             </div>
 
@@ -63,7 +64,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Owner Phone Number</label>
-                                    <p>+1 (555) 019-2834</p>
+                                    <p>{phone}</p>
                                 </div>
                             </div>
 
@@ -76,7 +77,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Rep. Name</label>
-                                    <p>Michael Scott</p>
+                                    <p>{repName}</p>
                                 </div>
                             </div>
                             <div className="contact-item">
@@ -85,7 +86,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Rep. Phone</label>
-                                    <p>+1 (555) 987-6543</p>
+                                    <p>{repPhone}</p>
                                 </div>
                             </div>
 
@@ -95,7 +96,7 @@ const OwnerDetails = () => {
                                 </div>
                                 <div className="contact-text">
                                     <label>Primary Address</label>
-                                    <p>123 Maple Ave, Springfield, IL 62704</p>
+                                    <p>{address}</p>
                                 </div>
                             </div>
 
@@ -118,7 +119,7 @@ const OwnerDetails = () => {
                                     </div>
                                     <div className="info-content">
                                         <label>Full Name<span>*</span></label>
-                                        <p>John Doe</p>
+                                        <p>{displayName}</p>
                                     </div>
                                 </div>
                             </div>
@@ -139,6 +140,12 @@ const OwnerDetails = () => {
 
                     {/* Right Column */}
                     <div className="right-column">
+                        {/* Status Row */}
+                        {!loading && owner && (
+                            <div style={{ marginBottom: '20px', display: 'none' }}>
+                                {/* Hidden debug block placeholder */}
+                            </div>
+                        )}
                         {/* Stats Row */}
                         <div className="stats-row">
                             <div className="stat-widget">

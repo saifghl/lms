@@ -307,3 +307,36 @@
     color: #1976d2;
     font-weight: 600;
 }
+
+.actions-col {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.action-icon {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 20px;     /* 👈 MEDIUM–BIG (VERY VISIBLE) */
+    padding: 6px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.action-icon:hover {
+    background: #f1f5f9;
+    transform: scale(1.15);
+}
+
+.action-icon.view {
+    color: #0d111b;
+}
+
+.action-icon.edit {
+    color: #0f1b14;
+}
+
+.action-icon.delete {
+    color: #1a1818;
+}

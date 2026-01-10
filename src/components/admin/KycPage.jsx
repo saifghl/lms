@@ -1,56 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import './KycPage.css';
+import { ownerAPI } from '../../services/api'; // Adapting import to match known structure
 
 const KycPage = () => {
-    // Mock Data for KYC
-    const kycRequests = [
-        {
-            id: 1,
-            name: 'John Doe',
-            type: 'Tenant',
-            documentType: 'Aadhar Card',
-            status: 'Pending',
-            date: '2024-01-15',
-            avatar: '1'
-        },
-        {
-            id: 2,
-            name: 'Jane Smith',
-            type: 'Owner',
-            documentType: 'PAN Card',
-            status: 'Verified',
-            date: '2024-01-14',
-            avatar: '2'
-        },
-        {
-            id: 3,
-            name: 'Robert Brown',
-            type: 'Tenant',
-            documentType: 'Passport',
-            status: 'Rejected',
-            date: '2024-01-12',
-            avatar: '3'
-        },
-        {
-            id: 4,
-            name: 'Alice Johnson',
-            type: 'Owner',
-            documentType: 'Driving License',
-            status: 'Pending',
-            date: '2024-01-10',
-            avatar: '4'
-        },
-        {
-            id: 5,
-            name: 'Michael Chen',
-            type: 'Tenant',
-            documentType: 'Aadhar Card',
-            status: 'Verified',
-            date: '2024-01-08',
-            avatar: '5'
-        }
-    ];
+    const [kycRequests, setKycRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch Data
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Fetching owners. Ideally we'd fetch tenants too if a tenantAPI exists.
+                // Assuming ownerAPI.getAll() exists and returns an array of owners.
+                const response = await ownerAPI.getAll();
+                const owners = response.data || response; // Handle { data: [...] } or [...]
+
+                if (!Array.isArray(owners)) {
+                    throw new Error("Invalid API response format");
+                }
+
+                // Map API data to UI structure
+                const mappedRequests = owners.map(owner => ({
+                    id: owner.id,
+                    name: owner.name || owner.first_name + ' ' + owner.last_name || 'Unknown',
+                    type: 'Owner', // Currently hardcoded as we are only fetching owners
+                    documentType: owner.kyc_document_type || 'Aadhar Card', // Fallback or real field
+                    status: mapStatus(owner.kyc_status || owner.status), // Map DB status to UI
+                    date: owner.created_at ? new Date(owner.created_at).toLocaleDateString() : 'N/A',
+                    avatar: owner.id % 10 // Deterministic avatar for demo
+                }));
+
+                setKycRequests(mappedRequests);
+                setLoading(false);
+            } catch (err) {
+                console.error("KYC Fetch Error:", err);
+                setError("Failed to load KYC requests.");
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const mapStatus = (dbStatus) => {
+        if (!dbStatus) return 'Pending';
+        const s = dbStatus.toLowerCase();
+        if (s.includes('verified') || s === 'active') return 'Verified';
+        if (s.includes('reject')) return 'Rejected';
+        return 'Pending';
+    };
 
     const getStatusClass = (status) => {
         switch (status.toLowerCase()) {
@@ -58,6 +58,25 @@ const KycPage = () => {
             case 'rejected': return 'status-rejected';
             case 'pending': return 'status-pending';
             default: return '';
+        }
+    };
+
+    const handleUpdateStatus = async (id, newStatus) => {
+        try {
+            // Optimistic Update
+            setKycRequests(prev => prev.map(item =>
+                item.id === id ? { ...item, status: newStatus } : item
+            ));
+
+            // API Call
+            // Assuming ownerAPI.update exists
+            const kycStatus = newStatus === 'Verified' ? 'verified' : 'rejected';
+            await ownerAPI.update(id, { kyc_status: kycStatus });
+
+        } catch (err) {
+            console.error("Update Status Error:", err);
+            // Revert on failure (could add complex revert logic here)
+            alert("Failed to update status");
         }
     };
 
@@ -117,69 +136,78 @@ const KycPage = () => {
                         <div>Actions</div>
                     </div>
 
-                    {kycRequests.map(item => (
-                        <div className="kyc-row" key={item.id}>
-                            <div className="checkbox-wrapper">
-                                <label className="check-container">
-                                    <input type="checkbox" />
-                                </label>
-                            </div>
+                    {loading ? (
+                        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading requests...</div>
+                    ) : error ? (
+                        <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>{error}</div>
+                    ) : (
+                        kycRequests.map(item => (
+                            <div className="kyc-row" key={item.id}>
+                                <div className="checkbox-wrapper">
+                                    <label className="check-container">
+                                        <input type="checkbox" />
+                                    </label>
+                                </div>
 
-                            <div className="user-info">
-                                <img
-                                    src={`https://i.pravatar.cc/150?u=${item.avatar}`}
-                                    alt={item.name}
-                                    className="user-avatar"
-                                />
-                                <div className="user-details">
-                                    <h4>{item.name}</h4>
-                                    <span>ID: KYC-{item.id.toString().padStart(4, '0')}</span>
+                                <div className="user-info">
+                                    <img
+                                        src={`https://i.pravatar.cc/150?u=${item.avatar}`}
+                                        alt={item.name}
+                                        className="user-avatar"
+                                    />
+                                    <div className="user-details">
+                                        <h4>{item.name}</h4>
+                                        <span>ID: KYC-{item.id.toString().padStart(4, '0')}</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span className={`type-badge ${item.type.toLowerCase()}`}>{item.type}</span>
+                                </div>
+
+                                <div className="document-info">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="doc-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    {item.documentType}
+                                </div>
+
+                                <div className="date-info">
+                                    {item.date}
+                                </div>
+
+                                <div>
+                                    <span className={`status-badge ${getStatusClass(item.status)}`}>{item.status}</span>
+                                </div>
+
+                                <div className="actions">
+                                    <button className="icon-action-btn view" title="View">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                    {item.status === 'Pending' && (
+                                        <>
+                                            <button
+                                                className="icon-action-btn approve"
+                                                title="Approve"
+                                                onClick={() => handleUpdateStatus(item.id, 'Verified')}
+                                            >
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                            </button>
+                                            <button
+                                                className="icon-action-btn reject"
+                                                title="Reject"
+                                                onClick={() => handleUpdateStatus(item.id, 'Rejected')}
+                                            >
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
-
-                            <div>
-                                <span className={`type-badge ${item.type.toLowerCase()}`}>{item.type}</span>
-                            </div>
-
-                            <div className="document-info">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="doc-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                                {item.documentType}
-                            </div>
-
-                            <div className="date-info">
-                                {item.date}
-                            </div>
-
-                            <div>
-                                <span className={`status-badge ${getStatusClass(item.status)}`}>{item.status}</span>
-                            </div>
-
-                            <div className="actions">
-                                <button className="icon-action-btn view" title="View">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </button>
-                                {item.status === 'Pending' && (
-                                    <>
-                                        <button className="icon-action-btn approve" title="Approve">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                        </button>
-                                        <button className="icon-action-btn reject" title="Reject">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </section>
 
                 <footer className="table-footer">
-                    <span>Showing 1–{kycRequests.length} of {kycRequests.length} requests</span>
-                    <div className="pagination">
-                        <span className="page-arrow">&lt;</span>
-                        <span className="page-item active">1</span>
-                        <span className="page-arrow">&gt;</span>
-                    </div>
+                    <span>Showing {kycRequests.length} requests</span>
                 </footer>
             </main>
         </div>

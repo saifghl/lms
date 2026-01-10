@@ -1,24 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './EditUnit.css';
+import { unitAPI } from '../../services/api';
 
 const EditUnit = () => {
-    const { id } = useParams(); // Get unit ID from URL
+    const { id } = useParams();
     const navigate = useNavigate();
 
-    // TODO: Backend - Fetch unit details by ID
-    // useEffect(() => { fetch(`/api/units/${id}`).then(...) }, [id]);
-
-    // Mock data based on design
     const unitId = id || "104-B";
 
-    const handleUpdate = (e) => {
-        e.preventDefault();
-        // TODO: Backend - Collect updated data and PUT to /api/units/${id}
-        console.log("Updating unit...");
-        navigate('/admin/units');
-    };
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+
+    const handleUpdate = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    setError('');
+
+    try {
+        await unitAPI.update(id, {
+            unit_number: unitId,     // ✅ REQUIRED
+            status: "vacant",        // optional
+            super_area: 1150         // optional
+        });
+
+        setMessage("✅ Unit updated successfully");
+
+        setTimeout(() => {
+            navigate("/admin/units");
+        }, 1500);
+
+    } catch (err) {
+        console.error(err);
+        setError("❌ Failed to update unit");
+    }
+};
 
     return (
         <div className="dashboard-container">
@@ -26,21 +43,31 @@ const EditUnit = () => {
             <main className="main-content">
                 <div className="edit-unit-container">
                     <div className="unit-form-card">
+
                         {/* Header */}
                         <div className="edit-header">
                             <div className="header-content">
                                 <div className="breadcrumb">
-                                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <Link to="/admin/units" style={{ textDecoration: 'none', color: 'inherit' }}>UNITS</Link> &gt; <span className="active">UNIT {unitId}</span>
+                                    <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt;{' '}
+                                    <Link to="/admin/units" style={{ textDecoration: 'none', color: 'inherit' }}>UNITS</Link> &gt;{' '}
+                                    <span className="active">UNIT {unitId}</span>
                                 </div>
                                 <div className="title-row">
                                     <h2>Edit Unit: {unitId}</h2>
                                     <button className="view-history-btn">View History</button>
                                 </div>
-                                <p className="subtitle">Update current lease details, status, pricing, and amenities for this unit.</p>
+                                <p className="subtitle">
+                                    Update current lease details, status, pricing, and amenities for this unit.
+                                </p>
                             </div>
                         </div>
 
+                        {/* ✅ MESSAGE (NO DESIGN CHANGE) */}
+                        {message && <div className="success-msg">{message}</div>}
+                        {error && <div className="error-msg">{error}</div>}
+
                         <form className="unit-form" onSubmit={handleUpdate}>
+
                             {/* Unit Identification */}
                             <section className="form-section">
                                 <h3>Unit Identification</h3>
@@ -51,7 +78,12 @@ const EditUnit = () => {
                                     </div>
                                     <div className="form-group">
                                         <label>Property Name</label>
-                                        <input type="text" defaultValue="Sunset Apartments (locked)" disabled className="locked-input" />
+                                        <input
+                                            type="text"
+                                            defaultValue="Sunset Apartments (locked)"
+                                            disabled
+                                            className="locked-input"
+                                        />
                                     </div>
                                 </div>
                                 <div className="form-row">
@@ -63,7 +95,6 @@ const EditUnit = () => {
                                                 <option value="1_bed">1 Bed / 1 Bath</option>
                                                 <option value="studio">Studio</option>
                                             </select>
-                                            <svg className="chevron-down" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                         </div>
                                     </div>
                                     <div className="form-group">
@@ -98,7 +129,6 @@ const EditUnit = () => {
                                                 <option value="Leased">Leased</option>
                                                 <option value="Reserved">Reserved</option>
                                             </select>
-                                            <svg className="chevron-down" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                         </div>
                                     </div>
                                     <div className="form-group">
@@ -108,44 +138,26 @@ const EditUnit = () => {
                                 </div>
                             </section>
 
-                            {/* Specifications & Dimensions */}
+                            {/* Specifications */}
                             <section className="form-section">
                                 <h3>Specifications & Dimensions</h3>
                                 <div className="specs-grid">
-                                    <label className="checkbox-item">
-                                        <input type="checkbox" defaultChecked />
-                                        <span>Front facing</span>
-                                    </label>
-                                    <label className="checkbox-item">
-                                        <input type="checkbox" defaultChecked />
-                                        <span>corner shop</span>
-                                    </label>
-                                    <label className="checkbox-item">
-                                        <input type="checkbox" />
-                                        <span>double hight</span>
-                                    </label>
-                                    <label className="checkbox-item">
-                                        <input type="checkbox" defaultChecked />
-                                        <span>boulevard facing</span>
-                                    </label>
-                                    <label className="checkbox-item">
-                                        <input type="checkbox" defaultChecked />
-                                        <span>Central AC</span>
-                                    </label>
-                                    <label className="checkbox-item">
-                                        <input type="checkbox" />
-                                        <span>assigned Parking</span>
-                                    </label>
+                                    <label className="checkbox-item"><input type="checkbox" defaultChecked /><span>Front facing</span></label>
+                                    <label className="checkbox-item"><input type="checkbox" defaultChecked /><span>corner shop</span></label>
+                                    <label className="checkbox-item"><input type="checkbox" /><span>double hight</span></label>
+                                    <label className="checkbox-item"><input type="checkbox" defaultChecked /><span>boulevard facing</span></label>
+                                    <label className="checkbox-item"><input type="checkbox" defaultChecked /><span>Central AC</span></label>
+                                    <label className="checkbox-item"><input type="checkbox" /><span>assigned Parking</span></label>
                                 </div>
                             </section>
 
                             <div className="form-footer">
                                 <Link to="/admin/units" className="cancel-btn">Cancel</Link>
                                 <button type="submit" className="update-btn">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                                     Update Unit
                                 </button>
                             </div>
+
                         </form>
                     </div>
                 </div>

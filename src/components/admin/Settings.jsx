@@ -1,101 +1,274 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import './Settings.css';
+import { settingsAPI } from '../../services/api';
 
 const Settings = () => {
+
+    // TEMP → later replace with JWT user id
+    const userId = 3;
+
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // password states
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+
+    /* ============================
+       LOAD USER FROM DB
+    ============================ */
+    useEffect(() => {
+        settingsAPI.get(userId)
+            .then(res => {
+                setUser(res.data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error("Load user error:", err);
+                setLoading(false);
+            });
+    }, [userId]);
+
+    /* ============================
+       HANDLE INPUT CHANGE
+    ============================ */
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setUser(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    /* ============================
+       SAVE PROFILE
+    ============================ */
+    const handleSave = () => {
+        settingsAPI.update(userId, user)
+            .then(() => alert("Profile updated successfully"))
+            .catch(() => alert("Update failed"));
+    };
+
+    /* ============================
+       PHOTO UPLOAD
+    ============================ */
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            alert("Only image files allowed");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("photo", file);
+
+        settingsAPI.uploadPhoto(userId, formData)
+            .then(res => {
+                setUser(prev => ({
+                    ...prev,
+                    profile_image: res.data.image
+                }));
+            })
+            .catch(() => alert("Photo upload failed"));
+    };
+
+    /* ============================
+       REMOVE PHOTO (FIXED)
+    ============================ */
+    const handleRemovePhoto = () => {
+        settingsAPI.removePhoto(userId)
+            .then(() => {
+                setUser(prev => ({
+                    ...prev,
+                    profile_image: null
+                }));
+            })
+            .catch(() => alert("Failed to remove photo"));
+    };
+
+    /* ============================
+       UPDATE PASSWORD
+    ============================ */
+    const handlePasswordUpdate = () => {
+        if (!currentPassword || !newPassword) {
+            alert("Fill both password fields");
+            return;
+        }
+
+        settingsAPI.updatePassword(userId, {
+            currentPassword,
+            newPassword
+        })
+            .then(() => {
+                alert("Password updated successfully");
+                setCurrentPassword("");
+                setNewPassword("");
+            })
+            .catch(() => alert("Password update failed"));
+    };
+
+    if (loading) return <div style={{ padding: 30 }}>Loading...</div>;
+    if (!user) return <div style={{ padding: 30 }}>User not found</div>;
+
+    // ✅ Correct image path
+    const profileImage = user.profile_image
+        ? `http://localhost:5000${user.profile_image}`
+        : "https://via.placeholder.com/150";
+
     return (
         <div className="settings-container">
             <Sidebar />
+
             <main className="settings-content">
                 <header className="settings-header">
                     <h2>Profile Settings</h2>
-                    <div className="sub-header">Manage your personal details, security preferences, and account settings.</div>
+                    <div className="sub-header">
+                        Manage your personal details, security preferences, and account settings.
+                    </div>
                 </header>
 
-                {/* Profile Card */}
+                {/* ================= PROFILE CARD ================= */}
                 <div className="profile-card">
                     <div className="profile-info-left">
                         <div className="profile-avatar-container">
                             <img
-                                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=2574&auto=format&fit=crop"
-                                alt="Alex Johnson"
+                                src={profileImage}
+                                alt="Profile"
                                 className="profile-avatar"
                             />
-                            <div className="edit-avatar-icon">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                            </div>
+
+                            <input
+                                type="file"
+                                accept="image/*"
+                                hidden
+                                id="photoUpload"
+                                onChange={handlePhotoChange}
+                            />
+
+                            {/* Pencil icon */}
+                            <label
+                                htmlFor="photoUpload"
+                                className="edit-avatar-icon"
+                                style={{ zIndex: 1 }}
+                            >
+                                ✎
+                            </label>
                         </div>
+
                         <div className="profile-text">
-                            <h3>Alex Johnson</h3>
+                            <h3>{user.first_name} {user.last_name}</h3>
                             <span className="role">Super Administrator</span>
-                            <span className="location">San Francisco, CA</span>
+                            <span className="location">{user.location || "—"}</span>
                         </div>
                     </div>
-                    <div className="profile-actions">
-                        <button className="btn-remove">Remove</button>
-                        <button className="btn-change-photo">Change Photo</button>
+
+                    {/* ✅ FIXED BUTTONS */}
+                    <div className="profile-actions" style={{ zIndex: 5 }}>
+                        <button
+                            type="button"
+                            className="btn-remove"
+                            onClick={handleRemovePhoto}
+                        >
+                            Remove
+                        </button>
+
+                        <button
+                            type="button"
+                            className="btn-change-photo"
+                            onClick={() => document.getElementById("photoUpload").click()}
+                        >
+                            Change Photo
+                        </button>
                     </div>
                 </div>
 
-                {/* Personal Information */}
+                {/* ================= PERSONAL INFO ================= */}
                 <section className="settings-section">
                     <h3>Personal Information</h3>
+
                     <div className="form-grid">
                         <div className="form-field">
                             <label>First Name</label>
-                            <input type="text" defaultValue="Alex" />
+                            <input
+                                type="text"
+                                name="first_name"
+                                value={user.first_name}
+                                onChange={handleChange}
+                            />
                         </div>
+
                         <div className="form-field">
                             <label>Last Name</label>
-                            <input type="text" defaultValue="Johnson" />
+                            <input
+                                type="text"
+                                name="last_name"
+                                value={user.last_name}
+                                onChange={handleChange}
+                            />
                         </div>
+
                         <div className="form-field">
                             <label>Job Title</label>
-                            <input type="text" defaultValue="Senior Property Manager" />
+                            <input
+                                type="text"
+                                name="job_title"
+                                value={user.job_title || ""}
+                                onChange={handleChange}
+                            />
                         </div>
+
                         <div className="form-field">
                             <label>Phone Number</label>
-                            <input type="text" defaultValue="+1 (555) 123-4567" />
+                            <input
+                                type="text"
+                                name="phone"
+                                value={user.phone || ""}
+                                onChange={handleChange}
+                            />
                         </div>
                     </div>
+
+                    <button className="btn-save" onClick={handleSave}>
+                        Save Changes
+                    </button>
                 </section>
 
-                <hr style={{ border: '0', borderTop: '1px solid #eee', marginBottom: '40px' }} />
+                <hr />
 
-                {/* Security & Password */}
+                {/* ================= SECURITY ================= */}
                 <section className="settings-section">
                     <h3>Security & Password</h3>
 
-                    <div className="form-field" style={{ marginBottom: '20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <label>Email Address</label>
-                            <span className="last-changed-badge">Last changed 3 months ago</span>
-                        </div>
-                        <div className="email-field-container input-with-icon">
-                            <input type="email" defaultValue="alex.johnson@leaseadmin.com" className="verified" readOnly />
-                            <div className="input-right-icon">
-                                <span className="verified-badge">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>
-                                    Verified
-                                </span>
-                            </div>
-                        </div>
+                    <div className="form-field">
+                        <label>Email Address</label>
+                        <input type="email" value={user.email} readOnly />
                     </div>
 
-                    <div className="form-field" style={{ marginBottom: '20px' }}>
+                    <div className="form-field">
                         <label>Current Password</label>
-                        <input type="password" placeholder="Enter current password" />
+                        <input
+                            type="password"
+                            value={currentPassword}
+                            onChange={e => setCurrentPassword(e.target.value)}
+                        />
                     </div>
 
                     <div className="form-field">
                         <label>New Password</label>
-                        <input type="password" placeholder="Enter new password" />
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={e => setNewPassword(e.target.value)}
+                        />
                     </div>
-                </section>
 
-                <footer className="settings-footer">
-                    <button className="btn-save">Save Changes</button>
-                </footer>
+                    <button className="btn-save" onClick={handlePasswordUpdate}>
+                        Update Password
+                    </button>
+                </section>
             </main>
         </div>
     );
