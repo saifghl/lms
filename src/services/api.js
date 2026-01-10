@@ -1,54 +1,55 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api"
 });
 
-/* ================= OWNERS ================= */
-export const ownerAPI = {
-  getAll: () => API.get("/owners"),
-  getById: (id) => API.get(`/owners/${id}`),
-  create: (data) => API.post("/owners", data),
-  update: (id, data) => API.put(`/owners/${id}`, data),
-  delete: (id) => API.delete(`/owners/${id}`), // ✅ THIS FIXES DELETE
-};
+// Add token to requests if available
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-/* ================= UNITS ================= */
-export const unitAPI = {
-  getAll: () => API.get("/units"),
+// Add response interceptor for error handling
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
-  getById: (id) => API.get(`/units/${id}`),   // ✅ ADD THIS
+// Auth APIs
+export const login = (data) => API.post("/auth/login", data);
+export const register = (data) => API.post("/auth/register", data);
 
-  update: (id, data) => API.put(`/units/${id}`, data),
-};
-
-/* ================= SETTINGS ================= */
-export const settingsAPI = {
-  get: (id) => API.get(`/settings/${id}`),
-  update: (id, data) => API.put(`/settings/${id}`, data),
-
-  uploadPhoto: (id, data) =>
-    API.post(`/settings/${id}/photo`, data, {
-      headers: { "Content-Type": "multipart/form-data" }
-    }),
-
-  removePhoto: (id) =>
-    API.delete(`/settings/${id}/photo`),
-
-  updatePassword: (id, data) =>
-    API.put(`/settings/${id}/password`, data),
-};
+// Project APIs
+export const getProjects = () => API.get("/projects");
+export const getProjectById = (id) => API.get(`/projects/${id}`);
+export const addProject = (data) => API.post("/projects", data, {
+  headers: { "Content-Type": "multipart/form-data" }
+});
+export const updateProject = (id, data) => API.put(`/projects/${id}`, data, {
+  headers: { "Content-Type": "multipart/form-data" }
+});
+export const deleteProject = (id) => API.delete(`/projects/${id}`);
 
 
+// Dashboard APIs
+export const getDashboardStats = () => API.get("/dashboard/stats");
 
+// Activity Log APIs
+export const getActivityLogs = (page = 1, limit = 50) => 
+  API.get(`/activity-logs?page=${page}&limit=${limit}`);
 
-
-/* ================= ROLES ================= */
-export const roleAPI = {
-  getAll: () => API.get("/roles"),
-  create: (data) => API.post("/roles", data),
-  update: (id, data) => API.put(`/roles/${id}`, data),
-  delete: (id) => API.delete(`/roles/${id}`),
-};
+// Lease Management//
+export const getLeaseStats = () => API.get("/leases/stats");
+export const getPendingLeases = () => API.get("/leases/pending");
+export const approveLease = (id) => API.put(`/leases/approve/${id}`);
+export const getExpiringLeases = () => API.get("/leases/expiring");
+export const getNotifications = () => API.get("/leases/notifications");
 
 export default API;

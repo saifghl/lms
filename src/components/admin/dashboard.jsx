@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { getDashboardStats } from '../../services/api';
 import './dashboard.css';
 
 const Dashboard = () => {
-
     const navigate = useNavigate();
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await getDashboardStats();
+                setStats(response.data);
+            } catch (error) {
+                console.error("Error fetching dashboard stats:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
 
     return (
         <div className="dashboard-container">
@@ -40,34 +56,36 @@ const Dashboard = () => {
 
                 {/* TOP METRICS */}
                 <section className="stats-grid">
+                    {loading ? (
+                        <div>Loading...</div>
+                    ) : (
+                        [
+                            { title: "Total Projects", value: stats?.stats?.totalProjects || 0, change: "", cls: "positive", stroke: "#2ED573" },
+                            { title: "Total Units", value: stats?.stats?.totalUnits || 0, change: "", cls: "negative", stroke: "#FF4757" },
+                            { title: "Total Owners", value: stats?.stats?.totalOwners || 0, change: "", cls: "neutral", stroke: "#2E66FF" },
+                            { title: "Total Tenants", value: stats?.stats?.totalTenants || 0, change: "", cls: "warning", stroke: "#FFA502" },
+                            { title: "Total Leases", value: stats?.stats?.totalLeases || 0, change: "", cls: "info", stroke: "#5352ED" },
+                            { title: "Total Revenue", value: `₹${(stats?.stats?.totalRevenue || 0).toLocaleString()}`, change: "", cls: "negative", stroke: "#FF4757" },
+                        ].map((c, i) => (
+                            <div className="stat-card fade-in" key={i}>
+                                <h4>{c.title}</h4>
+                                <div className="stat-value">{c.value}</div>
+                                <div className={`stat-change ${c.cls}`}>{c.change}</div>
 
-                    {[
-                        { title: "Total Projects", value: "12", change: "+2% vs last month", cls: "positive", stroke: "#2ED573" },
-                        { title: "Total Units", value: "148", change: "+5% vs last month", cls: "negative", stroke: "#FF4757" },
-                        { title: "Total Owners", value: "45", change: "- 0% change", cls: "neutral", stroke: "#2E66FF" },
-                        { title: "Total Tenants", value: "142", change: "+3% vs last month", cls: "warning", stroke: "#FFA502" },
-                        { title: "Total Leases", value: "138", change: "+4% vs last month", cls: "info", stroke: "#5352ED" },
-                        { title: "Total Revenue", value: "$1.2M", change: "+12% YTD", cls: "negative", stroke: "#FF4757" },
-                    ].map((c, i) => (
-                        <div className="stat-card fade-in" key={i}>
-                            <h4>{c.title}</h4>
-                            <div className="stat-value">{c.value}</div>
-                            <div className={`stat-change ${c.cls}`}>{c.change}</div>
-
-                            <div className="mini-chart">
-                                <svg width="100%" height="38" viewBox="0 0 100 40">
-                                    <path
-                                        d="M0,30 C12,18 30,34 50,24 S88,18 100,26"
-                                        fill="none"
-                                        stroke={c.stroke}
-                                        strokeWidth="2.2"
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
+                                <div className="mini-chart">
+                                    <svg width="100%" height="38" viewBox="0 0 100 40">
+                                        <path
+                                            d="M0,30 C12,18 30,34 50,24 S88,18 100,26"
+                                            fill="none"
+                                            stroke={c.stroke}
+                                            strokeWidth="2.2"
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-
+                        ))
+                    )}
                 </section>
 
                 {/* AREA SECTION */}
@@ -76,11 +94,11 @@ const Dashboard = () => {
                     <div className="area-card fade-in">
                         <div>
                             <h3>Area Occupied</h3>
-                            <p>Average Rent Achieved: ₹57.20 per sq ft</p>
+                            <p>Average Rent Achieved: ₹{stats?.areaStats?.occupied?.avgRentPerSqft?.toFixed(2) || '0.00'} per sq ft</p>
                         </div>
 
                         <div className="area-value-block">
-                            <div className="area-value">245,000 sq ft</div>
+                            <div className="area-value">{stats?.areaStats?.occupied?.area?.toLocaleString() || '0'} sq ft</div>
                             <span>Super / Leasable Area</span>
                         </div>
                     </div>
@@ -88,11 +106,11 @@ const Dashboard = () => {
                     <div className="area-card fade-in">
                         <div>
                             <h3>Area Vacant</h3>
-                            <p>Average Expected Rent: ₹53.82 per sq ft</p>
+                            <p>Available for leasing</p>
                         </div>
 
                         <div className="area-value-block">
-                            <div className="area-value">42,000 sq ft</div>
+                            <div className="area-value">{stats?.areaStats?.vacant?.area?.toLocaleString() || '0'} sq ft</div>
                             <span>Super / Leasable Area</span>
                         </div>
                     </div>
@@ -166,23 +184,28 @@ const Dashboard = () => {
                             <button>View All</button>
                         </div>
 
-                        {[
-                            { m:"Nov",d:"15",t:"Unit 402 • Nov 15, 2024",c:"James Logistics",b:"30 Days",cls:"warning"},
-                            { m:"Dec",d:"01",t:"Unit 105 • Dec 01, 2024",c:"TechCorp Inc",b:"45 Days",cls:"success"},
-                            { m:"Dec",d:"12",t:"Unit 220 • Dec 12, 2024",c:"Star Bakery",b:"60 Days",cls:"success"},
-                        ].map((x,i)=>(
-                            <div className="list-item" key={i}>
-                                <div className="list-icon-circle">
-                                    <span>{x.m}</span>
-                                    <span className="icon-day">{x.d}</span>
+                        {stats?.upcomingRenewals?.length > 0 ? stats.upcomingRenewals.map((x, i) => {
+                            const date = new Date(x.lease_end_date);
+                            const month = date.toLocaleString('default', { month: 'short' });
+                            const day = date.getDate();
+                            return (
+                                <div className="list-item" key={i}>
+                                    <div className="list-icon-circle">
+                                        <span>{month}</span>
+                                        <span className="icon-day">{day}</span>
+                                    </div>
+                                    <div className="list-info">
+                                        <h4>{x.unit_number} • {x.lease_end_date}</h4>
+                                        <p>{x.tenant_name}</p>
+                                    </div>
+                                    <span className={`badge ${x.days_remaining < 30 ? 'warning' : 'success'}`}>
+                                        {x.days_remaining} Days
+                                    </span>
                                 </div>
-                                <div className="list-info">
-                                    <h4>{x.t}</h4>
-                                    <p>{x.c}</p>
-                                </div>
-                                <span className={`badge ${x.cls}`}>{x.b}</span>
-                            </div>
-                        ))}
+                            );
+                        }) : (
+                            <div className="list-item">No upcoming renewals</div>
+                        )}
                     </div>
 
                     {/* EXPIRIES */}
@@ -192,24 +215,28 @@ const Dashboard = () => {
                             <button>View All</button>
                         </div>
 
-                        {[
-                            {m:"Oct",d:"31",t:"Unit 402 • Nov 15, 2024",c:"James Logistics",cls:"danger-pill",txt:"HIGH RISK"},
-                            {m:"Nov",d:"05",t:"Unit 105 • Dec 01, 2024",c:"TechCorp Inc",cls:"warning-pill",txt:"MEDIUM"},
-                            {m:"Nov",d:"20",t:"Unit 220 • Dec 12, 2024",c:"Star Bakery",cls:"success-pill",txt:"LOW"},
-                        ].map((x,i)=>(
-                            <div className="list-item" key={i}>
-                                <div className="list-icon-circle">
-                                    <span>{x.m}</span>
-                                    <span className="icon-day">{x.d}</span>
+                        {stats?.upcomingExpiries?.length > 0 ? stats.upcomingExpiries.map((x, i) => {
+                            const date = new Date(x.lease_end_date);
+                            const month = date.toLocaleString('default', { month: 'short' });
+                            const day = date.getDate();
+                            const riskLevel = x.days_remaining < 30 ? 'danger-pill' : x.days_remaining < 60 ? 'warning-pill' : 'success-pill';
+                            const riskText = x.days_remaining < 30 ? 'HIGH RISK' : x.days_remaining < 60 ? 'MEDIUM' : 'LOW';
+                            return (
+                                <div className="list-item" key={i}>
+                                    <div className="list-icon-circle">
+                                        <span>{month}</span>
+                                        <span className="icon-day">{day}</span>
+                                    </div>
+                                    <div className="list-info">
+                                        <h4>{x.unit_number} • {x.lease_end_date}</h4>
+                                        <p>{x.tenant_name}</p>
+                                    </div>
+                                    <span className={`badge ${riskLevel}`}>{riskText}</span>
                                 </div>
-                                <div className="list-info">
-                                    <h4>{x.t}</h4>
-                                    <p>{x.c}</p>
-                                </div>
-                                <span className={`badge ${x.cls}`}>{x.txt}</span>
-                            </div>
-                        ))}
-
+                            );
+                        }) : (
+                            <div className="list-item">No upcoming expiries</div>
+                        )}
                     </div>
 
                     {/* ESCALATIONS */}
@@ -219,23 +246,27 @@ const Dashboard = () => {
                             <button>View All</button>
                         </div>
 
-                        {[
-                            {m:"JAN",d:"01",t:"Unit 402 • Nov 15, 2024",c:"CPI Adjustment",p:"+3.5%"},
-                            {m:"JAN",d:"01",t:"Unit 105 • Dec 01, 2024",c:"Fixed Increase",p:"+2.0%"},
-                            {m:"FEB",d:"01",t:"Unit 220 • Dec 12, 2024",c:"Market Review",p:"+5.0%"},
-                        ].map((x,i)=>(
-                            <div className="list-item" key={i}>
-                                <div className="list-icon-circle gray">
-                                    <span>{x.m}</span>
-                                    <span className="icon-day">{x.d}</span>
+                        {stats?.rentEscalations?.length > 0 ? stats.rentEscalations.map((x, i) => {
+                            const date = new Date(x.effective_date);
+                            const month = date.toLocaleString('default', { month: 'short' }).toUpperCase();
+                            const day = date.getDate();
+                            const value = x.increase_type === 'Percentage (%)' ? `+${x.value}%` : `+₹${x.value}`;
+                            return (
+                                <div className="list-item" key={i}>
+                                    <div className="list-icon-circle gray">
+                                        <span>{month}</span>
+                                        <span className="icon-day">{day}</span>
+                                    </div>
+                                    <div className="list-info">
+                                        <h4>{x.unit_number} • {x.effective_date}</h4>
+                                        <p>{x.increase_type}</p>
+                                    </div>
+                                    <span className="text-success">{value}</span>
                                 </div>
-                                <div className="list-info">
-                                    <h4>{x.t}</h4>
-                                    <p>{x.c}</p>
-                                </div>
-                                <span className="text-success">{x.p}</span>
-                            </div>
-                        ))}
+                            );
+                        }) : (
+                            <div className="list-item">No upcoming escalations</div>
+                        )}
 
                     </div>
 

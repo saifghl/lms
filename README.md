@@ -1,70 +1,219 @@
-# Getting Started with Create React App
+# Lease Management System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive lease management system built with React and Node.js/Express.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Project Management**: Create and manage property projects
+- **Unit Management**: Track individual units within projects
+- **Lease Management**: Manage lease agreements with tenants
+- **Tenant Management**: Maintain tenant records and information
+- **Owner Management**: Track property owners and their units
+- **Dashboard**: Real-time statistics and analytics
+- **Activity Logs**: Track all system activities
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Frontend
+- React 19
+- React Router
+- Axios for API calls
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Backend
+- Node.js
+- Express.js
+- MySQL (mysql2)
+- JWT for authentication
+- Multer for file uploads
+- bcryptjs for password hashing
 
-### `npm test`
+## Setup Instructions
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
+- Node.js (v14 or higher)
+- MySQL (v8 or higher)
+- npm or yarn
 
-### `npm run build`
+### Database Setup
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Create a MySQL database:
+```sql
+mysql -u root -p
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Import the database schema:
+```bash
+mysql -u root -p < lease_management_system.sql
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Or run the SQL file in your MySQL client.
 
-### `npm run eject`
+### Backend Setup
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. Navigate to the backend directory:
+```bash
+cd backend
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. Install dependencies:
+```bash
+npm install
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+3. Create a `.env` file in the backend directory:
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=lease_management_system
+JWT_SECRET=your-secret-key-change-this-in-production
+PORT=5000
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+4. Start the backend server:
+```bash
+node server.js
+```
 
-## Learn More
+The backend will run on `http://localhost:5000`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Frontend Setup
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Navigate to the project root:
+```bash
+cd ..
+```
 
-### Code Splitting
+2. Install dependencies:
+```bash
+npm install
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+3. Create a `.env` file in the root directory:
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+```
 
-### Analyzing the Bundle Size
+4. Start the development server:
+```bash
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+The frontend will run on `http://localhost:3000`
 
-### Making a Progressive Web App
+## API Endpoints
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
 
-### Advanced Configuration
+### Projects
+- `GET /api/projects` - Get all projects
+- `GET /api/projects/:id` - Get project by ID
+- `POST /api/projects` - Create new project
+- `PUT /api/projects/:id` - Update project
+- `DELETE /api/projects/:id` - Delete project
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Units
+- `GET /api/units` - Get all units
+- `GET /api/units/:id` - Get unit by ID
+- `POST /api/units` - Create new unit
+- `PUT /api/units/:id` - Update unit
+- `DELETE /api/units/:id` - Delete unit
 
-### Deployment
+### Leases
+- `GET /api/leases` - Get all leases
+- `GET /api/leases/:id` - Get lease by ID
+- `POST /api/leases` - Create new lease
+- `PUT /api/leases/:id` - Update lease
+- `DELETE /api/leases/:id` - Delete lease
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Tenants
+- `GET /api/tenants` - Get all tenants
+- `GET /api/tenants/:id` - Get tenant by ID
+- `POST /api/tenants` - Create new tenant
+- `PUT /api/tenants/:id` - Update tenant
+- `DELETE /api/tenants/:id` - Delete tenant
 
-### `npm run build` fails to minify
+### Owners
+- `GET /api/owners` - Get all owners
+- `GET /api/owners/:id` - Get owner by ID
+- `POST /api/owners` - Create new owner
+- `PUT /api/owners/:id` - Update owner
+- `DELETE /api/owners/:id` - Delete owner
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Dashboard
+- `GET /api/dashboard/stats` - Get dashboard statistics
+
+### Activity Logs
+- `GET /api/activity-logs` - Get activity logs
+
+## Default Admin Account
+
+After importing the database, you can use:
+- Email: `admin@example.com`
+- Password: `admin123`
+
+**Note**: Make sure to change the default password after first login!
+
+## Deployment
+
+### Backend Deployment
+
+1. Set environment variables on your hosting platform
+2. Install dependencies: `npm install`
+3. Start the server: `node server.js` or use PM2: `pm2 start server.js`
+
+### Frontend Deployment
+
+1. Build the React app: `npm run build`
+2. Deploy the `build` folder to your hosting platform
+3. Set `REACT_APP_API_URL` to your backend API URL
+
+## Project Structure
+
+```
+lms/
+├── backend/
+│   ├── config/
+│   │   └── db.js
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── projectController.js
+│   │   ├── unitController.js
+│   │   ├── leaseController.js
+│   │   ├── tenantController.js
+│   │   ├── ownerController.js
+│   │   ├── dashboardController.js
+│   │   └── activityLogController.js
+│   ├── routes/
+│   │   ├── authRoutes.js
+│   │   ├── projectRoutes.js
+│   │   ├── unitRoutes.js
+│   │   ├── leaseRoutes.js
+│   │   ├── tenantRoutes.js
+│   │   ├── ownerRoutes.js
+│   │   ├── dashboardRoutes.js
+│   │   └── activityLogRoutes.js
+│   ├── middleware/
+│   ├── uploads/
+│   └── server.js
+├── src/
+│   ├── components/
+│   │   ├── admin/
+│   │   ├── Login/
+│   │   └── ...
+│   ├── services/
+│   │   └── api.js
+│   └── App.js
+├── lease_management_system.sql
+└── package.json
+```
+
+## License
+
+This project is proprietary software.
+
+## Support
+
+For issues or questions, please contact the development team.
