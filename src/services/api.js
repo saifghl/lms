@@ -37,6 +37,14 @@ export const updateProject = (id, data) => API.put(`/projects/${id}`, data, {
 });
 export const deleteProject = (id) => API.delete(`/projects/${id}`);
 
+// OWNERS APIs
+export const ownerAPI = {
+  getOwners: () => API.get("/owners"),
+  getOwnerById: (id) => API.get(`/owners/${id}`),
+  createOwner: (data) => API.post("/owners", data),
+  updateOwner: (id, data) => API.put(`/owners/${id}`, data),
+  deleteOwner: (id) => API.delete(`/owners/${id}`),
+};
 
 // Dashboard APIs
 export const getDashboardStats = () => API.get("/dashboard/stats");
