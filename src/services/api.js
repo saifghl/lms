@@ -46,6 +46,13 @@ export const ownerAPI = {
   deleteOwner: (id) => API.delete(`/owners/${id}`),
 };
 
+// ---------------- ROLES ----------------
+export const roleAPI = {
+  getRoles: () => API.get("/roles"),
+  createRole: (data) => API.post("/roles", data),
+  deleteRole: (id) => API.delete(`/roles/${id}`),
+};
+
 // Dashboard APIs
 export const getDashboardStats = () => API.get("/dashboard/stats");
 
