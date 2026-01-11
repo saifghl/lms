@@ -11,7 +11,7 @@ const projectRoutes = require("./routes/projectRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
 const leaseRoutes = require("./routes/leaseRoutes");
-const managementRoutes = require("./routes/managementRepRoutes");
+const managementRoutes = require("./routes/managementRoutes");
 const tenantRoutes = require("./routes/tenantRoutes");
 const ownerRoutes = require("./routes/ownerRoutes");
 
