@@ -45,6 +45,14 @@ export const ownerAPI = {
   updateOwner: (id, data) => API.put(`/owners/${id}`, data),
   deleteOwner: (id) => API.delete(`/owners/${id}`),
 };
+// ---------------- UNITS ----------------
+export const unitAPI = {
+  getUnits: () => API.get("/units"),
+  getUnitById: (id) => API.get(`/units/${id}`),
+  createUnit: (data) => API.post("/units", data),
+  updateUnit: (id, data) => API.put(`/units/${id}`, data),
+  deleteUnit: (id) => API.delete(`/units/${id}`),
+};
 
 // ---------------- ROLES ----------------
 export const roleAPI = {
@@ -66,5 +74,6 @@ export const getPendingLeases = () => API.get("/leases/pending");
 export const approveLease = (id) => API.put(`/leases/approve/${id}`);
 export const getExpiringLeases = () => API.get("/leases/expiring");
 export const getNotifications = () => API.get("/leases/notifications");
+
 
 export default API;
