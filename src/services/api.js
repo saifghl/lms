@@ -53,10 +53,10 @@ export const unitAPI = {
   updateUnit: (id, data) => API.put(`/units/${id}`, data),
   deleteUnit: (id) => API.delete(`/units/${id}`),
 };
-// ---------------- SETTINGS ----------------
+// SETTINGS//
 export const settingsAPI = {
-  getSettings: () => API.get("/settings"),
-  updateSettings: (data) => API.put("/settings", data),
+  getSettings: () => api.get("/settings"),
+  updateSettings: (data) => api.put("/settings", data),
 };
 // ---------------- ROLES ----------------
 export const roleAPI = {
