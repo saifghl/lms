@@ -55,8 +55,8 @@ export const unitAPI = {
 };
 // SETTINGS//
 export const settingsAPI = {
-  getSettings: () => api.get("/settings"),
-  updateSettings: (data) => api.put("/settings", data),
+  getSettings: () => API.get("/settings"),
+  updateSettings: (data) => API.put("/settings", data),
 };
 // ---------------- ROLES ----------------
 export const roleAPI = {
