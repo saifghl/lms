@@ -14,6 +14,8 @@ const leaseRoutes = require("./routes/leaseRoutes");
 const managementRoutes = require("./routes/managementRoutes");
 const tenantRoutes = require("./routes/tenantRoutes");
 const ownerRoutes = require("./routes/ownerRoutes");
+const settingsRoutes = require("./routes/settingsRoutes");
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -43,6 +45,7 @@ app.use("/api/management", managementRoutes);
 app.use("/api/leases", leaseRoutes);
 app.use("/api/tenants", tenantRoutes);
 app.use("/api/owners", ownerRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
