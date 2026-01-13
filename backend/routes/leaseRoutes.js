@@ -1,31 +1,18 @@
-
 const express = require("express");
 const router = express.Router();
-const lease = require("../controllers/leaseController");
+const leaseController = require("../controllers/leaseController");
 
+// Stats & Dashboard
+router.get("/stats", leaseController.getLeaseStats);
+router.get("/pending", leaseController.getPendingLeases);
+router.get("/expiring", leaseController.getExpiringLeases);
+router.get("/notifications", leaseController.getLeaseNotifications);
+router.put("/approve/:id", leaseController.approveLease);
 
-router.get("/stats", lease.getLeaseStats);
-router.get("/pending", lease.getPendingLeases);
-router.put("/approve/:id", lease.approveLease);
-router.get("/expiring", lease.getExpiringLeases);
-router.get("/notifications", lease.getLeaseNotifications);
-
-
-module.exports = router;
-
-const express = require('express');
-const {
-    createLease,
-    getAllLeases,
-    getLeaseById,
-    updateLease
-} = require('../controllers/leaseController');
-
-// TEMP: no auth so frontend works
-router.get('/', getAllLeases);
-router.post('/', createLease);
-router.get('/:id', getLeaseById);
-router.put('/:id', updateLease);
+// CRUD
+router.get("/", leaseController.getAllLeases);
+router.post("/", leaseController.createLease);
+router.get("/:id", leaseController.getLeaseById);
+router.put("/:id", leaseController.updateLease);
 
 module.exports = router;
-

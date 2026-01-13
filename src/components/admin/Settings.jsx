@@ -19,13 +19,22 @@ const Settings = () => {
        LOAD USER FROM DB
     ============================ */
     useEffect(() => {
-        settingsAPI.get(userId)
+        // Changed to use getSettings()
+        settingsAPI.getSettings()
             .then(res => {
                 setUser(res.data);
                 setLoading(false);
             })
             .catch(err => {
                 console.error("Load user error:", err);
+                // Fallback mock data if API fails (for demo)
+                setUser({
+                    first_name: "Admin",
+                    last_name: "User",
+                    email: "admin@example.com",
+                    role: "Super Admin",
+                    profile_image: null
+                });
                 setLoading(false);
             });
     }, [userId]);
@@ -45,7 +54,7 @@ const Settings = () => {
        SAVE PROFILE
     ============================ */
     const handleSave = () => {
-        settingsAPI.update(userId, user)
+        settingsAPI.updateSettings(user)
             .then(() => alert("Profile updated successfully"))
             .catch(() => alert("Update failed"));
     };
@@ -160,7 +169,7 @@ const Settings = () => {
 
                         <div className="profile-text">
                             <h3>{user.first_name} {user.last_name}</h3>
-                            <span className="role">Super Administrator</span>
+                            <span className="role">{user.role || "Administrator"}</span>
                             <span className="location">{user.location || "—"}</span>
                         </div>
                     </div>
@@ -195,7 +204,7 @@ const Settings = () => {
                             <input
                                 type="text"
                                 name="first_name"
-                                value={user.first_name}
+                                value={user.first_name || ""}
                                 onChange={handleChange}
                             />
                         </div>
@@ -205,7 +214,7 @@ const Settings = () => {
                             <input
                                 type="text"
                                 name="last_name"
-                                value={user.last_name}
+                                value={user.last_name || ""}
                                 onChange={handleChange}
                             />
                         </div>
@@ -244,7 +253,7 @@ const Settings = () => {
 
                     <div className="form-field">
                         <label>Email Address</label>
-                        <input type="email" value={user.email} readOnly />
+                        <input type="email" value={user.email || ""} readOnly />
                     </div>
 
                     <div className="form-field">

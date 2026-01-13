@@ -76,10 +76,13 @@ function App() {
         <Route path="/admin/create-user" element={<CreateUser />} />
         <Route path="/admin/tenant" element={<Tenant />} />
         <Route path="/admin/tenant/add" element={<AddTenant />} />
+        <Route path="/admin/add-tenant" element={<AddTenant />} /> {/* User Access URL */}
         <Route path="/admin/tenant/edit/:id" element={<EditTenant />} />
         <Route path="/admin/tenant/:id" element={<TenantDetails />} />
         <Route path="/admin/owner" element={<OwnerList />} />
+        <Route path="/admin/owners" element={<OwnerList />} /> {/* Possible Alias */}
         <Route path="/admin/owner/add" element={<AddOwner />} />
+        <Route path="/admin/owners/add" element={<AddOwner />} /> {/* Possible Alias */}
         <Route path="/admin/owner/edit/:id" element={<EditOwner />} />
         <Route path="/admin/owner/:id" element={<OwnerDetails />} />
         <Route path="/admin/activity-logs" element={<ActivityLogs />} />

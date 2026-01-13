@@ -33,7 +33,57 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter });
 
 /* ===============================
-   GET USER PROFILE
+   GET CURRENT USER PROFILE (Default)
+================================ */
+router.get("/", async (req, res) => {
+    // Default to ID 1 or 3 for demo (since Settings.jsx used 3)
+    const id = 1;
+    try {
+        const [rows] = await pool.query(
+            `SELECT id, first_name, last_name, email, phone, job_title, location, profile_image
+             FROM users WHERE id = ?`,
+            [id]
+        );
+
+        if (!rows.length) {
+            // If ID 1 doesn't exist, try to return the first user
+            const [anyUser] = await pool.query("SELECT * FROM users LIMIT 1");
+            if (anyUser.length) return res.json(anyUser[0]);
+
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/* ===============================
+   UPDATE CURRENT PROFILE (Default)
+================================ */
+router.put("/", async (req, res) => {
+    const id = 1; // Default
+    const { first_name, last_name, phone, job_title, location } = req.body;
+
+    try {
+        await pool.query(
+            `UPDATE users SET
+             first_name = ?, last_name = ?, phone = ?, job_title = ?, location = ?
+             WHERE id = ?`,
+            [first_name, last_name, phone, job_title, location, id]
+        );
+
+        res.json({ message: "Profile updated successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Update failed" });
+    }
+});
+
+/* ===============================
+   GET USER PROFILE BY ID
 ================================ */
 router.get("/:id", async (req, res) => {
     try {
@@ -55,7 +105,7 @@ router.get("/:id", async (req, res) => {
 });
 
 /* ===============================
-   UPDATE PROFILE
+   UPDATE PROFILE BY ID
 ================================ */
 router.put("/:id", async (req, res) => {
     const { first_name, last_name, phone, job_title, location } = req.body;
@@ -100,9 +150,6 @@ router.post("/:id/photo", upload.single("photo"), async (req, res) => {
 
 /* ===============================
    REMOVE PROFILE PHOTO
-================================ */
-/* ===============================
-   REMOVE PROFILE PHOTO (FIXED)
 ================================ */
 router.delete("/:id/photo", async (req, res) => {
     try {

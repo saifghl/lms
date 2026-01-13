@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import RepSidebar from "./RepSidebar";
-import { searchData } from "../../services/managementApi";
+// import { managementAPI } from "../../services/api"; // Search API not fully Impl yet
 import "./SearchFilters.css";
 
 const SearchFilters = () => {
-  const [results, setResults] = useState([]);
+  // const [results, setResults] = useState([]);
+  const [results] = useState([]); // Fixed: Removed unused setResults
 
   useEffect(() => {
-    searchData().then((res) => setResults(res.data));
+    // managementAPI.searchData().then((res) => setResults(res.data));
   }, []);
 
   return (

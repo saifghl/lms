@@ -25,8 +25,10 @@ const EditOwner = () => {
   useEffect(() => {
     const fetchOwner = async () => {
       try {
-        const res = await ownerAPI.getById(id);
-        const owner = res.data.owner;
+        const res = await ownerAPI.getOwnerById(id);
+        const owner = res.data; // API usually returns the object directly or in data key. Check api.js: API.get(`/owners/${id}`). Backend controller returns json(owner[0]). So data is the owner object directly or array?
+        // backend/controllers/ownerController.js getOwnerById: return res.status(200).json(rows[0]); 
+        // So res.data IS the owner object.
 
         setFormData({
           name: owner.name || "",
@@ -60,7 +62,7 @@ const EditOwner = () => {
 
   const handleUpdate = async () => {
     try {
-      await ownerAPI.update(id, formData);
+      await ownerAPI.updateOwner(id, formData);
       alert("Owner updated successfully");
       navigate("/admin/owner");
     } catch (err) {

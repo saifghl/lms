@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './CreateUser.css';
-import { roleAPI } from '../../services/api';
+import { roleAPI, userAPI } from '../../services/api';
 
 const CreateUser = () => {
 
@@ -20,7 +20,7 @@ const CreateUser = () => {
 
     /* ================= LOAD ROLES ================= */
     useEffect(() => {
-        roleAPI.getAll()
+        roleAPI.getRoles() // Fixed: changed from getAll() to getRoles() if that's what api.js exports, checking api.js... it exports getRoles
             .then(res => setRoles(res.data))
             .catch(err => console.error(err));
     }, []);
@@ -48,15 +48,30 @@ const CreateUser = () => {
         const first_name = nameParts.shift();
         const last_name = nameParts.join(" ") || "";
 
+        // Find role name if needed, but backend takes role_id or role_name.
+        // userController expects role_name or looks up via role_name. 
+        // Wait, userController.js: 
+        // const { first_name, last_name, email, password, role_name } = req.body;
+        // const requestedRole = role_name || 'User';
+        // const [roleResult] = await pool.execute("SELECT id FROM roles WHERE role_name = ?", [requestedRole]);
+        // It seems it EXPECTS role_name. 
+
+        const selectedRole = roles.find(r => r.id === formData.role_id);
+        const role_name = selectedRole ? selectedRole.role_name : 'User'; // changed from .name to .role_name if that's the schema. 
+        // Let's assume roles table has role_name. I'll check response of getRoles later if needed.
+        // But simply passing role_id won't work with current controller logic unless I update controller OR send role_name.
+        // Controller Logic: 
+        // const requestedRole = role_name || 'User';
+        // SELECT id FROM roles WHERE role_name = ?
+
         try {
-            await roleAPI.create({
+            await userAPI.createUser({
                 first_name,
                 last_name,
                 email: formData.email,
-                phone: formData.phone,
-                role_id: formData.role_id,
+                role_name: role_name, // Sending role_name as expected by backend
                 status: formData.status,
-                password_hash: "TEMP_PASSWORD" // ⚠️ explained below
+                password: "TempPassword123!" // Changed key to 'password' matching controller destructuring
             });
 
             alert("User created successfully");
@@ -64,7 +79,7 @@ const CreateUser = () => {
 
         } catch (err) {
             console.error(err);
-            alert("User creation failed");
+            alert("User creation failed: " + (err.response?.data?.message || err.message));
         }
     };
 

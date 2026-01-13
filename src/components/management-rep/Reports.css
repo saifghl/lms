@@ -1,247 +1,207 @@
 /* Reports.css */
+@import '../admin/dashboard.css';
+
 .reports-container {
-    padding: 24px;
-    background-color: #f8f9fa;
+    display: flex;
     min-height: 100vh;
-    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
 }
 
-.reports-header {
+/* Reusing page-header, filters-bar, table-container from dashboard/leases conventions 
+   Redefining here or ensuring they are available. 
+   Ideally, we should have a shared css, but copying for isolation as per previous pattern.
+*/
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 24px;
 }
 
-.reports-header h1 {
-    font-size: 1.5rem;
-    margin: 0 0 4px 0;
-    color: #1a202c;
+.header-left h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 5px 0;
+    color: var(--text-primary);
 }
 
-.reports-header p {
-    color: #718096;
+.header-left p {
+    color: var(--text-secondary);
     font-size: 0.95rem;
     margin: 0;
 }
 
-/* Filter Section */
-.reports-filters-card {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #edf2f7;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+.breadcrumb {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
-.filter-row {
+.breadcrumb .active {
+    color: var(--text-primary);
+}
+
+/* Filters Bar */
+.filters-bar {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
     display: flex;
-    gap: 16px;
-    margin-bottom: 24px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    background: #ffffff;
     flex-wrap: wrap;
+    border-radius: 12px 12px 0 0;
 }
 
 .filter-group {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-    min-width: 150px;
-}
-
-.filter-group label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #4a5568;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.filter-select {
-    padding: 8px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    color: #2d3748;
-    background-color: #fff;
-    cursor: pointer;
-}
-
-.filter-date-btn {
-    display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    color: #2d3748;
-    background-color: #fff;
-    cursor: pointer;
+    gap: 16px;
 }
 
-.report-tabs {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    border-bottom: 1px solid #edf2f7;
-    padding-bottom: 16px;
-    margin-bottom: 16px;
-}
-
-.report-tab {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #718096;
-    cursor: pointer;
-    padding-bottom: 4px;
-    border-bottom: 2px solid transparent;
-}
-
-.report-tab.active {
-    color: #3182ce;
-    border-bottom-color: #3182ce;
-}
-
-.report-actions-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.search-bar-container {
+.search-wrapper {
     position: relative;
     width: 300px;
 }
 
-.search-icon-inside {
+.search-wrapper input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.search-wrapper input:focus {
+    border-color: var(--primary-blue);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.search-icon {
     position: absolute;
-    left: 10px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #a0aec0;
 }
 
-.report-search-input {
-    width: 100%;
-    padding: 8px 10px 8px 36px;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    background: #f7fafc;
-}
-
-.export-report-btn {
-    background-color: #2b6cb0;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
 /* Table */
-.reports-table-container {
+.content-card {
     background: white;
     border-radius: 12px;
-    border: 1px solid #edf2f7;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
     overflow: hidden;
 }
 
-.reports-table {
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.data-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 800px;
 }
 
-.reports-table th {
+.data-table th,
+.data-table td {
+    padding: 16px 24px;
     text-align: left;
-    padding: 16px 24px;
-    color: #718096;
-    font-size: 0.85rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.data-table th {
     font-weight: 600;
-    border-bottom: 1px solid #edf2f7;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: #fafbfd;
 }
 
-.reports-table td {
-    padding: 16px 24px;
-    border-bottom: 1px solid #edf2f7;
-    vertical-align: middle;
+.data-table tbody tr:hover {
+    background-color: #f8fafc;
 }
 
-.project-cell {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: capitalize;
 }
 
-.project-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: #cbd5e0;
-    /* Placeholder color */
-    background-size: cover;
-    background-position: center;
+.status-badge.completed {
+    background-color: #def7ec;
+    color: #03543f;
 }
 
-.project-info h4 {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #2d3748;
+.status-badge.pending {
+    background-color: #fefcbf;
+    color: #744210;
 }
 
-.project-id {
-    font-size: 0.75rem;
-    color: #718096;
+.status-badge.processing {
+    background-color: #ebf8ff;
+    color: #2b6cb0;
 }
-
-.date-text,
-.type-text {
-    font-size: 0.9rem;
-    color: #4a5568;
-}
-
-
 
 .action-btn {
     background: none;
     border: none;
     color: #718096;
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
+    border-radius: 4px;
+    transition: color 0.2s;
 }
 
 .action-btn:hover {
-    color: #2d3748;
+    color: var(--primary-blue);
+    background-color: #ebf8ff;
 }
 
 /* Pagination */
-.table-footer {
-    padding: 16px 24px;
+.pagination {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #718096;
+    padding: 16px 24px;
+    border-top: 1px solid #f0f0f0;
+    color: var(--text-secondary);
     font-size: 0.85rem;
 }
 
-.pagination {
+.page-nav {
     display: flex;
-    gap: 4px;
     align-items: center;
+    gap: 4px;
 }
 
-.page-num {
-    padding: 4px 10px;
+.page-nav button {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
     cursor: pointer;
-    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: var(--text-secondary);
 }
 
-.page-num.active {
-    background-color: #ebf8ff;
-    color: #2b6cb0;
-    font-weight: 600;
+.page-nav button:hover:not(:disabled) {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: var(--primary-blue);
 }

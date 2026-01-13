@@ -2,58 +2,15 @@ import React from 'react';
 import Sidebar from './Sidebar';
 import './ActivityLogs.css';
 
+import { getActivityLogs } from '../../services/api';
+import { useEffect, useState } from 'react';
+
 const ActivityLogs = () => {
-    // Mock Data based on the screenshot
-    const logs = [
-        {
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2574&auto=format&fit=crop',
-            name: 'Michael Chen',
-            role: 'Admin',
-            action: 'Deleted Tenant Profile',
-            details: 'ID #88291 - John Smith',
-            module: 'User Management',
-            date: 'Oct 24, 2023',
-            time: '12:15:22 PM',
-            status: 'Success',
-            statusClass: 'success'
-        },
-        {
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=2670&auto=format&fit=crop',
-            name: 'Sarah Jenkins',
-            role: 'Property Manager',
-            action: 'Updated Lease Terms',
-            details: 'Modified rent amount for Unit 4B',
-            module: 'Lease Management',
-            date: 'Oct 24, 2023',
-            time: '14:30:05 PM',
-            status: 'Warning',
-            statusClass: 'warning'
-        },
-        {
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=2574&auto=format&fit=crop',
-            name: 'Alex Morgan',
-            role: 'Leasing Agent',
-            action: 'Created New Property',
-            details: 'Downtown Loft #402',
-            module: 'Properties',
-            date: 'Oct 23, 2023',
-            time: '16:20:00 PM',
-            status: 'Success',
-            statusClass: 'success'
-        },
-        {
-            avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=2588&auto=format&fit=crop',
-            name: 'Emily Davis',
-            role: 'Financial Analyst',
-            action: 'Exported Financial Reports',
-            details: 'Q3 2023 Revenue Sheet',
-            module: 'Reports',
-            date: 'Oct 24, 2023',
-            time: '09:00:10 AM',
-            status: 'Error',
-            statusClass: 'error'
-        }
-    ];
+    const [logs, setLogs] = useState([]);
+
+    useEffect(() => {
+        getActivityLogs().then(res => setLogs(res.data)).catch(console.error);
+    }, []);
 
     return (
         <div className="activity-logs-container">

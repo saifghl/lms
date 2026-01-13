@@ -1,30 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { unitAPI } from '../../services/api';
 import './units.css';
 
 const Units = () => {
     const [units, setUnits] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedBuilding, setSelectedBuilding] = useState('All');
     const [selectedUnitType, setSelectedUnitType] = useState('All');
+    const [error, setError] = useState(null);
+    const [filters, setFilters] = useState({
+        search: '',
+        project_id: '',
+        status: ''
+    });
 
-    // Fetch units from API on component mount
     useEffect(() => {
         const fetchUnits = async () => {
             try {
                 console.log('Fetching units from API...');
-                const response = await fetch('http://localhost:5000/api/units');  // Updated to port 5000
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`);
-                }
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    throw new Error('Response is not JSON (likely HTML error page)');
-                }
-                const data = await response.json();
+                const response = await unitAPI.getUnits();
+                const data = response.data;
                 console.log('API Response:', data);
 
                 if (!Array.isArray(data)) {
@@ -44,7 +43,7 @@ const Units = () => {
                 setError(null);
             } catch (err) {
                 console.error('Fetch error:', err);
-                setError(err.message);
+                setError(err.message || 'Failed to fetch units');
                 setUnits([]);
             } finally {
                 setLoading(false);
@@ -97,7 +96,6 @@ const Units = () => {
                 <Sidebar />
                 <main className="main-content">
                     <p>Error fetching units: {error}</p>
-                    <p>Check if the backend server is running on port 5000 and the route is mounted.</p>
                     <button onClick={() => window.location.reload()}>Retry</button>
                 </main>
             </div>
@@ -163,13 +161,14 @@ const Units = () => {
                                     <th>Unit No</th>
                                     <th>Tower/Building</th>
                                     <th>Area (SQ FT)</th>
+                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredUnits.length === 0 ? (
                                     <tr>
-                                        <td colSpan="4">No units found.</td>
+                                        <td colSpan="5">No units found.</td>
                                     </tr>
                                 ) : (
                                     filteredUnits.map((unit) => (
@@ -177,6 +176,7 @@ const Units = () => {
                                             <td className="unit-id">{unit.unitNo}</td>
                                             <td>{unit.building}</td>
                                             <td>{unit.area}</td>
+                                            <td><span className={`status-badge ${unit.status}`}>{unit.status}</span></td>
                                             <td>
                                                 <div className="action-buttons">
                                                     <Link to={`/admin/view-unit/${unit.id}`} className="action-btn view" title="View">

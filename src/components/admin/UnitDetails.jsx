@@ -1,20 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { unitAPI } from '../../services/api';
 import './UnitDetails.css';
 
 const UnitDetails = () => {
     const { id } = useParams();
-
     const [unit, setUnit] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // TODO: Ideally, getUnitById should return tenant and owner info if subscribed.
+    // For now, we will display what we have.
 
     useEffect(() => {
         const fetchUnit = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/units/${id}`);
-                const data = await res.json();
-                setUnit(data);
+                const res = await unitAPI.getUnitById(id);
+                setUnit(res.data.data || res.data);
             } catch (err) {
                 console.error("Error fetching unit:", err);
             } finally {

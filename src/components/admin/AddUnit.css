@@ -1,103 +1,103 @@
-/* AddUnit.css */
-
 .add-unit-container {
-    padding: 20px;
-    display: flex;
-    justify-content: center;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .unit-form-card {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.03);
-    width: 100%;
-    max-width: 900px;
-    padding: 30px;
-    border: 1px solid #f0f0f0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 32px;
 }
 
 .form-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 30px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .header-titles h2 {
-    font-size: 1.5rem;
+    font-size: 24px;
     font-weight: 700;
-    margin: 0 0 5px 0;
-    color: var(--text-primary);
+    color: #111827;
+    margin: 0 0 8px 0;
 }
 
 .header-titles p {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+    color: #6b7280;
+    font-size: 14px;
     margin: 0;
 }
 
-.unit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
+.close-btn {
+    color: #9ca3af;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 32px;
 }
 
 .form-section h3 {
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: 600;
+    color: #374151;
     margin: 0 0 20px 0;
-    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .form-row {
-    display: flex;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
     margin-bottom: 20px;
 }
 
-.form-row:last-child {
-    margin-bottom: 0;
-}
-
 .form-row.three-cols {
-    display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
 }
 
 .form-group {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.form-group.half-width {
-    max-width: 50%;
-}
-
 .form-group label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    color: #4b5563;
 }
 
-/* Reusing input styles but specific tweaks */
 .form-group input,
 .form-group select {
     padding: 10px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    color: var(--text-primary);
-    background: #f8fafc;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #111827;
+    background-color: white;
+    transition: all 0.2s;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .form-group input:focus,
 .form-group select:focus {
-    background: white;
-    border-color: var(--primary-blue);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
     outline: none;
 }
 
@@ -106,54 +106,53 @@
     width: 100%;
 }
 
+.select-wrapper select {
+    appearance: none;
+    padding-right: 30px;
+}
+
 .chevron-down {
     position: absolute;
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-secondary);
     pointer-events: none;
+    color: #6b7280;
 }
 
-.form-group select {
-    appearance: none;
-    cursor: pointer;
-}
-
-/* Input with Suffix */
 .input-with-suffix {
     position: relative;
-    width: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .input-with-suffix input {
-    padding-right: 50px;
+    padding-right: 45px;
 }
 
 .suffix {
     position: absolute;
     right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    color: #6b7280;
+    font-size: 13px;
     font-weight: 500;
+    pointer-events: none;
 }
 
-/* Dashed Upload Box */
+/* Upload Box */
 .upload-box.dashed {
-    border: 2px dashed #e2e8f0;
-    background: #f8fafc;
+    border: 2px dashed #d1d5db;
     border-radius: 8px;
-    padding: 40px;
+    padding: 32px;
     text-align: center;
+    background-color: #f9fafb;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .upload-box.dashed:hover {
-    border-color: var(--primary-blue);
-    background: #f0f9ff;
+    border-color: #9ca3af;
+    background-color: #f3f4f6;
 }
 
 .upload-content {
@@ -161,71 +160,52 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    color: var(--text-secondary);
-}
-
-.upload-content svg {
-    margin-bottom: 8px;
-}
-
-.upload-content span {
-    font-size: 0.9rem;
-    font-weight: 500;
+    color: #4b5563;
 }
 
 .upload-hint {
-    font-size: 0.75rem;
-    color: #94a3b8;
+    font-size: 12px;
+    color: #9ca3af;
 }
 
 /* Footer */
 .form-footer {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
     display: flex;
     justify-content: flex-end;
-    gap: 15px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #f0f0f0;
+    gap: 16px;
 }
 
 .cancel-btn {
     padding: 10px 24px;
-    background: #f1f5f9;
-    border: none;
-    border-radius: 8px;
-    color: var(--text-secondary);
-    font-weight: 600;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-weight: 500;
+    color: #374151;
     cursor: pointer;
     text-transform: capitalize;
 }
 
-.cancel-btn:hover {
-    background: #e2e8f0;
-}
-
 .create-btn {
     padding: 10px 24px;
-    background: var(--primary-blue);
+    background: #111827;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-weight: 500;
     color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
     cursor: pointer;
+    text-transform: capitalize;
+    transition: background 0.2s;
 }
 
 .create-btn:hover {
-    background: #0069d9;
+    background: #000000;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-
-    .form-row,
-    .form-row.three-cols {
-        flex-direction: column;
-    }
-
-    .form-group.half-width {
-        max-width: 100%;
-    }
+.create-btn:disabled {
+    background: #6b7280;
+    cursor: not-allowed;
 }

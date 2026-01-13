@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { leaseAPI, getProjects, unitAPI, tenantAPI, ownerAPI } from '../../services/api';
 import './EditLease.css';
 import './dashboard.css';
 
@@ -38,37 +39,62 @@ const EditLease = () => {
 
     const [escalationSteps, setEscalationSteps] = useState([]);
 
+    // Dropdown Data
+    const [projects, setProjects] = useState([]);
+    const [units, setUnits] = useState([]);
+    const [tenants, setTenants] = useState([]);
+    const [owners, setOwners] = useState([]);
+
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                // Load Dropdown Data
+                const [projRes, unitRes, tenantRes, ownerRes] = await Promise.all([
+                    getProjects(),
+                    unitAPI.getUnits(),
+                    tenantAPI.getTenants(),
+                    ownerAPI.getOwners()
+                ]);
+                setProjects(projRes.data || []);
+                setUnits(unitRes.data || []);
+                setTenants(tenantRes.data || []);
+                setOwners(ownerRes.data || []);
+
+            } catch (err) {
+                console.error("Error loading dropdown data:", err);
+            }
+        };
+        loadInitialData();
+    }, []);
+
     useEffect(() => {
         if (!id) return;
 
         const fetchLease = async () => {
             try {
-                const token = localStorage.getItem('token');
-                const res = await fetch(`http://localhost:5000/api/leases/${id}`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {}
-                });
-
-                if (!res.ok) throw new Error('Failed to fetch lease');
-
-                const data = await res.json();
+                const res = await leaseAPI.getLeaseById(id);
+                const data = res.data;
 
                 setFormData({
-                    project: data.project_name || '',
-                    unit: data.unit_number || '',
-                    tenant: data.tenant_name || '',
-                    owner: data.owner_name || '',
+                    // If backend returns IDs, mapped logic might be needed, assuming names for now based on previous code
+                    // But ideally we should use IDs. The previous code mapped names. 
+                    // Let's assume data comes with standard fields.
+                    project: data.project_id || '',
+                    unit: data.unit_id || '',
+                    tenant: data.tenant_id || '',
+                    owner: data.owner_id || '',
                     startDate: data.lease_start ? data.lease_start.substring(0, 10) : '',
                     endDate: data.lease_end ? data.lease_end.substring(0, 10) : '',
                     rentCommencementDate: data.rent_commencement_date ? data.rent_commencement_date.substring(0, 10) : '',
-                    duration: data.tenure_months ? `${data.tenure_months} Months` : '',
+                    duration: data.tenure_months ? `${data.tenure_months}` : '',
                     lockinPeriod: data.lockin_period_months || '',
                     noticePeriod: data.notice_period_months || '',
                     baseRent: data.monthly_rent || '',
-                    mgr: data.monthly_rent || '',
+                    mgr: data.monthly_rent || '', // Assuming MGR logic matches base rent for now
                     camCharges: data.cam_charges || '',
                     paymentDueDay: data.payment_due_day || '1st of Month',
                     billingFrequency: data.billing_frequency || 'Monthly',
-                    latePaymentFee: '',
+                    latePaymentFee: '', // Not in DB view
                     revenueShare: data.revenue_share_percentage || '',
                     applicableOn: data.revenue_share_applicable_on || 'Net Sales',
                     reportingFrequency: 'Monthly',
@@ -132,16 +158,18 @@ const EditLease = () => {
                                 <label>Project</label>
                                 <select name="project" value={formData.project} onChange={handleChange}>
                                     <option value="" disabled>Select Project</option>
-                                    <option>Sunrise Apartments</option>
-                                    <option>Oakwood Residency</option>
+                                    {projects.map(p => (
+                                        <option key={p.id} value={p.id}>{p.project_name}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Unit</label>
                                 <select name="unit" value={formData.unit} onChange={handleChange}>
                                     <option value="" disabled>Select Unit</option>
-                                    <option>Unit 101</option>
-                                    <option>Unit 102</option>
+                                    {units.map(u => (
+                                        <option key={u.id} value={u.id}>{u.unit_number}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -150,15 +178,18 @@ const EditLease = () => {
                                 <label>Tenant</label>
                                 <select name="tenant" value={formData.tenant} onChange={handleChange}>
                                     <option value="" disabled>Select Tenant</option>
-                                    <option>John Smith</option>
-                                    <option>TechCorp Inc</option>
+                                    {tenants.map(t => (
+                                        <option key={t.id} value={t.id}>{t.full_name}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Owner (Landlord)</label>
                                 <select name="owner" value={formData.owner} onChange={handleChange}>
                                     <option value="" disabled>Select Owner</option>
-                                    <option>Cusec Properties</option>
+                                    {owners.map(o => (
+                                        <option key={o.id} value={o.id}>{o.full_name}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -359,6 +390,10 @@ const EditLease = () => {
                                     setSaving(true);
 
                                     const payload = {
+                                        project_id: formData.project,
+                                        unit_id: formData.unit,
+                                        tenant_id: formData.tenant,
+                                        owner_id: formData.owner,
                                         lease_start: formData.startDate,
                                         lease_end: formData.endDate,
                                         rent_commencement_date: formData.rentCommencementDate,
@@ -387,26 +422,13 @@ const EditLease = () => {
                                             }))
                                     };
 
-                                    const token = localStorage.getItem('token');
-                                    const res = await fetch(`http://localhost:5000/api/leases/${id}`, {
-                                        method: 'PUT',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            ...(token ? { Authorization: `Bearer ${token}` } : {})
-                                        },
-                                        body: JSON.stringify(payload)
-                                    });
-
-                                    const data = await res.json().catch(() => null);
-                                    if (!res.ok) {
-                                        throw new Error(data?.message || 'Failed to update lease');
-                                    }
+                                    await leaseAPI.updateLease(id, payload);
 
                                     alert('Lease updated successfully');
                                     navigate('/admin/leases');
                                 } catch (err) {
                                     console.error(err);
-                                    alert(err.message || 'Failed to update lease');
+                                    alert(err.response?.data?.message || err.message || 'Failed to update lease');
                                 } finally {
                                     setSaving(false);
                                 }

@@ -146,10 +146,13 @@
     border-radius: 8px;
     padding: 12px 16px;
     color: #0066cc;
+    /* Keep if you want text blue, usually black/dark grey is better for content */
     font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
+    cursor: default;
+    /* Changed from pointer since individual labels are clickable */
+    display: block;
+    /* Changed from flex */
+    /* align-items: center; removed */
 }
 
 /* Form Actions */

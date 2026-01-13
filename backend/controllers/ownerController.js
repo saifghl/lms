@@ -52,6 +52,7 @@ exports.getOwners = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch owners" });
     }
 };
+
 /* =========================
    GET OWNER BY ID  ✅ (FIXED)
 ========================= */
@@ -92,37 +93,34 @@ exports.createOwner = async (req, res) => {
         phone,
         alternative_contact,
         representative_name,
-        representative_phone,  // Added
-        representative_email,  // Added
+        representative_phone,
+        representative_email,
         address,
         unit_ids
     } = req.body;
-
-    if (!unit_ids || unit_ids.length === 0) {
-        return res.status(400).json({ message: "At least one unit is required" });
-    }
 
     const conn = await pool.getConnection();
 
     try {
         await conn.beginTransaction();
 
-        // 1️⃣ Fetch unit areas
-        const [units] = await conn.query(
-            "SELECT id, super_area FROM units WHERE id IN (?)",
-            [unit_ids]
-        );
+        let totalOwnedArea = 0;
 
-        if (units.length === 0) {
-            throw new Error("Invalid unit IDs");
+        // 1️⃣ Calculate Area if units are provided
+        if (unit_ids && unit_ids.length > 0) {
+            const [units] = await conn.query(
+                "SELECT id, super_area FROM units WHERE id IN (?)",
+                [unit_ids]
+            );
+            if (units.length > 0) {
+                totalOwnedArea = units.reduce(
+                    (sum, u) => sum + Number(u.super_area),
+                    0
+                );
+            }
         }
 
-        const totalOwnedArea = units.reduce(
-            (sum, u) => sum + Number(u.super_area),
-            0
-        );
-
-        // 2️⃣ Insert owner (UPDATED: Added representative_phone and representative_email)
+        // 2️⃣ Insert owner
         const [ownerResult] = await conn.query(
             `INSERT INTO owners
             (name, email, phone, alternative_contact,
@@ -135,8 +133,8 @@ exports.createOwner = async (req, res) => {
                 phone,
                 alternative_contact || null,
                 representative_name || null,
-                representative_phone || null,  // Added
-                representative_email || null,  // Added
+                representative_phone || null,
+                representative_email || null,
                 address || null,
                 totalOwnedArea,
                 null,
@@ -146,18 +144,20 @@ exports.createOwner = async (req, res) => {
 
         const ownerId = ownerResult.insertId;
 
-        // 3️⃣ Owner-unit mapping
-        const ownerUnits = unit_ids.map(unitId => [ownerId, unitId]);
-        await conn.query(
-            "INSERT INTO owner_units (owner_id, unit_id) VALUES ?",
-            [ownerUnits]
-        );
+        // 3️⃣ Owner-unit mapping (only if units provided)
+        if (unit_ids && unit_ids.length > 0) {
+            const ownerUnits = unit_ids.map(unitId => [ownerId, unitId]);
+            await conn.query(
+                "INSERT INTO owner_units (owner_id, unit_id) VALUES ?",
+                [ownerUnits]
+            );
 
-        // 4️⃣ Mark units occupied
-        await conn.query(
-            "UPDATE units SET status='occupied' WHERE id IN (?)",
-            [unit_ids]
-        );
+            // 4️⃣ Mark units occupied
+            await conn.query(
+                "UPDATE units SET status='occupied' WHERE id IN (?)",
+                [unit_ids]
+            );
+        }
 
         await conn.commit();
         res.json({ message: "Owner created successfully" });
@@ -175,7 +175,7 @@ exports.createOwner = async (req, res) => {
    UPDATE OWNER (UPDATED)
 ========================= */
 exports.updateOwner = async (req, res) => {
-    const { name, email, phone, representative_phone, representative_email, address } = req.body;  // Added missing fields
+    const { name, email, phone, representative_phone, representative_email, address } = req.body;
 
     try {
         await pool.query(

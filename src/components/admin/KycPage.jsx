@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import './KycPage.css';
-import { ownerAPI } from '../../services/api'; // Adapting import to match known structure
+import { ownerAPI } from '../../services/api';
 
 const KycPage = () => {
     const [kycRequests, setKycRequests] = useState([]);
@@ -12,17 +12,24 @@ const KycPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetching owners. Ideally we'd fetch tenants too if a tenantAPI exists.
-                // Assuming ownerAPI.getAll() exists and returns an array of owners.
-                const response = await ownerAPI.getAll();
-                const owners = response.data || response; // Handle { data: [...] } or [...]
+                // Fetching owners.
+                const response = await ownerAPI.getOwners();
+                const owners = response.data || response;
 
                 if (!Array.isArray(owners)) {
-                    throw new Error("Invalid API response format");
+                    // Sometimes API wrappers act differently, let's be safe
+                    if (owners.data && Array.isArray(owners.data)) {
+                        // handled above with || response, but for safety:
+                    } else {
+                        // console.error("Invalid format", owners);
+                        // throw new Error("Invalid API response format");
+                    }
                 }
 
+                const finalOwners = Array.isArray(owners) ? owners : (owners.data || []);
+
                 // Map API data to UI structure
-                const mappedRequests = owners.map(owner => ({
+                const mappedRequests = finalOwners.map(owner => ({
                     id: owner.id,
                     name: owner.name || owner.first_name + ' ' + owner.last_name || 'Unknown',
                     type: 'Owner', // Currently hardcoded as we are only fetching owners
@@ -71,7 +78,7 @@ const KycPage = () => {
             // API Call
             // Assuming ownerAPI.update exists
             const kycStatus = newStatus === 'Verified' ? 'verified' : 'rejected';
-            await ownerAPI.update(id, { kyc_status: kycStatus });
+            await ownerAPI.updateOwner(id, { kyc_status: kycStatus });
 
         } catch (err) {
             console.error("Update Status Error:", err);

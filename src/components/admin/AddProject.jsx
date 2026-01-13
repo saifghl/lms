@@ -55,7 +55,8 @@ const AddProject = () => {
       navigate("/admin/projects");
     } catch (error) {
       console.error("Add project error:", error);
-      alert("Failed to add project");
+      const errorMessage = error.response?.data?.error || error.message || "Failed to add project";
+      alert(`Failed to add project: ${errorMessage}`);
     }
   };
 

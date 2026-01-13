@@ -4,7 +4,7 @@ const pool = require("../config/db");
 exports.getRepDashboardStats = async (req, res) => {
   try {
     const connection = await pool.getConnection();
-    
+
     try {
       // Get total projects
       let totalProjects = 0;
@@ -196,7 +196,7 @@ exports.getRepReports = async (req, res) => {
   try {
     const connection = await pool.getConnection();
     const { project_id, owner_id, tenant_id, page = 1, limit = 10 } = req.query;
-    
+
     try {
       let query = `
         SELECT 
@@ -210,24 +210,24 @@ exports.getRepReports = async (req, res) => {
         LEFT JOIN leases l ON u.id = l.unit_id
         WHERE 1=1
       `;
-      
+
       const params = [];
-      
+
       if (project_id) {
         query += " AND p.id = ?";
         params.push(project_id);
       }
-      
+
       if (owner_id) {
         query += " AND u.owner_id = ?";
         params.push(owner_id);
       }
-      
+
       query += " GROUP BY p.id, p.project_name, p.project_image";
       query += " ORDER BY last_report_date DESC";
-      
+
       const [reports] = await connection.query(query, params);
-      
+
       res.json({
         data: reports.map(report => ({
           id: `P-${report.project_id}`,
@@ -267,7 +267,7 @@ exports.getRepNotifications = async (req, res) => {
   try {
     const connection = await pool.getConnection();
     const { type, page = 1, limit = 10 } = req.query;
-    
+
     try {
       let query = `
         SELECT 
@@ -282,18 +282,18 @@ exports.getRepNotifications = async (req, res) => {
         FROM notifications n
         WHERE 1=1
       `;
-      
+
       const params = [];
-      
+
       if (type && type !== 'All') {
         query += " AND n.type = ?";
         params.push(type.toLowerCase().replace(' ', '_'));
       }
-      
+
       query += " ORDER BY n.created_at DESC";
-      
+
       const [notifications] = await connection.query(query, params);
-      
+
       res.json({
         data: notifications.map(notif => ({
           id: notif.id,
@@ -333,31 +333,31 @@ exports.getDocuments = async (req, res) => {
   try {
     const connection = await pool.getConnection();
     const { category, page = 1, limit = 10 } = req.query;
-    
+
     try {
       let query = `
         SELECT 
           d.*,
           p.project_name,
           p.project_image,
-          u.name as uploaded_by_name
+          CONCAT(u.first_name, ' ', u.last_name) as uploaded_by_name
         FROM documents d
         LEFT JOIN projects p ON d.project_id = p.id
         LEFT JOIN users u ON d.uploaded_by = u.id
         WHERE 1=1
       `;
-      
+
       const params = [];
-      
+
       if (category) {
         query += " AND d.category = ?";
         params.push(category);
       }
-      
+
       query += " ORDER BY d.created_at DESC";
-      
+
       const [documents] = await connection.query(query, params);
-      
+
       res.json({
         data: documents.map(doc => ({
           id: `P-${doc.project_id}`,
@@ -383,8 +383,8 @@ exports.getDocuments = async (req, res) => {
     res.json({
       data: [],
       pagination: {
-        page: parseInt(page) || 1,
-        limit: parseInt(limit) || 10,
+        page: 1,
+        limit: 10,
         total: 0,
         totalPages: 0
       }
@@ -402,15 +402,15 @@ exports.uploadDocument = async (req, res) => {
       file_path,
       uploaded_by
     } = req.body;
-    
+
     try {
       const [result] = await connection.query(`
         INSERT INTO documents 
         (project_id, category, file_path, uploaded_by)
         VALUES (?, ?, ?, ?)
       `, [project_id, category, file_path, uploaded_by]);
-      
-      res.json({ 
+
+      res.json({
         message: "Document uploaded successfully",
         id: result.insertId
       });

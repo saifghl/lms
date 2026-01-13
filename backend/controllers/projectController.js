@@ -34,11 +34,15 @@ const addProject = async (req, res) => {
 
     const image = req.file ? req.file.filename : null;
 
+    // Sanitize numeric fields
+    const floors = total_floors ? parseInt(total_floors) : 0;
+    const area = total_project_area ? parseFloat(total_project_area) : 0;
+
     const [result] = await pool.execute(
       `INSERT INTO projects 
       (project_name, location, address, project_type, total_floors, total_project_area, project_image, description)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [project_name, location, address, project_type, total_floors, total_project_area, image, description]
+      [project_name, location, address, project_type, floors, area, image, description]
     );
 
     res.status(201).json({ message: "Project Added Successfully", id: result.insertId });
@@ -90,12 +94,16 @@ const updateProject = async (req, res) => {
 
     const image = req.file ? req.file.filename : null;
 
+    // Sanitize numeric fields
+    const floors = total_floors ? parseInt(total_floors) : 0;
+    const area = total_project_area ? parseFloat(total_project_area) : 0;
+
     let sql = `
       UPDATE projects SET
       project_name=?, location=?, address=?, project_type=?,
       total_floors=?, total_project_area=?, description=?, status=?
     `;
-    const values = [project_name, location, address, project_type, total_floors, total_project_area, description, status || 'active'];
+    const values = [project_name, location, address, project_type, floors, area, description, status || 'active'];
 
     if (image) {
       sql += ", project_image=?";

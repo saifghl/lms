@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './AddLease.css';
 import './dashboard.css'; // Ensure dashboard styles are available
+import { leaseAPI, getProjects, unitAPI, tenantAPI, ownerAPI } from '../../services/api';
 
 const AddLease = () => {
     const navigate = useNavigate();
@@ -49,20 +50,18 @@ const AddLease = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = localStorage.getItem('token');
-                const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
                 const [projectsRes, tenantsRes, ownersRes] = await Promise.all([
-                    fetch('http://localhost:5000/api/projects', { headers }),
-                    fetch('http://localhost:5000/api/tenants', { headers }),
-                    fetch('http://localhost:5000/api/owners', { headers })
+                    getProjects(),
+                    tenantAPI.getTenants(),
+                    ownerAPI.getOwners()
                 ]);
 
-                if (projectsRes.ok) setProjects(await projectsRes.json());
-                if (tenantsRes.ok) setTenants(await tenantsRes.json());
-                if (ownersRes.ok) setOwners(await ownersRes.json());
+                setProjects(projectsRes.data || []);
+                setTenants(tenantsRes.data || []);
+                setOwners(ownersRes.data || []);
             } catch (err) {
                 console.error('Failed to fetch data:', err);
+                alert('Error loading form data');
             }
         };
         fetchData();
@@ -73,14 +72,8 @@ const AddLease = () => {
         if (formData.project_id) {
             const fetchUnits = async () => {
                 try {
-                    const token = localStorage.getItem('token');
-                    const res = await fetch(`http://localhost:5000/api/projects/${formData.project_id}/units`, {
-                        headers: token ? { Authorization: `Bearer ${token}` } : {}
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        setUnits(data);
-                    }
+                    const res = await unitAPI.getUnitsByProject(formData.project_id);
+                    setUnits(res.data || []);
                 } catch (err) {
                     console.error('Failed to fetch units:', err);
                 }
@@ -96,14 +89,8 @@ const AddLease = () => {
         if (formData.tenant_id && isSubLease) {
             const fetchSubTenants = async () => {
                 try {
-                    const token = localStorage.getItem('token');
-                    const res = await fetch(`http://localhost:5000/api/tenants/${formData.tenant_id}`, {
-                        headers: token ? { Authorization: `Bearer ${token}` } : {}
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        setSubTenants(data.subtenants || []);
-                    }
+                    const res = await tenantAPI.getTenantById(formData.tenant_id);
+                    setSubTenants(res.data?.subtenants || []);
                 } catch (err) {
                     console.error('Failed to fetch sub-tenants:', err);
                 }
@@ -134,7 +121,7 @@ const AddLease = () => {
     const handleSubmit = async () => {
         try {
             // Validate required fields
-            if (!formData.project_id || !formData.unit_id || !formData.tenant_id || 
+            if (!formData.project_id || !formData.unit_id || !formData.tenant_id ||
                 !formData.lease_start || !formData.lease_end || !formData.rent_commencement_date) {
                 alert('Please fill in all required fields');
                 return;
@@ -193,27 +180,14 @@ const AddLease = () => {
                 escalations: escalations
             };
 
-            const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:5000/api/leases', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {})
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await res.json().catch(() => null);
-
-            if (!res.ok) {
-                throw new Error(data?.message || 'Failed to create lease');
-            }
+            await leaseAPI.createLease(payload);
 
             alert('Lease created successfully');
             navigate('/admin/leases');
         } catch (err) {
             console.error(err);
-            alert(err.message || 'Failed to create lease');
+            const msg = err.response?.data?.message || err.message;
+            alert(msg || 'Failed to create lease');
         }
     };
 
@@ -308,8 +282,8 @@ const AddLease = () => {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Project *</label>
-                                <select 
-                                    value={formData.project_id} 
+                                <select
+                                    value={formData.project_id}
                                     onChange={(e) => handleInputChange('project_id', e.target.value)}
                                 >
                                     <option value="">Select Project</option>
@@ -322,8 +296,8 @@ const AddLease = () => {
                             </div>
                             <div className="form-group">
                                 <label>Unit *</label>
-                                <select 
-                                    value={formData.unit_id} 
+                                <select
+                                    value={formData.unit_id}
                                     onChange={(e) => handleInputChange('unit_id', e.target.value)}
                                     disabled={!formData.project_id}
                                 >
@@ -340,8 +314,8 @@ const AddLease = () => {
                             <div className="form-group">
                                 <label>{isSubLease ? 'Sub Tenant *' : 'Tenant *'}</label>
                                 {isSubLease ? (
-                                    <select 
-                                        value={formData.sub_tenant_id} 
+                                    <select
+                                        value={formData.sub_tenant_id}
                                         onChange={(e) => handleInputChange('sub_tenant_id', e.target.value)}
                                         disabled={!formData.tenant_id}
                                     >
@@ -353,8 +327,8 @@ const AddLease = () => {
                                         ))}
                                     </select>
                                 ) : (
-                                    <select 
-                                        value={formData.tenant_id} 
+                                    <select
+                                        value={formData.tenant_id}
                                         onChange={(e) => handleInputChange('tenant_id', e.target.value)}
                                     >
                                         <option value="">Select Tenant</option>
@@ -369,8 +343,8 @@ const AddLease = () => {
                             <div className="form-group">
                                 <label>{isSubLease ? 'Tenant (Lessor) *' : 'Owner (Landlord) *'}</label>
                                 {isSubLease ? (
-                                    <select 
-                                        value={formData.tenant_id} 
+                                    <select
+                                        value={formData.tenant_id}
                                         onChange={(e) => handleInputChange('tenant_id', e.target.value)}
                                     >
                                         <option value="">Select Tenant</option>
@@ -381,8 +355,8 @@ const AddLease = () => {
                                         ))}
                                     </select>
                                 ) : (
-                                    <select 
-                                        value={formData.owner_id} 
+                                    <select
+                                        value={formData.owner_id}
                                         onChange={(e) => handleInputChange('owner_id', e.target.value)}
                                     >
                                         <option value="">Select Owner</option>
@@ -399,9 +373,9 @@ const AddLease = () => {
                             <div className="form-row">
                                 <div className="form-group">
                                     <label>Sub Lease Area (sq ft) *</label>
-                                    <input 
-                                        type="number" 
-                                        placeholder="e.g. 500" 
+                                    <input
+                                        type="number"
+                                        placeholder="e.g. 500"
                                         value={formData.sub_lease_area_sqft}
                                         onChange={(e) => handleInputChange('sub_lease_area_sqft', e.target.value)}
                                     />
@@ -416,24 +390,24 @@ const AddLease = () => {
                         <div className="form-row date-row">
                             <div className="form-group">
                                 <label>Lease Start Date *</label>
-                                <input 
-                                    type="date" 
+                                <input
+                                    type="date"
                                     value={formData.lease_start}
                                     onChange={(e) => handleInputChange('lease_start', e.target.value)}
                                 />
                             </div>
                             <div className="form-group">
                                 <label>Lease End Date *</label>
-                                <input 
-                                    type="date" 
+                                <input
+                                    type="date"
                                     value={formData.lease_end}
                                     onChange={(e) => handleInputChange('lease_end', e.target.value)}
                                 />
                             </div>
                             <div className="form-group">
                                 <label>Rent Commencement Date *</label>
-                                <input 
-                                    type="date" 
+                                <input
+                                    type="date"
                                     value={formData.rent_commencement_date}
                                     onChange={(e) => handleInputChange('rent_commencement_date', e.target.value)}
                                 />
@@ -443,26 +417,26 @@ const AddLease = () => {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Fit-out Period End</label>
-                                <input 
-                                    type="date" 
+                                <input
+                                    type="date"
                                     value={formData.fitout_period_end}
                                     onChange={(e) => handleInputChange('fitout_period_end', e.target.value)}
                                 />
                             </div>
                             <div className="form-group">
                                 <label>Lockin Period (Months)</label>
-                                <input 
-                                    type="number" 
-                                    placeholder="e.g. 12" 
+                                <input
+                                    type="number"
+                                    placeholder="e.g. 12"
                                     value={formData.lockin_period_months}
                                     onChange={(e) => handleInputChange('lockin_period_months', e.target.value)}
                                 />
                             </div>
                             <div className="form-group">
                                 <label>Notice Period (Months)</label>
-                                <input 
-                                    type="number" 
-                                    placeholder="e.g. 3" 
+                                <input
+                                    type="number"
+                                    placeholder="e.g. 3"
                                     value={formData.notice_period_months}
                                     onChange={(e) => handleInputChange('notice_period_months', e.target.value)}
                                 />
@@ -481,9 +455,9 @@ const AddLease = () => {
                                     <label>Fixed Rent Amount (Monthly)</label>
                                     <div className="currency-input">
                                         <span className="currency-symbol">₹</span>
-                                        <input 
-                                            type="number" 
-                                            placeholder="0.00" 
+                                        <input
+                                            type="number"
+                                            placeholder="0.00"
                                             value={formData.monthly_rent}
                                             onChange={(e) => handleInputChange('monthly_rent', e.target.value)}
                                         />
@@ -495,9 +469,9 @@ const AddLease = () => {
                                     <label>Minimum Guarantee (MGR)</label>
                                     <div className="currency-input">
                                         <span className="currency-symbol">₹</span>
-                                        <input 
-                                            type="number" 
-                                            placeholder="0.00" 
+                                        <input
+                                            type="number"
+                                            placeholder="0.00"
                                             value={formData.monthly_rent}
                                             onChange={(e) => handleInputChange('monthly_rent', e.target.value)}
                                         />
@@ -516,16 +490,16 @@ const AddLease = () => {
                             <div className="form-row">
                                 <div className="form-group">
                                     <label>Revenue Share Percentage (%)</label>
-                                    <input 
-                                        type="number" 
-                                        placeholder="e.g. 10" 
+                                    <input
+                                        type="number"
+                                        placeholder="e.g. 10"
                                         value={formData.revenue_share_percentage}
                                         onChange={(e) => handleInputChange('revenue_share_percentage', e.target.value)}
                                     />
                                 </div>
                                 <div className="form-group">
                                     <label>Applicable On</label>
-                                    <select 
+                                    <select
                                         value={formData.revenue_share_applicable_on}
                                         onChange={(e) => handleInputChange('revenue_share_applicable_on', e.target.value)}
                                     >
@@ -539,7 +513,7 @@ const AddLease = () => {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Payment Due Day</label>
-                                <select 
+                                <select
                                     value={formData.payment_due_day}
                                     onChange={(e) => handleInputChange('payment_due_day', e.target.value)}
                                 >
@@ -551,7 +525,7 @@ const AddLease = () => {
                             </div>
                             <div className="form-group">
                                 <label>Billing Frequency</label>
-                                <select 
+                                <select
                                     value={formData.billing_frequency}
                                     onChange={(e) => handleInputChange('billing_frequency', e.target.value)}
                                 >
@@ -564,9 +538,9 @@ const AddLease = () => {
                                 <label>CAM Charges (Monthly)</label>
                                 <div className="currency-input">
                                     <span className="currency-symbol">₹</span>
-                                    <input 
-                                        type="number" 
-                                        placeholder="0.00" 
+                                    <input
+                                        type="number"
+                                        placeholder="0.00"
                                         value={formData.cam_charges}
                                         onChange={(e) => handleInputChange('cam_charges', e.target.value)}
                                     />
@@ -581,9 +555,9 @@ const AddLease = () => {
                                 <label>Security Deposit</label>
                                 <div className="currency-input">
                                     <span className="currency-symbol">₹</span>
-                                    <input 
-                                        type="number" 
-                                        placeholder="0.00" 
+                                    <input
+                                        type="number"
+                                        placeholder="0.00"
                                         value={formData.security_deposit}
                                         onChange={(e) => handleInputChange('security_deposit', e.target.value)}
                                     />
@@ -594,9 +568,9 @@ const AddLease = () => {
                                 <label>Utility Deposit</label>
                                 <div className="currency-input">
                                     <span className="currency-symbol">₹</span>
-                                    <input 
-                                        type="number" 
-                                        placeholder="0.00" 
+                                    <input
+                                        type="number"
+                                        placeholder="0.00"
                                         value={formData.utility_deposit}
                                         onChange={(e) => handleInputChange('utility_deposit', e.target.value)}
                                     />
@@ -605,7 +579,7 @@ const AddLease = () => {
                             </div>
                             <div className="form-group">
                                 <label>Deposit Type</label>
-                                <select 
+                                <select
                                     value={formData.deposit_type}
                                     onChange={(e) => handleInputChange('deposit_type', e.target.value)}
                                 >
