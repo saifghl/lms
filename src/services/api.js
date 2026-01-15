@@ -40,6 +40,8 @@ export const deleteProject = (id) => API.delete(`/projects/${id}`);
 // OWNERS APIs
 export const ownerAPI = {
   getOwners: () => API.get("/owners"),
+  getKycStats: () => API.get("/owners/stats"), // New stats API
+  exportOwners: () => API.get("/owners/export", { responseType: 'blob' }),
   getOwnerById: (id) => API.get(`/owners/${id}`),
   createOwner: (data) => API.post("/owners", data),
   updateOwner: (id, data) => API.put(`/owners/${id}`, data),
@@ -55,7 +57,7 @@ export const unitAPI = {
   }),
   updateUnit: (id, data) => API.put(`/units/${id}`, data),
   deleteUnit: (id) => API.delete(`/units/${id}`),
-  getUnitsByProject: (projectId) => API.get(`/projects/${projectId}/units`), // Added to support AddLease
+  getUnitsByProject: (projectId) => API.get(`/units?projectId=${projectId}`),
 };
 
 // ---------------- TENANTS ----------------
@@ -99,17 +101,28 @@ export const userAPI = {
 export const managementAPI = {
   getDashboardStats: () => API.get("/management/dashboard"),
   getReports: (params) => API.get("/management/reports", { params }),
+  exportReports: (params) => API.get("/management/reports/export", { params, responseType: 'blob' }),
   getDocuments: (params) => API.get("/management/documents", { params }),
   getNotifications: (params) => API.get("/management/notifications", { params }),
-  uploadDocument: (data) => API.post("/management/documents", data),
+  uploadDocument: (data) => API.post("/management/documents", data, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
 };
 
 // Dashboard APIs
 export const getDashboardStats = () => API.get("/dashboard/stats");
 
 // Activity Log APIs
-export const getActivityLogs = (page = 1, limit = 50) =>
-  API.get(`/activity-logs?page=${page}&limit=${limit}`);
+// Activity Log APIs
+export const getActivityLogs = (page = 1, limit = 50, filters = {}) => {
+  const query = new URLSearchParams({ page, limit, ...filters }).toString();
+  return API.get(`/activity/activity-logs?${query}`);
+};
+
+export const exportActivityLogs = (filters = {}) => {
+  const query = new URLSearchParams(filters).toString();
+  return API.get(`/activity/export?${query}`, { responseType: 'blob' });
+};
 
 // Lease Management
 export const leaseAPI = {

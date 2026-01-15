@@ -5,7 +5,7 @@ import { getProjectById, updateProject } from "../../services/api";
 import "./EditProject.css";
 
 const EditProject = () => {
-  const { id } = useParams(); // /admin/edit-project/:id
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -16,10 +16,12 @@ const EditProject = () => {
     total_floors: "",
     total_project_area: "",
     description: "",
-    status: "Active"
+    status: "active"
   });
 
-  /* ================= FETCH PROJECT BY ID ================= */
+  const [image, setImage] = useState(null);
+
+  // Fetch Project
   useEffect(() => {
     const fetchProject = async () => {
       try {
@@ -32,22 +34,29 @@ const EditProject = () => {
     fetchProject();
   }, [id]);
 
-  /* ================= HANDLE CHANGE ================= */
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  /* ================= UPDATE ================= */
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
+  };
+
   const handleUpdate = async () => {
     try {
-      await updateProject(id, formData);
+      const data = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        data.append(key, value);
+      });
+      if (image) {
+        data.append("image", image);
+      }
+
+      await updateProject(id, data);
       alert("Project Updated Successfully");
       navigate("/admin/projects");
     } catch (error) {
-      console.error(error);
+      console.error("Update error:", error);
       alert("Error updating project");
     }
   };
@@ -57,8 +66,6 @@ const EditProject = () => {
       <Sidebar />
       <main className="main-content">
         <div className="edit-project-container">
-
-          {/* Header */}
           <header className="edit-header">
             <div className="header-left">
               <div className="breadcrumb">
@@ -68,74 +75,82 @@ const EditProject = () => {
               </div>
               <div className="title-row">
                 <h1>{formData.project_name}</h1>
-                <span className="status-badge active">{formData.status}</span>
+                <span className={`status-badge ${formData.status === 'active' ? 'active' : ''}`}>{formData.status}</span>
               </div>
-              <p className="subtitle">
-                Update critical project details, financials, and lease terms.
-              </p>
+              <p className="subtitle">Update critical project details.</p>
             </div>
           </header>
 
           <div className="edit-grid">
-
-            {/* MAIN COLUMN */}
+            {/* Main Column */}
             <div className="edit-col-main">
-
               <section className="edit-card">
                 <h3>General Information</h3>
-
                 <div className="form-group vertical">
                   <label>Project Name</label>
-                  <input
-                    type="text"
-                    name="project_name"
-                    value={formData.project_name}
-                    onChange={handleChange}
-                  />
+                  <input type="text" name="project_name" value={formData.project_name} onChange={handleChange} />
                 </div>
-
+                <div className="form-row">
+                  <div className="form-group vertical">
+                    <label>Location</label>
+                    <input type="text" name="location" value={formData.location} onChange={handleChange} />
+                  </div>
+                  <div className="form-group vertical">
+                    <label>Project Type</label>
+                    <select name="project_type" value={formData.project_type} onChange={handleChange}>
+                      <option value="Residential">Residential</option>
+                      <option value="Commercial">Commercial</option>
+                      <option value="Mixed">Mixed Use</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group vertical">
+                  <label>Address</label>
+                  <textarea name="address" rows="3" value={formData.address} onChange={handleChange} />
+                </div>
                 <div className="form-group vertical">
                   <label>Description</label>
-                  <textarea
-                    rows="4"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                  />
+                  <textarea name="description" rows="4" value={formData.description} onChange={handleChange} />
+                </div>
+              </section>
+            </div>
+
+            {/* Side Column */}
+            <div className="edit-col-side">
+              <section className="edit-card">
+                <h3>Stats</h3>
+                <div className="form-group vertical">
+                  <label>Total Floors</label>
+                  <input type="number" name="total_floors" value={formData.total_floors} onChange={handleChange} />
+                </div>
+                <div className="form-group vertical">
+                  <label>Total Area (sqft)</label>
+                  <input type="number" name="total_project_area" value={formData.total_project_area} onChange={handleChange} />
                 </div>
               </section>
 
-            </div>
-
-            {/* SIDE COLUMN */}
-            <div className="edit-col-side">
               <section className="edit-card">
                 <h3>Settings</h3>
                 <div className="toggle-row">
                   <span>Status</span>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                  <select name="status" value={formData.status} onChange={handleChange}>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="maintenance">Maintenance</option>
                   </select>
+                </div>
+                <div className="form-group vertical" style={{ marginTop: '15px' }}>
+                  <label>Update Image</label>
+                  <input type="file" onChange={handleImageChange} />
                 </div>
               </section>
             </div>
-
           </div>
 
           <div className="edit-footer">
-            <Link to="/admin/projects" className="cancel-btn">
-              Cancel
-            </Link>
-            <button className="update-btn" onClick={handleUpdate}>
-              Update Project
-            </button>
+            <Link to="/admin/projects" className="cancel-btn">Cancel</Link>
+            <button className="update-btn" onClick={handleUpdate}>Update Project</button>
           </div>
-
         </div>
       </main>
     </div>

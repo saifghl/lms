@@ -68,12 +68,24 @@ router.put("/", async (req, res) => {
     const { first_name, last_name, phone, job_title, location } = req.body;
 
     try {
-        await pool.query(
-            `UPDATE users SET
-             first_name = ?, last_name = ?, phone = ?, job_title = ?, location = ?
-             WHERE id = ?`,
-            [first_name, last_name, phone, job_title, location, id]
-        );
+        // Build dynamic query to only update provided fields
+        let fields = [];
+        let values = [];
+
+        if (first_name !== undefined) { fields.push("first_name = ?"); values.push(first_name); }
+        if (last_name !== undefined) { fields.push("last_name = ?"); values.push(last_name); }
+        if (phone !== undefined) { fields.push("phone = ?"); values.push(phone); }
+        if (job_title !== undefined) { fields.push("job_title = ?"); values.push(job_title); }
+        if (location !== undefined) { fields.push("location = ?"); values.push(location); }
+
+        if (fields.length === 0) {
+            return res.status(400).json({ message: "No fields to update" });
+        }
+
+        values.push(id);
+        const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
+
+        await pool.query(sql, values);
 
         res.json({ message: "Profile updated successfully" });
     } catch (err) {
@@ -111,12 +123,23 @@ router.put("/:id", async (req, res) => {
     const { first_name, last_name, phone, job_title, location } = req.body;
 
     try {
-        await pool.query(
-            `UPDATE users SET
-             first_name = ?, last_name = ?, phone = ?, job_title = ?, location = ?
-             WHERE id = ?`,
-            [first_name, last_name, phone, job_title, location, req.params.id]
-        );
+        let fields = [];
+        let values = [];
+
+        if (first_name !== undefined) { fields.push("first_name = ?"); values.push(first_name); }
+        if (last_name !== undefined) { fields.push("last_name = ?"); values.push(last_name); }
+        if (phone !== undefined) { fields.push("phone = ?"); values.push(phone); }
+        if (job_title !== undefined) { fields.push("job_title = ?"); values.push(job_title); }
+        if (location !== undefined) { fields.push("location = ?"); values.push(location); }
+
+        if (fields.length === 0) {
+            return res.status(400).json({ message: "No fields to update" });
+        }
+
+        values.push(req.params.id);
+        const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
+
+        await pool.query(sql, values);
 
         res.json({ message: "Profile updated successfully" });
     } catch (err) {

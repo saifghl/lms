@@ -1,70 +1,35 @@
-/* Notifications.css */
-@import '../admin/dashboard.css';
-
+/* Notifications.css - Premium Design */
 .notifications-container {
     display: flex;
     min-height: 100vh;
-    background-color: #f8f9fa;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 24px;
-}
-
-.header-left h1 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin: 5px 0;
-    color: var(--text-primary);
-}
-
-.header-left p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    margin: 0;
-}
-
-.breadcrumb {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-.breadcrumb .active {
-    color: var(--text-primary);
+    background-color: var(--bg-light);
 }
 
 .content-card {
-    background: white;
-    border-radius: 12px;
-    border: 1px solid #f0f0f0;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    padding: 0;
+    /* Tabs sit flush */
     overflow: hidden;
 }
 
 .notifications-tabs {
     display: flex;
-    gap: 40px;
-    border-bottom: 1px solid #f0f0f0;
-    padding: 0 24px;
-    margin-bottom: 0;
+    gap: 32px;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 32px;
     background: #fff;
 }
 
 .tab {
-    padding: 16px 0;
+    padding: 20px 0;
     font-size: 0.95rem;
     color: var(--text-secondary);
     cursor: pointer;
     font-weight: 500;
     position: relative;
     border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .tab:hover {
@@ -77,18 +42,26 @@
     border-bottom-color: var(--primary-blue);
 }
 
+.unread-badge-count {
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 99px;
+    font-weight: 700;
+}
+
 .notifications-list {
     background: white;
 }
 
 .notification-item {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 24px 30px;
-    border-bottom: 1px solid #f0f0f0;
-    transition: background-color 0.2s;
-    gap: 20px;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.1s;
+    gap: 16px;
+    position: relative;
 }
 
 .notification-item:hover {
@@ -96,104 +69,98 @@
 }
 
 .notification-item.unread {
-    background-color: #ebf8ff;
+    background-color: #f0f7ff;
 }
 
-.notification-item.unread:hover {
-    background-color: #e2e8f0;
-    /* Slightly darker than unread bg */
+.notification-status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #cbd5e1;
+    margin-top: 6px;
+    flex-shrink: 0;
 }
 
-.notification-item:last-child {
-    border-bottom: none;
+.notification-item.unread .notification-status-indicator {
+    background-color: var(--primary-blue);
 }
 
 .notification-content {
     flex: 1;
 }
 
-.notification-text {
-    font-size: 1rem;
-    color: #2d3748;
-    font-weight: 500;
+.notification-header {
+    display: flex;
+    justify-content: space-between;
     margin-bottom: 4px;
-    line-height: 1.5;
 }
 
-.notification-meta {
-    font-size: 0.85rem;
-    color: #718096;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.notification-text {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
 .notification-time {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.notification-body {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
 }
 
 .notification-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
 }
 
-.btn-mark-read {
+.action-link {
     background: none;
-    border: 1px solid #e2e8f0;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    color: #4a5568;
+    border: none;
+    color: var(--primary-blue);
+    font-size: 0.85rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    padding: 0;
 }
 
-.btn-mark-read:hover {
-    background-color: #edf2f7;
-    color: #2d3748;
+.action-link:hover {
+    text-decoration: underline;
 }
 
-.unread-badge {
-    background-color: #2b6cb0;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-top: 6px;
-    flex-shrink: 0;
-}
-
-.btn-mark-all {
+.white-btn {
+    background: white;
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
-    border: 1px solid #e2e8f0;
-    background: white;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #4a5568;
-    cursor: pointer;
     transition: all 0.2s;
-    height: 38px;
 }
 
-.btn-mark-all:hover {
-    background-color: #f7fafc;
-    border-color: #cbd5e1;
-    color: #2d3748;
+.white-btn:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 .empty-state {
-    padding: 60px 20px;
+    padding: 80px 20px;
     text-align: center;
-    color: #718096;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.empty-state svg {
-    margin-bottom: 16px;
-    color: #cbd5e0;
+.empty-state h3 {
+    margin: 0 0 8px 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
 }

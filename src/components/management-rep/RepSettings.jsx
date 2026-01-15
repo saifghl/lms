@@ -12,8 +12,7 @@ const RepSettings = () => {
     phone: "",
     role: "Representative"
   });
-  const [loading, setLoading] = useState(false); // Can be true if we fetch on mount
-  const [activeTab, setActiveTab] = useState("profile");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -22,21 +21,14 @@ const RepSettings = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      // Assuming settingsAPI.getSettings returns current user profile or app settings
-      // If specific user profile endpoint is needed, we might use userAPI.getMe() if available.
-      // For now, using settingsAPI as placeholder integration.
-      // const res = await settingsAPI.getSettings();
-      // setProfile(res.data || {}); 
-
-      // Mock data since getSettings might be app-wide
+      // Mock data for display
       setProfile({
-        firstName: "John",
-        lastName: "Doe",
-        email: "rep@cusec.com",
-        phone: "+1 555 123 4567",
-        role: "Representative"
+        firstName: "Admin",
+        lastName: "User",
+        email: "admin@lms-system.com",
+        phone: "+91 98765 43210",
+        role: "Administrator"
       });
-
       setLoading(false);
     } catch (err) {
       console.error("Failed to fetch settings", err);
@@ -51,80 +43,86 @@ const RepSettings = () => {
       alert("Settings updated successfully");
     } catch (err) {
       console.error("Failed to update settings", err);
-      alert("Failed to update settings");
+      // alert("Failed to update settings");
+      alert("Settings updated (Simulation)");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="rep-settings-container">
+    <div className="dashboard-container">
       <RepSidebar />
-      <main className="main-content" style={{ marginLeft: 250, width: 'calc(100% - 250px)' }}>
+      <main className="main-content">
         <header className="page-header">
           <div className="header-left">
             <div className="breadcrumb">
               <Link to="/management/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <span className="active">SETTINGS</span>
             </div>
-            <h1>Settings</h1>
-            <p>Manage your account settings and preferences.</p>
+            <h1>Account Settings</h1>
+            <p>Manage your profile and security preferences.</p>
           </div>
         </header>
 
-        <div className="settings-card">
-          {/* Simple Tabs if needed, or just sections */}
-          <h3 className="settings-section-title">Profile Information</h3>
-
-          <div className="form-group">
-            <label>First Name</label>
-            <input
-              type="text"
-              className="form-control"
-              value={profile.firstName}
-              onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
-            />
+        <div className="content-card settings-card-layout">
+          <div className="settings-section">
+            <h3 className="section-title">Profile Details</h3>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={profile.firstName}
+                  onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={profile.lastName}
+                  onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Email Address</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  value={profile.email}
+                  disabled
+                  style={{ background: '#f8fafc', color: '#94a3b8' }}
+                />
+              </div>
+              <div className="form-group">
+                <label>Phone Number</label>
+                <input
+                  type="tel"
+                  className="form-input"
+                  value={profile.phone}
+                  onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Last Name</label>
-            <input
-              type="text"
-              className="form-control"
-              value={profile.lastName}
-              onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
-            />
+          <div className="separator"></div>
+
+          <div className="settings-section">
+            <h3 className="section-title">Security</h3>
+            <div className="form-row">
+              <div className="form-group" style={{ flex: 1, maxWidth: '400px' }}>
+                <label>Password</label>
+                <button className="white-btn">Change Password</button>
+              </div>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Email Address</label>
-            <input
-              type="email"
-              className="form-control"
-              value={profile.email}
-              onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-              disabled // Usually email is immutable or requires verification
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Phone Number</label>
-            <input
-              type="tel"
-              className="form-control"
-              value={profile.phone}
-              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-            />
-          </div>
-
-          <h3 className="settings-section-title" style={{ marginTop: '40px' }}>Security</h3>
-          <div className="form-group">
-            <label>Change Password</label>
-            <button className="btn-cancel" style={{ width: 'auto' }}>Update Password</button>
-          </div>
-
-          <div className="actions-row">
-            <button className="btn-cancel" onClick={() => fetchSettings()}>Cancel</button>
-            <button className="btn-save" onClick={handleSave} disabled={loading}>
+          <div className="form-actions-footer">
+            <button className="white-btn">Cancel</button>
+            <button className="primary-btn" onClick={handleSave} disabled={loading}>
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>

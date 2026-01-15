@@ -73,7 +73,9 @@ const AddLease = () => {
             const fetchUnits = async () => {
                 try {
                     const res = await unitAPI.getUnitsByProject(formData.project_id);
-                    setUnits(res.data || []);
+                    const allUnits = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                    // Filter only vacant units
+                    setUnits(allUnits.filter(u => u.status === 'vacant'));
                 } catch (err) {
                     console.error('Failed to fetch units:', err);
                 }
@@ -159,7 +161,7 @@ const AddLease = () => {
                 sub_tenant_id: isSubLease ? parseInt(formData.sub_tenant_id) : null,
                 lease_type: isSubLease ? 'Subtenant lease' : 'Direct lease',
                 rent_model: rentModel,
-                sub_lease_area_sqft: isSubLease ? parseFloat(formData.sub_lease_area_sqft) : null,
+                sub_lease_area_sqft: isSubLease ? (parseFloat(formData.sub_lease_area_sqft) || 0) : null,
                 lease_start: formData.lease_start,
                 lease_end: formData.lease_end,
                 rent_commencement_date: formData.rent_commencement_date,
@@ -175,7 +177,7 @@ const AddLease = () => {
                 security_deposit: parseFloat(formData.security_deposit) || 0,
                 utility_deposit: parseFloat(formData.utility_deposit) || 0,
                 deposit_type: formData.deposit_type,
-                revenue_share_percentage: rentModel === 'RevenueShare' ? parseFloat(formData.revenue_share_percentage) : null,
+                revenue_share_percentage: rentModel === 'RevenueShare' ? (parseFloat(formData.revenue_share_percentage) || 0) : null,
                 revenue_share_applicable_on: rentModel === 'RevenueShare' ? formData.revenue_share_applicable_on : null,
                 escalations: escalations
             };

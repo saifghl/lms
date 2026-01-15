@@ -12,10 +12,11 @@ const EditUnit = () => {
         unit_number: '',
         status: '',
         super_area: '',
-        monthly_rent: '',
-        security_deposit: '',
+        projected_rent: '', // Changed from monthly_rent to match DB
         floor_number: '',
-        project_id: '' // Assuming display readonly or select ??
+        unit_condition: '',
+        plc: '',
+        carpet_area: ''
     });
 
     const [message, setMessage] = useState('');
@@ -28,11 +29,13 @@ const EditUnit = () => {
                 const data = res.data;
                 setFormData({
                     unit_number: data.unit_number || '',
-                    status: data.status || 'Vacant',
+                    status: data.status || 'vacant',
                     super_area: data.super_area || '',
-                    monthly_rent: data.monthly_rent || '',
-                    security_deposit: data.security_deposit || '',
-                    floor_number: data.floor_number || ''
+                    projected_rent: data.projected_rent || '',
+                    floor_number: data.floor_number || '',
+                    unit_condition: data.unit_condition || 'bare_shell',
+                    plc: data.plc || 'front_facing',
+                    carpet_area: data.carpet_area || ''
                 });
             } catch (err) {
                 console.error("Error fetching unit:", err);
@@ -86,7 +89,6 @@ const EditUnit = () => {
                                 </div>
                                 <div className="title-row">
                                     <h2>Edit Unit: {formData.unit_number}</h2>
-                                    <button className="view-history-btn">View History</button>
                                 </div>
                                 <p className="subtitle">
                                     Update current lease details, status, pricing, and amenities for this unit.
@@ -131,24 +133,40 @@ const EditUnit = () => {
                                                 value={formData.status}
                                                 onChange={handleChange}
                                             >
-                                                <option value="Vacant">Vacant</option>
-                                                <option value="Occupied">Occupied</option>
-                                                <option value="Reserved">Reserved</option>
-                                                <option value="Under Maintenance">Under Maintenance</option>
+                                                <option value="vacant">Vacant</option>
+                                                <option value="occupied">Occupied</option>
+                                                <option value="reserved">Reserved</option>
+                                                <option value="under_maintenance">Under Maintenance</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div className="form-group">
-                                        <label>Square Footage</label>
-                                        <div className="input-with-suffix">
-                                            <input
-                                                type="text"
-                                                name="super_area"
-                                                value={formData.super_area}
-                                                onChange={handleChange}
-                                            />
-                                            <span className="suffix">sq ft</span>
-                                        </div>
+                                        <label>Super Area (sq ft)</label>
+                                        <input
+                                            type="text"
+                                            name="super_area"
+                                            value={formData.super_area}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Projected Rent (₹)</label>
+                                        <input
+                                            type="text"
+                                            name="projected_rent"
+                                            value={formData.projected_rent}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Unit Condition</label>
+                                        <select name="unit_condition" value={formData.unit_condition} onChange={handleChange}>
+                                            <option value="fully_fitted">Fully Fitted</option>
+                                            <option value="semi_fitted">Semi Fitted</option>
+                                            <option value="bare_shell">Bare Shell</option>
+                                        </select>
                                     </div>
                                 </div>
                             </section>

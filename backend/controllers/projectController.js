@@ -38,11 +38,24 @@ const addProject = async (req, res) => {
     const floors = total_floors ? parseInt(total_floors) : 0;
     const area = total_project_area ? parseFloat(total_project_area) : 0;
 
+    const values = [
+      project_name,
+      location || null,
+      address || null,
+      project_type || null,
+      floors,
+      area,
+      image,
+      description || null
+    ];
+
+    console.log("DEBUG ADD PROJECT VALUES:", values);
+
     const [result] = await pool.execute(
       `INSERT INTO projects 
       (project_name, location, address, project_type, total_floors, total_project_area, project_image, description)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [project_name, location, address, project_type, floors, area, image, description]
+      values
     );
 
     res.status(201).json({ message: "Project Added Successfully", id: result.insertId });
@@ -103,7 +116,16 @@ const updateProject = async (req, res) => {
       project_name=?, location=?, address=?, project_type=?,
       total_floors=?, total_project_area=?, description=?, status=?
     `;
-    const values = [project_name, location, address, project_type, floors, area, description, status || 'active'];
+    const values = [
+      project_name,
+      location || null,
+      address || null,
+      project_type || null,
+      floors,
+      area,
+      description || null,
+      status || 'active'
+    ];
 
     if (image) {
       sql += ", project_image=?";
@@ -132,11 +154,35 @@ const deleteProject = async (req, res) => {
   }
 };
 
+/* ================= GET PROJECT UNITS ================= */
+const getUnitsByProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [units] = await pool.execute(`
+      SELECT 
+        u.id, 
+        u.unit_number, 
+        u.floor_number, 
+        u.super_area, 
+        u.status 
+      FROM units u
+      WHERE u.project_id = ?
+      ORDER BY u.unit_number ASC
+    `, [id]);
+
+    res.json({ data: units });
+  } catch (error) {
+    console.error("Get units by project error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   addProject,
   getProjects,
   getProjectById,
   updateProject,
   deleteProject,
+  getUnitsByProject,
   upload
 };

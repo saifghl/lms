@@ -3,7 +3,8 @@ const pool = require("../config/db");
 /* ================= GET UNITS ================= */
 const getUnits = async (req, res) => {
     try {
-        const [rows] = await pool.query(`
+        const { projectId } = req.query;
+        let query = `
             SELECT 
                 u.id,
                 u.unit_number,
@@ -12,8 +13,18 @@ const getUnits = async (req, res) => {
                 u.status
             FROM units u
             JOIN projects p ON p.id = u.project_id
-            ORDER BY u.id DESC
-        `);
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (projectId) {
+            query += " AND u.project_id = ?";
+            params.push(projectId);
+        }
+
+        query += " ORDER BY u.id DESC";
+
+        const [rows] = await pool.query(query, params);
 
         res.json(rows);
     } catch (err) {
@@ -207,10 +218,10 @@ const deleteUnit = async (req, res) => {
         const { id } = req.params;
         await pool.query("DELETE FROM units WHERE id = ?", [id]);
         res.json({ message: "Unit Deleted Successfully" });
-      } catch (error) {
+    } catch (error) {
         console.error("Delete unit error:", error);
         res.status(500).json({ error: error.message });
-      }
+    }
 }
 
 module.exports = {

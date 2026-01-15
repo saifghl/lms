@@ -48,21 +48,31 @@ const Leases = () => {
                 <header className="page-header">
                     <div className="header-left">
                         <div className="breadcrumb">
-                            <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <span className="active">LEASE LIST</span>
+                            <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <span className="active">LEASES</span>
                         </div>
                         <h1>Lease Management</h1>
-                        <p>View and manage all active lease agreements and contracts.</p>
+                        <p>View and manage all active lease agreements.</p>
                     </div>
                     {/* Link to Create Lease page */}
-                    <Link to="/admin/add-lease" className="primary-btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>+ Create Lease</Link>
+                    <Link to="/admin/add-lease" className="primary-btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Create Lease
+                    </Link>
                 </header>
 
                 <div className="content-card">
                     {/* Filters Bar */}
                     <div className="filters-bar">
                         <div className="leases-filter-group">
+                            <div className="filter-item" style={{ flex: 2 }}>
+                                <label>Search</label>
+                                <div className="search-wrapper" style={{ minWidth: '100%', maxWidth: '100%' }}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    <input type="text" placeholder="Search by Tenant, Unit, or ID..." />
+                                </div>
+                            </div>
                             <div className="filter-item">
-                                <label>Status Filter</label>
+                                <label>Status</label>
                                 <div className="select-wrapper">
                                     <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                                         <option value="">All Statuses</option>
@@ -74,12 +84,6 @@ const Leases = () => {
                                     </select>
                                     <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </div>
-                            </div>
-                            <div className="filter-item">
-                                <button className="more-filters-btn">
-                                    More Filters
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                                </button>
                             </div>
                         </div>
                         <div className="view-actions">
@@ -98,55 +102,66 @@ const Leases = () => {
                             <thead>
                                 <tr>
                                     <th>Lease ID</th>
-                                    <th>Project / Unit</th>
+                                    <th>Unit</th>
                                     <th>Tenant</th>
-                                    <th>Monthly Rent</th>
+                                    <th>Duration</th>
+                                    <th>Rent / Month</th>
                                     <th>Deposit</th>
-                                    <th>Term</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    <th style={{ textAlign: 'right' }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading && (
                                     <tr>
-                                        <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Loading...</td>
+                                        <td colSpan="8" style={{ textAlign: 'center', padding: '40px' }}>Loading leases...</td>
                                     </tr>
                                 )}
                                 {!loading && leases.length === 0 && (
                                     <tr>
-                                        <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No leases found</td>
+                                        <td colSpan="8" style={{ textAlign: 'center', padding: '40px' }}>No leases found.</td>
                                     </tr>
                                 )}
                                 {!loading && leases.map((lease) => (
                                     <tr key={lease.id}>
                                         <td className="id-cell">
-                                            <Link to={`/admin/view-lease/${lease.id}`} style={{ textDecoration: 'none', color: '#4299e1', fontWeight: 500 }}>
+                                            <Link to={`/admin/view-lease/${lease.id}`} style={{ textDecoration: 'none', color: '#2e66ff', fontWeight: 600 }}>
                                                 L-{lease.id}
                                             </Link>
                                         </td>
                                         <td>
                                             <div className="cell-stacked">
-                                                <span className="primary-text">{lease.project_name || 'N/A'}</span>
-                                                <span className="secondary-text">{lease.unit_number || 'N/A'}</span>
+                                                <span className="primary-text">{lease.unit_number || 'N/A'}</span>
+                                                <span className="secondary-text">{lease.project_name || 'Project'}</span>
                                             </div>
                                         </td>
-                                        <td>{lease.tenant_name || lease.sub_tenant_name || 'N/A'}</td>
-                                        <td>{formatCurrency(lease.monthly_rent)}</td>
-                                        <td>{formatCurrency(lease.security_deposit)}</td>
+                                        <td>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <div style={{ width: '24px', height: '24px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 600, color: '#64748b' }}>
+                                                    {(lease.tenant_name || 'T')[0]}
+                                                </div>
+                                                {lease.tenant_name || lease.sub_tenant_name || 'N/A'}
+                                            </div>
+                                        </td>
                                         <td>
                                             <div className="cell-stacked">
                                                 <span className="primary-text">{formatDate(lease.lease_start)}</span>
                                                 <span className="secondary-text">to {formatDate(lease.lease_end)}</span>
                                             </div>
                                         </td>
+                                        <td>{formatCurrency(lease.monthly_rent)}</td>
+                                        <td>{formatCurrency(lease.security_deposit)}</td>
                                         <td>
-                                            <span className={`status-badge ${lease.status}`}>{lease.status}</span>
+                                            <span className={`status-badge ${lease.status ? lease.status.toLowerCase() : 'draft'}`}>
+                                                {lease.status || 'Draft'}
+                                            </span>
                                         </td>
                                         <td>
-                                            <Link to={`/admin/edit-lease/${lease.id}`} className="action-btn" title="Edit">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                            </Link>
+                                            <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
+                                                <Link to={`/admin/edit-lease/${lease.id}`} className="action-btn" title="Edit">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
