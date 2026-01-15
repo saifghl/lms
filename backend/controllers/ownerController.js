@@ -54,6 +54,65 @@ exports.getOwners = async (req, res) => {
 };
 
 /* =========================
+   EXPORT OWNERS REPORT
+========================= */
+exports.exportOwners = async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT 
+                id,
+                name,
+                email,
+                phone,
+                representative_name,
+                gst_number,
+                total_owned_area,
+                address,
+                kyc_status,
+                created_at
+            FROM owners
+            ORDER BY created_at DESC
+        `);
+
+        console.log("Exporting owners, found:", rows.length);
+
+        // Manual CSV Generation
+        const fields = [
+            'id', 'name', 'email', 'phone',
+            'representative_name', 'gst_number', 'total_owned_area',
+            'address', 'kyc_status', 'created_at'
+        ];
+        const csvRows = [];
+
+        // Header
+        csvRows.push(fields.join(','));
+
+        // Data
+        for (const row of rows) {
+            const values = fields.map(field => {
+                const val = row[field];
+                // Escape quotes and wrap in quotes if necessary
+                if (val === null || val === undefined) return '';
+                // Handle date formatting if needed, but string is fine
+                const str = String(val).replace(/"/g, '""');
+                return `"${str}"`;
+            });
+            csvRows.push(values.join(','));
+        }
+
+        const csv = csvRows.join('\n');
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment('kyc_report.csv');
+        return res.send(csv);
+
+    } catch (err) {
+        console.error("EXPORT OWNERS ERROR:", err);
+        res.status(500).json({ message: "Failed to export owners" });
+    }
+};
+
+/* =========================
    GET OWNER BY ID  ✅ (FIXED)
 ========================= */
 exports.getOwnerById = async (req, res) => {
@@ -290,5 +349,27 @@ exports.removeUnitFromOwner = async (req, res) => {
         res.json({ message: "Unit removed successfully" });
     } catch (err) {
         res.status(500).json({ message: "Failed to remove unit" });
+    }
+};
+
+/* =========================
+   GET KYC STATS
+========================= */
+exports.getKycStats = async (req, res) => {
+    try {
+        const [total] = await pool.query(`SELECT COUNT(*) as count FROM owners`);
+        const [pending] = await pool.query(`SELECT COUNT(*) as count FROM owners WHERE kyc_status = 'Pending' OR kyc_status IS NULL`);
+        const [verified] = await pool.query(`SELECT COUNT(*) as count FROM owners WHERE kyc_status = 'verified'`);
+        const [rejected] = await pool.query(`SELECT COUNT(*) as count FROM owners WHERE kyc_status = 'rejected'`);
+
+        res.json({
+            total: total[0].count,
+            pending: pending[0].count,
+            verified: verified[0].count,
+            rejected: rejected[0].count
+        });
+    } catch (err) {
+        console.error("GET KYC STATS ERROR:", err);
+        res.status(500).json({ message: "Failed to fetch KYC stats" });
     }
 };

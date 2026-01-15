@@ -8,7 +8,10 @@ const LeaseReminders = () => {
 
   useEffect(() => {
     getNotifications()
-      .then((res) => setNotifications(res.data))
+      .then((res) => {
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        setNotifications(data);
+      })
       .catch(() => alert("Failed to load notifications"));
   }, []);
 

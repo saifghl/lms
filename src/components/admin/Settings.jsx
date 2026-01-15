@@ -116,16 +116,22 @@ const Settings = () => {
                 setCurrentPassword("");
                 setNewPassword("");
             })
-            .catch(() => alert("Password update failed"));
+            .catch((err) => {
+                if (err.response && err.response.status === 401) {
+                    alert("Incorrect current password");
+                } else {
+                    alert("Password update failed");
+                }
+            });
     };
 
     if (loading) return <div style={{ padding: 30 }}>Loading...</div>;
     if (!user) return <div style={{ padding: 30 }}>User not found</div>;
 
-    // ✅ Correct image path
+    // ✅ Correct image path or offline placeholder
     const profileImage = user.profile_image
         ? `http://localhost:5000${user.profile_image}`
-        : "https://via.placeholder.com/150";
+        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'%3E%3Cpath d='M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z' /%3E%3C/svg%3E";
 
     return (
         <div className="settings-container">

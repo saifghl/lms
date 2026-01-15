@@ -137,6 +137,17 @@ exports.createLease = async (req, res) => {
             return res.status(400).json({ message: 'sub_tenant_id and sub_lease_area_sqft are required for Sub lease' });
         }
 
+        // Validate Unit belongs to Project
+        const [unitCheck] = await connection.query("SELECT project_id FROM units WHERE id = ?", [unit_id]);
+        if (unitCheck.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: "Unit not found" });
+        }
+        if (unitCheck[0].project_id != project_id) {
+            await connection.rollback();
+            return res.status(400).json({ message: "Selected unit does not belong to the selected project" });
+        }
+
         // Calculate tenure_months if not provided
         const startDate = new Date(lease_start);
         const endDate = new Date(lease_end);
@@ -166,7 +177,7 @@ exports.createLease = async (req, res) => {
                 lease_end,
                 rent_commencement_date,
                 fitout_period_end || null,
-                tenure_months || calculatedTenure,
+                tenure_months || (isNaN(calculatedTenure) ? 0 : calculatedTenure),
                 lockin_period_months || 12,
                 notice_period_months || 3,
                 monthly_rent || 0,

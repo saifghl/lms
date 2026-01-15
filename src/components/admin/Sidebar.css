@@ -1,13 +1,15 @@
-/* Sidebar.css - Pixel Perfect Refinement */
+/* Sidebar.css - Premium Design Update */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
     --primary-blue: #2e66ff;
     --sidebar-bg: #FFFFFF;
-    --text-dark: #1e272e;
-    --text-muted: #636e72;
-    --nav-active-bg: #E8F1FF;
-    --sidebar-width: 260px;
+    --text-dark: #0f172a;
+    --text-muted: #64748b;
+    --nav-active-bg: #eff6ff;
+    --nav-active-text: #2563eb;
+    --sidebar-width: 250px;
+    --border-color: #e2e8f0;
 }
 
 .sidebar {
@@ -16,25 +18,26 @@
     background-color: var(--sidebar-bg);
     display: flex;
     flex-direction: column;
-    padding: 40px 20px;
+    padding: 24px 16px;
     position: fixed;
     left: 0;
     top: 0;
     z-index: 1000;
-    transition: transform 0.3s ease-in-out;
+    border-right: 1px solid var(--border-color);
     font-family: 'Inter', sans-serif;
     box-sizing: border-box;
+    transition: transform 0.3s ease;
 }
 
 .sidebar-header {
-    margin-bottom: 40px;
-    padding: 0 10px;
+    margin-bottom: 32px;
+    padding: 0 8px;
 }
 
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
 }
 
 .logo-icon-container {
@@ -46,14 +49,14 @@
 .logo-text {
     font-weight: 700;
     color: var(--text-dark);
-    font-size: 1.1rem;
-    line-height: 1.2;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
 }
 
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
     flex: 1;
     overflow-y: auto;
     /* Enable scrolling for nav items */
@@ -79,95 +82,87 @@
     background: #cbd5e1;
 }
 
-/* Global link reset for sidebar */
+/* Reset Links */
 .sidebar a {
-    text-decoration: none !important;
-    border-bottom: none !important;
+    text-decoration: none;
 }
 
 .nav-item {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
-    text-decoration: none !important;
-    outline: none !important;
-    border: none !important;
-    border-bottom: none !important;
-    /* Explicitly remove bottom border */
-    box-shadow: none !important;
+    padding: 10px 12px;
     color: var(--text-muted);
-    border-radius: 12px;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    font-size: 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
     font-weight: 500;
-}
-
-.nav-item:focus,
-.nav-item:active,
-.nav-item.active:focus {
-    outline: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
 }
 
 .nav-item:hover {
-    background-color: #f5f6fa;
+    background-color: #f8fafc;
     color: var(--text-dark);
 }
 
 .nav-item.active {
     background-color: var(--nav-active-bg);
-    color: var(--primary-blue);
+    color: var(--nav-active-text);
     font-weight: 600;
 }
 
 .nav-item .icon {
-    margin-right: 15px;
+    margin-right: 12px;
     width: 20px;
     height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 0.8;
+}
+
+.nav-item.active .icon {
+    opacity: 1;
 }
 
 .sidebar-footer {
     margin-top: auto;
-    padding-top: 30px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
 }
 
 .nav-item.logout {
-    color: #FF4D4D;
-    font-weight: 600;
+    color: #ef4444;
 }
 
 .nav-item.logout:hover {
-    background-color: #FFF5F5;
+    background-color: #fef2f2;
+    color: #dc2626;
 }
 
 .nav-item.logout .icon {
-    color: #FF4D4D;
+    color: inherit;
 }
 
-/* Mobile Adjustments */
+/* Mobile Toggles */
 .mobile-toggle {
     display: none;
     position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 1001;
+    top: 16px;
+    left: 16px;
+    z-index: 1100;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
     cursor: pointer;
     background: white;
     padding: 10px;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-toggle span {
     display: block;
-    width: 25px;
+    width: 20px;
     height: 2px;
     background-color: var(--text-dark);
 }
@@ -179,7 +174,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     z-index: 999;
     backdrop-filter: blur(2px);
 }
@@ -187,11 +182,11 @@
 @media (max-width: 1024px) {
     .sidebar {
         transform: translateX(-100%);
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
     }
 
     .sidebar.open {
         transform: translateX(0);
+        box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05);
     }
 
     .mobile-toggle {

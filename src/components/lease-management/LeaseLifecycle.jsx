@@ -11,7 +11,10 @@ const LeaseLifecycle = () => {
 
   const loadLeases = () => {
     getPendingLeases()
-      .then((res) => setLeases(res.data))
+      .then((res) => {
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        setLeases(data);
+      })
       .catch(() => alert("Failed to load pending leases"));
   };
 
@@ -20,8 +23,12 @@ const LeaseLifecycle = () => {
   }, []);
 
   const handleApprove = async (id) => {
-    await approveLease(id);
-    loadLeases();
+    try {
+      await approveLease(id);
+      loadLeases();
+    } catch (error) {
+      alert("Failed to approve lease");
+    }
   };
 
   return (
@@ -33,7 +40,7 @@ const LeaseLifecycle = () => {
 
         {leases.map((lease) => (
           <div className="approval-card" key={lease.id}>
-            <h4>{lease.company_name}</h4>
+            <h4>{lease.company_name || lease.tenant?.company_name || "Unknown Tenant"}</h4>
             <p>Rent: ₹{lease.monthly_rent}</p>
             <p>
               Duration: {lease.lease_start} → {lease.lease_end}

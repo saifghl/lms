@@ -233,6 +233,37 @@
     margin-top: 4px;
 }
 
+/* Module Badges */
+.badge-module {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.badge-module.lease {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+}
+
+.badge-module.financials {
+    background-color: #ecfdf5;
+    color: #047857;
+}
+
+.badge-module.user {
+    background-color: #fef2f2;
+    color: #b91c1c;
+}
+
+.badge-module.system {
+    background-color: #f8fafc;
+    color: #64748b;
+}
+
 
 
 /* Footer */

@@ -10,11 +10,7 @@ const Reports = () => {
   const [filterType, setFilterType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    fetchReports();
-  }, [filterType, searchQuery]);
-
-  const fetchReports = async () => {
+  const fetchReports = React.useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
@@ -31,7 +27,11 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType, searchQuery]);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -40,6 +40,26 @@ const Reports = () => {
       month: "short",
       day: "2-digit",
     });
+  };
+
+  const handleExport = async () => {
+    try {
+      const res = await managementAPI.exportReports({
+        search: searchQuery,
+        type: filterType
+      });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `reports_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Failed to export reports:", err);
+      alert("Failed to export reports");
+    }
   };
 
   return (
@@ -54,7 +74,7 @@ const Reports = () => {
             <h1>Management Reports</h1>
             <p>View and download financial and operational reports.</p>
           </div>
-          <button className="export-report-btn">
+          <button className="export-report-btn" onClick={handleExport}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Export All
           </button>

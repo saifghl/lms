@@ -68,6 +68,12 @@ exports.createTenant = async (req, res) => {
         // 2️⃣ Assign units
         if (Array.isArray(unitIds) && unitIds.length > 0) {
             for (let unitId of unitIds) {
+                if (!unitId) continue;
+
+                // Validate unit exists
+                const [validUnit] = await connection.query("SELECT id FROM units WHERE id = ?", [unitId]);
+                if (validUnit.length === 0) continue;
+
                 // Check if unit is already assigned
                 const [existing] = await connection.query(
                     `SELECT * FROM tenant_units WHERE tenant_id = ? AND unit_id = ?`,
@@ -92,6 +98,11 @@ exports.createTenant = async (req, res) => {
         // 3️⃣ Insert subtenants
         if (Array.isArray(subtenants) && subtenants.length > 0) {
             for (let sub of subtenants) {
+                // Skip if no company name provided
+                if (!sub.company_name || sub.company_name.trim() === '') {
+                    continue;
+                }
+
                 await connection.query(
                     `INSERT INTO sub_tenants
                     (tenant_id, company_name, registration_number,
@@ -100,7 +111,7 @@ exports.createTenant = async (req, res) => {
                      VALUES (?, ?, ?, ?, ?, ?, ?)`,
                     [
                         tenantId,
-                        sub.company_name || null,
+                        sub.company_name,
                         sub.registration_number || null,
                         sub.allotted_area_sqft || null,
                         sub.contact_person_name || null,
@@ -121,9 +132,9 @@ exports.createTenant = async (req, res) => {
     } catch (err) {
         await connection.rollback();
         console.error('CREATE TENANT ERROR:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Failed to create tenant',
-            error: err.message 
+            error: err.message
         });
     } finally {
         connection.release();
@@ -154,9 +165,9 @@ exports.getAllTenants = async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error('GET ALL TENANTS ERROR:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Failed to fetch tenants',
-            error: err.message 
+            error: err.message
         });
     }
 };
@@ -205,9 +216,9 @@ exports.getTenantById = async (req, res) => {
 
     } catch (err) {
         console.error('GET TENANT BY ID ERROR:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Failed to fetch tenant details',
-            error: err.message 
+            error: err.message
         });
     }
 };
@@ -215,7 +226,7 @@ exports.updateTenant = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         const tenantId = req.params.id;
-        const { 
+        const {
             subtenants,
             company_name,
             company_registration_number,
@@ -332,6 +343,10 @@ exports.updateTenant = async (req, res) => {
             // Insert new subtenants
             if (Array.isArray(subtenants) && subtenants.length > 0) {
                 for (let st of subtenants) {
+                    if (!st.company_name || st.company_name.trim() === '') {
+                        continue;
+                    }
+
                     await connection.query(
                         `INSERT INTO sub_tenants
                         (tenant_id, company_name, registration_number,
@@ -340,7 +355,7 @@ exports.updateTenant = async (req, res) => {
                          VALUES (?, ?, ?, ?, ?, ?, ?)`,
                         [
                             tenantId,
-                            st.company_name || null,
+                            st.company_name,
                             st.registration_number || null,
                             st.allotted_area_sqft || null,
                             st.contact_person_name || null,
@@ -352,14 +367,62 @@ exports.updateTenant = async (req, res) => {
             }
         }
 
+        // Handle Unit Updates
+        const unitIds = req.body.unit_ids || req.body.units;
+        if (unitIds !== undefined) {
+            // 1. Get currently assigned units to release them
+            const [currentUnits] = await connection.query(
+                `SELECT unit_id FROM tenant_units WHERE tenant_id = ?`,
+                [tenantId]
+            );
+
+            // 2. Set current units to vacant
+            if (currentUnits.length > 0) {
+                const currentUnitIds = currentUnits.map(u => u.unit_id);
+                await connection.query(
+                    `UPDATE units SET status = 'vacant' WHERE id IN (?)`,
+                    [currentUnitIds]
+                );
+            }
+
+            // 3. Remove current assignments
+            await connection.query(
+                `DELETE FROM tenant_units WHERE tenant_id = ?`,
+                [tenantId]
+            );
+
+            // 4. Assign new units
+            if (Array.isArray(unitIds) && unitIds.length > 0) {
+                for (let unitId of unitIds) {
+                    if (!unitId) continue;
+
+                    // Validate unit exists
+                    const [validUnit] = await connection.query("SELECT id FROM units WHERE id = ?", [unitId]);
+                    if (validUnit.length === 0) continue;
+
+                    // Insert assignment
+                    await connection.query(
+                        `INSERT INTO tenant_units (tenant_id, unit_id) VALUES (?, ?)`,
+                        [tenantId, unitId]
+                    );
+
+                    // Update unit status
+                    await connection.query(
+                        `UPDATE units SET status = 'occupied' WHERE id = ?`,
+                        [unitId]
+                    );
+                }
+            }
+        }
+
         await connection.commit();
         res.json({ message: 'Tenant updated successfully' });
     } catch (err) {
         await connection.rollback();
         console.error('UPDATE TENANT ERROR:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Update failed',
-            error: err.message 
+            error: err.message
         });
     } finally {
         connection.release();

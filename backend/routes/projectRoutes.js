@@ -6,6 +6,7 @@ const projectController = require('../controllers/projectController');
 router.post('/', projectController.upload.single('image'), projectController.addProject);
 router.get('/', projectController.getProjects);
 router.get('/:id', projectController.getProjectById);
+router.get('/:id/units', projectController.getUnitsByProject); // New Route for Tenant Unit Selection
 router.put('/:id', projectController.upload.single('image'), projectController.updateProject);
 router.delete('/:id', projectController.deleteProject);
 

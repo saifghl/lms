@@ -8,7 +8,10 @@ const LeaseReports = () => {
 
   useEffect(() => {
     getExpiringLeases()
-      .then((res) => setLeases(res.data))
+      .then((res) => {
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        setLeases(data);
+      })
       .catch(() => alert("Failed to load lease reports"));
   }, []);
 
@@ -21,7 +24,7 @@ const LeaseReports = () => {
 
         {leases.map((lease) => (
           <div className="tracker-item" key={lease.id}>
-            <h3>{lease.company_name}</h3>
+            <h3>{lease.company_name || lease.tenant?.company_name || "Unknown Tenant"}</h3>
             <p>Rent: ₹{lease.monthly_rent}</p>
             <p>Expiry: {lease.lease_end}</p>
           </div>

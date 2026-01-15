@@ -7,7 +7,8 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    role: 'Admin'
   });
 
   const handleChange = (e) => {
@@ -19,10 +20,41 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // make an API call here.
-    // demo successful login and redirect to the dashboard.
-    console.log('Logging in with:', formData);
-    navigate('/admin/dashboard');
+
+    // MOCK LOGIN LOGIC with Explicit Role Selection
+    const selectedRole = formData.role;
+    let redirectPath = '/admin/dashboard';
+    let userRole = 'admin';
+
+    // Role-based logic
+    switch (selectedRole) {
+      case 'Admin':
+        redirectPath = '/admin/dashboard';
+        userRole = 'admin';
+        break;
+      case 'Lease Manager':
+        redirectPath = '/lease/dashboard';
+        userRole = 'lease_manager';
+        break;
+      case 'Management Rep':
+        redirectPath = '/management/dashboard';
+        userRole = 'management_rep';
+        break;
+      default:
+        redirectPath = '/admin/dashboard';
+    }
+
+    // Set Mock Token and User in LocalStorage
+    localStorage.setItem('token', 'mock-jwt-token-' + Date.now());
+    localStorage.setItem('user', JSON.stringify({
+      id: 999,
+      name: 'Mock User',
+      email: formData.email,
+      role: userRole
+    }));
+
+    console.log(`Mock Login Successful: Role=${selectedRole}, Redirect=${redirectPath}`);
+    navigate(redirectPath);
   };
 
   return (
@@ -78,8 +110,7 @@ const Login = () => {
                   onChange={handleChange}
                   required
                 />
-              </div>
-            </div>
+              </div>            </div>
 
             <div className="form-group">
               <label>Password</label>
@@ -115,6 +146,52 @@ const Login = () => {
                     </svg>
                   )}
                 </button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Select Role</label>
+              <div className="input-wrapper">
+                <span className="input-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </span>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '12px 40px',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '0.95rem',
+                    color: '#2d3748',
+                    appearance: 'none',
+                    backgroundColor: '#fff',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="Lease Manager">Lease Manager</option>
+                  <option value="Management Rep">Management Rep</option>
+                </select>
+                <span style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: '#718096'
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </span>
               </div>
             </div>
 

@@ -1,41 +1,59 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "./Sidebar";
 import "./RoleManagement.css";
 // import api from services
-import { userAPI } from "../../services/api";
+import { userAPI, roleAPI } from "../../services/api";
 
 const RoleManagement = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Create User State
+  // Modal State
   const [showModal, setShowModal] = useState(false);
-  const [newUser, setNewUser] = useState({
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  // Form State
+  const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
     email: "",
     password: "",
-    role_name: "User"
+    role_name: "User",
+    status: "active"
   });
 
+  // UI State
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" }); // type: success | error
+  const [activeActionMenu, setActiveActionMenu] = useState(null); // ID of user whose menu is open
+  const actionMenuRef = useRef(null);
+
   const fetchUsers = () => {
+    setLoading(true);
     userAPI.getUsers()
       .then(res => {
         const data = res.data;
         const formattedUsers = data.map(user => ({
           id: user.id,
           name: `${user.first_name} ${user.last_name}`,
+          firstName: user.first_name,
+          lastName: user.last_name,
           email: user.email,
-          role: user.role_name,
-          roleClass: user.role_name?.toLowerCase().replace(/\s+/g, "-"),
+          role: user.role_name || "User",
+          roleClass: (user.role_name || "User").toLowerCase().replace(/\s+/g, "-"),
           isAll: ["admin", "administrator", "super admin"]
-            .includes(user.role_name?.toLowerCase()),
+            .includes((user.role_name || "").toLowerCase()),
           status: (user.status || "active").toLowerCase()
         }));
 
         setUsers(formattedUsers);
       })
-      .catch(err => console.error("Failed to load users", err));
+      .catch(err => {
+        console.error("Failed to load users", err);
+        showToast("Failed to load users", "error");
+      })
+      .finally(() => setLoading(false));
   };
 
   /* =============================
@@ -43,21 +61,97 @@ const RoleManagement = () => {
   ============================== */
   useEffect(() => {
     fetchUsers();
+
+    // Click outside to close action menu
+    const handleClickOutside = (event) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
+        setActiveActionMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleCreateUser = async (e) => {
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ ...toast, show: false }), 3000);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      first_name: "",
+      last_name: "",
+      email: "",
+      password: "",
+      role_name: "User",
+      status: "active"
+    });
+    setIsEditing(false);
+    setCurrentUserId(null);
+  };
+
+  const handleOpenCreate = () => {
+    resetForm();
+    setShowModal(true);
+  };
+
+  const handleOpenEdit = (user) => {
+    setFormData({
+      first_name: user.firstName,
+      last_name: user.lastName,
+      email: user.email,
+      password: "", // User can leave blank to keep existing
+      role_name: user.role,
+      status: user.status
+    });
+    setIsEditing(true);
+    setCurrentUserId(user.id);
+    setShowModal(true);
+    setActiveActionMenu(null);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        await userAPI.deleteUser(id);
+        showToast("User deleted successfully", "success");
+        fetchUsers();
+      } catch (error) {
+        showToast("Failed to delete user", "error");
+      }
+      setActiveActionMenu(null);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await userAPI.createUser(newUser);
-      alert("User created successfully");
+      if (isEditing) {
+        // Update User
+        const payload = { ...formData };
+        if (!payload.password) delete payload.password; // Don't send empty password
+
+        await userAPI.updateUser(currentUserId, payload);
+        showToast("User updated successfully", "success");
+      } else {
+        // Create User
+        await userAPI.createUser(formData);
+        showToast("User created successfully", "success");
+      }
+
       setShowModal(false);
-      setNewUser({ first_name: "", last_name: "", email: "", password: "", role_name: "User" });
+      resetForm();
       fetchUsers();
     } catch (error) {
       console.error(error);
-      const msg = error.response?.data?.message || "Failed to create user";
-      alert(msg);
+      const msg = error.response?.data?.message || (isEditing ? "Failed to update user" : "Failed to create user");
+      showToast(msg, "error");
     }
+  };
+
+  const toggleActionMenu = (id, e) => {
+    e.stopPropagation();
+    setActiveActionMenu(activeActionMenu === id ? null : id);
   };
 
   /* =============================
@@ -71,6 +165,13 @@ const RoleManagement = () => {
   return (
     <div className="role-management-container">
       <Sidebar />
+
+      {/* TOAST NOTIFICATION */}
+      {toast.show && (
+        <div className={`toast-notification ${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
 
       {/* SEARCH BAR */}
       <div className="top-search-bar">
@@ -93,74 +194,106 @@ const RoleManagement = () => {
             <p>Manage user access, assign roles, and configure module permissions.</p>
           </div>
 
-          <button className="create-user-btn" onClick={() => setShowModal(true)}>
+          <button className="create-user-btn" onClick={handleOpenCreate}>
             + Create New User
           </button>
         </header>
 
         {/* MODAL */}
         {showModal && (
-          <div className="modal-overlay" style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-          }}>
-            <div className="modal-content" style={{
-              background: 'white', padding: '20px', borderRadius: '8px', minWidth: '400px'
-            }}>
-              <h3>Create New User</h3>
-              <form onSubmit={handleCreateUser}>
-                <input
-                  type="text"
-                  placeholder="First Name"
-                  value={newUser.first_name}
-                  onChange={e => setNewUser({ ...newUser, first_name: e.target.value })}
-                  required
-                  style={{ display: "block", width: "100%", marginBottom: "10px", padding: "8px", boxSizing: 'border-box' }}
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name"
-                  value={newUser.last_name}
-                  onChange={e => setNewUser({ ...newUser, last_name: e.target.value })}
-                  required
-                  style={{ display: "block", width: "100%", marginBottom: "10px", padding: "8px", boxSizing: 'border-box' }}
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={newUser.email}
-                  onChange={e => setNewUser({ ...newUser, email: e.target.value })}
-                  required
-                  style={{ display: "block", width: "100%", marginBottom: "10px", padding: "8px", boxSizing: 'border-box' }}
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={newUser.password}
-                  onChange={e => setNewUser({ ...newUser, password: e.target.value })}
-                  required
-                  style={{ display: "block", width: "100%", marginBottom: "10px", padding: "8px", boxSizing: 'border-box' }}
-                />
-                <select
-                  value={newUser.role_name}
-                  onChange={e => setNewUser({ ...newUser, role_name: e.target.value })}
-                  style={{ display: "block", width: "100%", marginBottom: "20px", padding: "8px", boxSizing: 'border-box' }}
-                >
-                  <option value="User">User</option>
-                  <option value="Admin">Admin</option>
-                  <option value="Lease Manager">Lease Manager</option>
-                  <option value="Manager">Manager</option>
-                </select>
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-                  <button type="button" onClick={() => setShowModal(false)} style={{ padding: "8px 16px", cursor: 'pointer' }}>Cancel</button>
-                  <button type="submit" style={{ padding: "8px 16px", background: "#007bff", color: "white", border: "none", borderRadius: '4px', cursor: 'pointer' }}>Create</button>
+          <div className="modal-overlay">
+            <div className="modal-content premium-modal">
+              <div className="modal-header">
+                <h3>{isEditing ? "Edit User" : "Create New User"}</h3>
+                <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="modal-form">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>First Name</label>
+                    <input
+                      type="text"
+                      className="premium-input"
+                      value={formData.first_name}
+                      onChange={e => setFormData({ ...formData, first_name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Last Name</label>
+                    <input
+                      type="text"
+                      className="premium-input"
+                      value={formData.last_name}
+                      onChange={e => setFormData({ ...formData, last_name: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    className="premium-input"
+                    value={formData.email}
+                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    disabled={isEditing} // Prevent changing email on edit if desired, or allow it
+                  />
+                  {isEditing && <span className="helper-text">Email acts as unique identifier</span>}
+                </div>
+
+                <div className="form-group">
+                  <label>{isEditing ? "Password (Leave blank to keep current)" : "Password"}</label>
+                  <input
+                    type="password"
+                    className="premium-input"
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    required={!isEditing}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Role</label>
+                  <select
+                    className="premium-select"
+                    value={formData.role_name}
+                    onChange={e => setFormData({ ...formData, role_name: e.target.value })}
+                  >
+                    <option value="User">User</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Lease Manager">Lease Manager</option>
+                    <option value="Manager">Manager</option>
+                  </select>
+                </div>
+
+                {isEditing && (
+                  <div className="form-group">
+                    <label>Status</label>
+                    <select
+                      className="premium-select"
+                      value={formData.status}
+                      onChange={e => setFormData({ ...formData, status: e.target.value })}
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="modal-actions">
+                  <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="submit" className="btn-primary">{isEditing ? "Save Changes" : "Create User"}</button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* ✅ STATS SECTION */}
+        {/* STATS SECTION */}
         <section className="stats-grid">
           <div className="stats-card">
             <h3>Total Users</h3>
@@ -202,7 +335,7 @@ const RoleManagement = () => {
             <div>Actions</div>
           </div>
 
-          {filteredUsers.map(user => (
+          {loading ? <div className="loading-row">Loading users...</div> : filteredUsers.map(user => (
             <div className="user-row" key={user.id}>
 
               {/* RADIO */}
@@ -253,7 +386,7 @@ const RoleManagement = () => {
                 )}
               </div>
 
-              {/* ✅ STATUS AFTER MODULE ACCESS */}
+              {/* STATUS */}
               <div className="status-column">
                 <span className={`status ${user.status}`}>
                   {user.status === "inactive" ? "Inactive" : "Active"}
@@ -261,12 +394,19 @@ const RoleManagement = () => {
               </div>
 
               {/* ACTIONS */}
-              <div>
-                <button className="action-btn">⋮</button>
+              <div className="actions-column">
+                <button className="action-btn" onClick={(e) => toggleActionMenu(user.id, e)}>⋮</button>
+                {activeActionMenu === user.id && (
+                  <div className="action-menu" ref={actionMenuRef}>
+                    <button onClick={() => handleOpenEdit(user)}>Edit</button>
+                    <button className="delete" onClick={() => handleDelete(user.id)}>Delete</button>
+                  </div>
+                )}
               </div>
 
             </div>
           ))}
+          {!loading && filteredUsers.length === 0 && <div className="loading-row">No users found.</div>}
         </section>
 
         {/* FOOTER */}

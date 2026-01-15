@@ -8,7 +8,10 @@ const LeaseValidation = () => {
 
   useEffect(() => {
     getExpiringLeases()
-      .then((res) => setRows(res.data))
+      .then((res) => {
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        setRows(data);
+      })
       .catch(() => alert("Failed to load lease validation data"));
   }, []);
 
@@ -30,7 +33,7 @@ const LeaseValidation = () => {
           <tbody>
             {rows.map((row) => (
               <tr key={row.id}>
-                <td>{row.company_name}</td>
+                <td>{row.company_name || row.tenant?.company_name || "N/A"}</td>
                 <td>₹{row.monthly_rent}</td>
                 <td>{row.lease_end}</td>
               </tr>

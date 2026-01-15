@@ -5,6 +5,7 @@ import { ownerAPI } from '../../services/api';
 
 const KycPage = () => {
     const [kycRequests, setKycRequests] = useState([]);
+    const [stats, setStats] = useState({ total: 0, pending: 0, verified: 0, rejected: 0 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -12,20 +13,17 @@ const KycPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetching owners.
-                const response = await ownerAPI.getOwners();
-                const owners = response.data || response;
+                // Fetch stats and owners concurrently
+                const [ownersRes, statsRes] = await Promise.all([
+                    ownerAPI.getOwners(),
+                    ownerAPI.getKycStats()
+                ]);
 
-                if (!Array.isArray(owners)) {
-                    // Sometimes API wrappers act differently, let's be safe
-                    if (owners.data && Array.isArray(owners.data)) {
-                        // handled above with || response, but for safety:
-                    } else {
-                        // console.error("Invalid format", owners);
-                        // throw new Error("Invalid API response format");
-                    }
-                }
+                // Handle Stats
+                setStats(statsRes.data);
 
+                // Handle Owners
+                const owners = ownersRes.data.data || ownersRes.data;
                 const finalOwners = Array.isArray(owners) ? owners : (owners.data || []);
 
                 // Map API data to UI structure
@@ -75,15 +73,45 @@ const KycPage = () => {
                 item.id === id ? { ...item, status: newStatus } : item
             ));
 
+            // Also update stats optimistically
+            setStats(prev => {
+                const item = kycRequests.find(r => r.id === id);
+                if (!item) return prev;
+                const oldStatus = item.status.toLowerCase(); // pending, verified, rejected
+                const newStatKey = newStatus.toLowerCase(); // verified, rejected
+
+                // Note: simple increment/decrement might be tricky if mapped status is complex
+                // But generally:
+                return {
+                    ...prev,
+                    [oldStatus]: Math.max(0, prev[oldStatus] - 1),
+                    [newStatKey]: prev[newStatKey] + 1
+                };
+            });
+
             // API Call
-            // Assuming ownerAPI.update exists
             const kycStatus = newStatus === 'Verified' ? 'verified' : 'rejected';
             await ownerAPI.updateOwner(id, { kyc_status: kycStatus });
 
         } catch (err) {
             console.error("Update Status Error:", err);
-            // Revert on failure (could add complex revert logic here)
             alert("Failed to update status");
+        }
+    };
+
+    const handleExport = async () => {
+        try {
+            const response = await ownerAPI.exportOwners();
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'kyc_report.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            console.error("Export Error:", err);
+            alert("Failed to export report");
         }
     };
 
@@ -105,7 +133,7 @@ const KycPage = () => {
                         <h2>KYC Verification</h2>
                         <p>Manage and verify tenant and owner documents.</p>
                     </div>
-                    <button className="export-btn">
+                    <button className="export-btn" onClick={handleExport}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Export Report
                     </button>
@@ -115,19 +143,19 @@ const KycPage = () => {
                 <section className="stats-grid">
                     <div className="stats-card">
                         <h3>Total Requests</h3>
-                        <div className="stat-value">{kycRequests.length}</div>
+                        <div className="stat-value">{stats.total}</div>
                     </div>
                     <div className="stats-card">
                         <h3>Pending Verification</h3>
-                        <div className="stat-value">{kycRequests.filter(r => r.status === 'Pending').length}</div>
+                        <div className="stat-value">{stats.pending}</div>
                     </div>
                     <div className="stats-card">
                         <h3>Verified Users</h3>
-                        <div className="stat-value">{kycRequests.filter(r => r.status === 'Verified').length}</div>
+                        <div className="stat-value">{stats.verified}</div>
                     </div>
                     <div className="stats-card">
                         <h3>Rejected</h3>
-                        <div className="stat-value">{kycRequests.filter(r => r.status === 'Rejected').length}</div>
+                        <div className="stat-value">{stats.rejected}</div>
                     </div>
                 </section>
 
