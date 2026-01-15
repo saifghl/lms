@@ -1138,3 +1138,161 @@ button {
   margin-top: 24px;
   display: inline-block;
 }
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .lease-dashboard-content {
+    margin-left: 0;
+    padding: 70px 20px 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .lease-dashboard-content {
+    padding: 70px 20px 20px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .dashboard-header h2 {
+    font-size: 22px;
+  }
+
+  .primary-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card h3 {
+    font-size: 28px;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .nav-tabs {
+    gap: 16px;
+    overflow-x: auto;
+  }
+
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .apply-filters-btn {
+    width: 100%;
+  }
+
+  .report-cards-grid,
+  .review-stats-grid,
+  .reports-kpi-grid,
+  .tracker-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .approval-body {
+    grid-template-columns: 1fr;
+  }
+
+  .approval-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .chart-section {
+    grid-template-columns: 1fr;
+  }
+
+  .tracker-filter-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tracker-search {
+    width: 100%;
+  }
+
+  .tracker-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .tracker-progress-section {
+    max-width: 100%;
+    margin: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .lease-dashboard-content {
+    padding: 70px 15px 15px;
+  }
+
+  .dashboard-header h2 {
+    font-size: 20px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-card h3 {
+    font-size: 24px;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-cards-grid,
+  .review-stats-grid,
+  .reports-kpi-grid,
+  .tracker-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .approval-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .data-table {
+    font-size: 12px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 12px;
+  }
+
+  .table-wrapper {
+    padding: 12px;
+  }
+
+  .bar-chart-container {
+    height: 200px;
+  }
+
+  .notification-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

@@ -118,3 +118,49 @@
 .btn-logout:hover {
     background-color: #41a823;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .logout-card {
+        width: 90%;
+        padding: 32px 24px;
+    }
+
+    .logout-card h2 {
+        font-size: 1.3rem;
+    }
+
+    .logout-actions {
+        flex-direction: column;
+    }
+
+    .btn-cancel,
+    .btn-logout {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .logout-card {
+        padding: 24px 20px;
+        border-radius: 12px;
+    }
+
+    .logout-card h2 {
+        font-size: 1.2rem;
+    }
+
+    .logout-card p {
+        font-size: 0.85rem;
+    }
+
+    .icon-container {
+        width: 56px;
+        height: 56px;
+    }
+
+    .logout-icon-svg {
+        width: 28px;
+        height: 28px;
+    }
+}
