@@ -5,7 +5,15 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-const pool = mysql.createPool(process.env.DATABASE_URL + "?ssl=true");
+const pool = mysql.createPool({
+  uri: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
 (async () => {
   try {
