@@ -1,35 +1,10 @@
-services:
-  # Backend Service
-  - type: web
-    name: lms-backend
-    runtime: node
-    region: singapore
-    plan: free
-    repo: https://github.com/saifghl/lms
-    branch: master
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: node server.js
-    envVars:
-      - key: PORT
-        value: 5000
-      - key: DB_HOST
-        sync: false  # User must provide database host
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: DB_NAME
-        value: lms_db
-
 staticSites:
-  # Frontend Static Site
   - name: lms-frontend
     repo: https://github.com/saifghl/lms
-    branch: master
+    branch: main
     rootDir: .
     buildCommand: npm install && npm run build
-    publishDir: build
+    publishPath: build
     routes:
       - type: rewrite
         source: /*
@@ -40,3 +15,26 @@ staticSites:
           type: web
           name: lms-backend
           property: url
+
+services:
+  - type: web
+    name: lms-backend
+    runtime: node
+    region: singapore
+    plan: free
+    repo: https://github.com/saifghl/lms
+    branch: main
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: lms_db
