@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "https://backend-xx4i.onrender.com/"
+  baseURL: process.env.REACT_APP_API_URL || "https://backend1-ls90.onrender.com/"
 });
 
 // Add token to requests if available
