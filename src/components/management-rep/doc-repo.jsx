@@ -13,6 +13,7 @@ const DocumentRepository = () => {
 
   useEffect(() => {
     fetchDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, filterCategory]);
 
   const fetchDocuments = async () => {

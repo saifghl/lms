@@ -7,7 +7,7 @@ import './AddUnit.css';
 const AddUnit = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
-    const [loading, setLoading] = useState(false);
+    // const [loading, setLoading] = useState(false);
     const [projects, setProjects] = useState([]);
     const [formData, setFormData] = useState({
         project_id: '',

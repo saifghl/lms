@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { ownerAPI } from '../../services/api';
 import './OwnerList.css';
 
 const OwnerList = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [owners, setOwners] = useState([]);
   const [loading, setLoading] = useState(true);
 

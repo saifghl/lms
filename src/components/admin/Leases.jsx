@@ -12,6 +12,7 @@ const Leases = () => {
 
     useEffect(() => {
         fetchLeases();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statusFilter]);
 
     const fetchLeases = async () => {

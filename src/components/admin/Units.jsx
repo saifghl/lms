@@ -7,16 +7,16 @@ import './units.css';
 const Units = () => {
     const [units, setUnits] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
+    // const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedBuilding, setSelectedBuilding] = useState('All');
     const [selectedUnitType, setSelectedUnitType] = useState('All');
     const [error, setError] = useState(null);
-    const [filters, setFilters] = useState({
-        search: '',
-        project_id: '',
-        status: ''
-    });
+    // const [filters, setFilters] = useState({
+    //     search: '',
+    //     project_id: '',
+    //     status: ''
+    // });
 
     useEffect(() => {
         const fetchUnits = async () => {

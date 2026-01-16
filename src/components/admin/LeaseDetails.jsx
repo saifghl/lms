@@ -14,6 +14,7 @@ const LeaseDetails = () => {
         if (id) {
             fetchLease();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchLease = async () => {

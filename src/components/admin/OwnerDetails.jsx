@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { ownerAPI, unitAPI } from '../../services/api';
+import { ownerAPI } from '../../services/api';
 import './OwnerDetails.css';
 
 const OwnerDetails = () => {

@@ -8,7 +8,7 @@ const UnitDetails = () => {
     const { id } = useParams();
     const [unit, setUnit] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    // const [error, setError] = useState(null);
 
     // TODO: Ideally, getUnitById should return tenant and owner info if subscribed.
     // For now, we will display what we have.
