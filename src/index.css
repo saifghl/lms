@@ -260,3 +260,58 @@ tr:last-child td {
 tr:hover td {
   background-color: #f8fafc;
 }
+
+/* ================= MOBILE RESPONSIVENESS ================= */
+@media (max-width: 768px) {
+
+  /* Adjust Main Content to not be swallowed by fixed sidebar */
+  .dashboard-container {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Sidebar is hidden by default in Sidebar.css, so main content should take full width */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 16px;
+  }
+
+  /* Cards should stack */
+  .dashboard-stats,
+  .stats-grid,
+  .grid-container,
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-row .form-group {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Table scrolling */
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 600px;
+    /* Force scroll */
+  }
+
+  /* Typography adjustments */
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+}

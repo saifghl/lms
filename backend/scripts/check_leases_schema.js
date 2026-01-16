@@ -4,9 +4,9 @@ const pool = require('../config/db');
 
 async function checkSchema() {
     try {
-        console.log("--- OWNERS ---");
-        const [owners] = await pool.query("DESCRIBE owners");
-        console.table(owners.map(col => ({ Field: col.Field, Type: col.Type })));
+        console.log("--- LEASES ---");
+        const [leases] = await pool.query("DESCRIBE leases");
+        console.table(leases.map(col => ({ Field: col.Field, Type: col.Type })));
         process.exit(0);
     } catch (err) {
         console.error("Error:", err);

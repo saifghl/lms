@@ -28,8 +28,8 @@ exports.exportReports = async (req, res) => {
           COALESCE(u.unit_number, 'N/A') as unit_number,
           COALESCE(t.company_name, 'N/A') as tenant,
           COALESCE(l.monthly_rent, 0) as rent,
-          l.lease_start,
-          l.lease_end,
+          l.term_start as lease_start,
+          l.term_end as lease_end,
           l.status
         FROM projects p
         LEFT JOIN units u ON p.id = u.project_id

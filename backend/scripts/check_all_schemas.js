@@ -7,6 +7,11 @@ async function checkSchema() {
         console.log("--- OWNERS ---");
         const [owners] = await pool.query("DESCRIBE owners");
         console.table(owners.map(col => ({ Field: col.Field, Type: col.Type })));
+
+        console.log("\n--- TENANTS ---");
+        const [tenants] = await pool.query("DESCRIBE tenants");
+        console.table(tenants.map(col => ({ Field: col.Field, Type: col.Type })));
+
         process.exit(0);
     } catch (err) {
         console.error("Error:", err);

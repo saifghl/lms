@@ -48,10 +48,10 @@ const createUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Insert user (Fixed: password_hash, role_id)
+        // Insert user (Fixed: ensure no undefined values)
         const [result] = await pool.execute(
             "INSERT INTO users (first_name, last_name, email, password_hash, role_id, status) VALUES (?, ?, ?, ?, ?, ?)",
-            [first_name, last_name, email, hashedPassword, roleId, 'active']
+            [first_name || '', last_name || '', email, hashedPassword, roleId || null, 'active']
         );
 
         res.status(201).json({ message: "User created successfully", id: result.insertId });

@@ -105,7 +105,7 @@ const LeaseDashboard = () => {
           <div className="area-card">
             <div className="area-info">
               <h4>Area Occupied</h4>
-              <span className="sub-text">Average Rent Achieved: ₹{stats?.areaStats?.occupied?.avgRentPerSqft?.toFixed(2) || '0'} per sq ft</span>
+              <span className="sub-text">Average Rent Achieved: ₹{parseFloat(stats?.areaStats?.occupied?.avgRentPerSqft || 0).toFixed(2)} per sq ft</span>
             </div>
             <div className="area-metrics">
               <span className="big-num">{stats?.areaStats?.occupied?.area?.toLocaleString() || '0'} sq ft</span>
@@ -117,7 +117,7 @@ const LeaseDashboard = () => {
           <div className="area-card">
             <div className="area-info">
               <h4>Area Vacant</h4>
-              <span className="sub-text">Average Expected Rent: ₹{stats?.areaStats?.vacant?.avgRentPerSqft?.toFixed(2) || '0'} per sq ft</span>
+              <span className="sub-text">Average Expected Rent: ₹{parseFloat(stats?.areaStats?.vacant?.avgRentPerSqft || 0).toFixed(2)} per sq ft</span>
             </div>
             <div className="area-metrics">
               <span className="big-num">{stats?.areaStats?.vacant?.area?.toLocaleString() || '0'} sq ft</span>

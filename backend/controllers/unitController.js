@@ -94,7 +94,7 @@ const createUnit = async (req, res) => {
         const unitId = result.insertId;
 
         /* --------- INSERT IMAGES --------- */
-        if (req.files && req.files.length > 0) {
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
             for (const file of req.files) {
                 await conn.query(
                     `INSERT INTO unit_images (unit_id, image_path)

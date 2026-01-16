@@ -32,9 +32,12 @@ exports.createTenant = async (req, res) => {
         await connection.beginTransaction();
 
         // Use unit_ids if provided, otherwise use units
-        const unitIds = unit_ids || units || [];
+        const rawUnitIds = unit_ids || units || [];
+        // FILTER: Ensure only valid numbers/strings are used, remove objects/nulls
+        const unitIds = (Array.isArray(rawUnitIds) ? rawUnitIds : [])
+            .map(id => (typeof id === 'object' ? id.id : id)) // Handle if {id: 1} is passed
+            .filter(id => id && !isNaN(id));
 
-        // ✅ Ensure no undefined / null issues
         const tenantValues = [
             company_name,
             company_registration_number || null,
@@ -56,9 +59,9 @@ exports.createTenant = async (req, res) => {
         // 1️⃣ Insert tenant
         const [tenantResult] = await connection.query(
             `INSERT INTO tenants 
-            (company_name, company_registration_number, industry, tax_id, website,
+            (company_name, registration_no, industry, tax_id, website,
              contact_person_name, contact_person_email, contact_person_phone,
-             street_address, city, state, zip_code, country, kyc_status, status)
+             address, city, state, zip_code, country, kyc_status, status)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             tenantValues
         );
@@ -66,15 +69,18 @@ exports.createTenant = async (req, res) => {
         const tenantId = tenantResult.insertId;
 
         // 2️⃣ Assign units
-        if (Array.isArray(unitIds) && unitIds.length > 0) {
+        if (unitIds.length > 0) {
             for (let unitId of unitIds) {
-                if (!unitId) continue;
-
                 // Validate unit exists
                 const [validUnit] = await connection.query("SELECT id FROM units WHERE id = ?", [unitId]);
-                if (validUnit.length === 0) continue;
+                if (validUnit.length === 0) {
+                    console.warn(`Skipping invalid unit ID: ${unitId}`);
+                    continue;
+                }
 
-                // Check if unit is already assigned
+                // Check if unit is already assigned to THIS tenant (idempotency)
+                // Note: If unit is assigned to ANOTHER tenant, we might want to block or overwrite. 
+                // Current logic: just insert if not already linked to this tenant.
                 const [existing] = await connection.query(
                     `SELECT * FROM tenant_units WHERE tenant_id = ? AND unit_id = ?`,
                     [tenantId, unitId]
@@ -99,15 +105,16 @@ exports.createTenant = async (req, res) => {
         if (Array.isArray(subtenants) && subtenants.length > 0) {
             for (let sub of subtenants) {
                 // Skip if no company name provided
-                if (!sub.company_name || sub.company_name.trim() === '') {
+                if (!sub.company_name || typeof sub.company_name !== 'string' || sub.company_name.trim() === '') {
+                    console.warn("Skipping subtenant with invalid/missing company_name");
                     continue;
                 }
 
                 await connection.query(
                     `INSERT INTO sub_tenants
-                    (tenant_id, company_name, registration_number,
-                     allotted_area_sqft, contact_person_name,
-                     contact_person_email, contact_person_phone)
+                    (tenant_id, company_name, registration_no,
+                     allotted_area, contact_person,
+                     email, phone)
                      VALUES (?, ?, ?, ?, ?, ?, ?)`,
                     [
                         tenantId,
@@ -132,8 +139,9 @@ exports.createTenant = async (req, res) => {
     } catch (err) {
         await connection.rollback();
         console.error('CREATE TENANT ERROR:', err);
+        console.error('SQL Message:', err.sqlMessage);
         res.status(500).json({
-            message: 'Failed to create tenant',
+            message: 'Failed to create tenant: ' + err.message,
             error: err.message
         });
     } finally {
@@ -151,7 +159,6 @@ exports.getAllTenants = async (req, res) => {
                 t.company_name,
                 t.contact_person_phone,
                 t.contact_person_email,
-                t.kyc_status,
                 t.status,
                 COALESCE(SUM(u.super_area), 0) AS area_occupied
             FROM tenants t

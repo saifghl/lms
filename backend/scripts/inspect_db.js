@@ -1,10 +1,11 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const pool = require('../config/db');
 
 async function inspect() {
     try {
-        const [tables] = await pool.query("SHOW TABLES");
-        console.log("Tables found:", tables.map(t => Object.values(t)[0]));
+        const tables = [{ t: 'sub_tenants' }];
+        console.log("Checking sub_tenants table...");
 
         for (const t of tables) {
             const tableName = Object.values(t)[0];
