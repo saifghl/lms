@@ -166,7 +166,7 @@ const Login = () => {
                   onChange={handleChange}
                   style={{
                     width: '100%',
-                    padding: '12px 40px',
+                    padding: '12px 16px 12px 60px',
                     border: '1px solid #e2e8f0',
                     borderRadius: '8px',
                     fontSize: '0.95rem',

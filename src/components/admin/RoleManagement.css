@@ -12,6 +12,8 @@
     margin-left: 250px;
     padding: 30px;
     width: calc(100% - 250px);
+    box-sizing: border-box;
+    /* Prevent padding from adding to width */
 }
 
 .role-header {
@@ -477,4 +479,71 @@ input:checked+.slider:before {
     border-radius: 6px;
     font-weight: 500;
     cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+    .role-content {
+        margin-left: 0;
+        padding: 80px 20px 20px;
+        width: 100%;
+    }
+
+    .top-search-bar {
+        position: static;
+        width: 100%;
+        margin-bottom: 20px;
+        padding: 0 20px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .role-table-container {
+        overflow-x: auto;
+    }
+
+    .role-table-header,
+    .user-row {
+        min-width: 800px;
+        /* Force min width to enable scrolling */
+    }
+}
+
+@media (max-width: 768px) {
+    .role-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .create-user-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .premium-modal {
+        width: 95%;
+        margin: 10px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .role-content {
+        padding: 70px 15px 20px;
+    }
+
+    .action-menu {
+        right: 40px;
+        /* Adjust dropdown position to not go off-screen */
+    }
 }
