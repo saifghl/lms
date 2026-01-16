@@ -32,17 +32,30 @@ exports.getOwnerDetails = async (req, res) => {
 ========================= */
 exports.getOwners = async (req, res) => {
     try {
-        const [rows] = await pool.query(`
+        const { search } = req.query;
+        let query = `
             SELECT 
-                id,
-                name,
-                email,
-                phone,
-                kyc_status,
-                created_at
-            FROM owners
-            ORDER BY created_at DESC
-        `);
+                o.id,
+                o.name,
+                o.email,
+                o.phone,
+                o.kyc_status,
+                o.created_at,
+                (SELECT document_path FROM owner_documents WHERE owner_id = o.id ORDER BY uploaded_at DESC LIMIT 1) as document_path,
+                (SELECT document_type FROM owner_documents WHERE owner_id = o.id ORDER BY uploaded_at DESC LIMIT 1) as document_type
+            FROM owners o
+        `;
+
+        const params = [];
+
+        if (search) {
+            query += ` WHERE o.name LIKE ? OR o.email LIKE ? OR o.phone LIKE ? OR o.kyc_status LIKE ?`;
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+        }
+
+        query += ` ORDER BY o.created_at DESC`;
+
+        const [rows] = await pool.query(query, params);
 
         res.json(rows);
     } catch (err) {
@@ -237,16 +250,41 @@ exports.createOwner = async (req, res) => {
    UPDATE OWNER (UPDATED)
 ========================= */
 exports.updateOwner = async (req, res) => {
-    const { name, email, phone, representative_phone, representative_email, address } = req.body;
+    const ownerId = req.params.id;
+    const updates = req.body;
+
+    // Allowed fields to prevent SQL injection or unwanted updates (e.g. id)
+    const allowedFields = [
+        'name', 'email', 'phone', 'representative_name',
+        'representative_phone', 'representative_email',
+        'address', 'gst_number', 'kyc_status'
+    ];
 
     try {
+        const fieldsToUpdate = [];
+        const values = [];
+
+        for (const [key, value] of Object.entries(updates)) {
+            if (allowedFields.includes(key) && value !== undefined) {
+                fieldsToUpdate.push(`${key} = ?`);
+                values.push(value);
+            }
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            return res.status(400).json({ message: "No valid fields to update" });
+        }
+
+        values.push(ownerId);
+
         await pool.query(
-            "UPDATE owners SET name=?, email=?, phone=?, representative_phone=?, representative_email=?, address=? WHERE id=?",
-            [name, email, phone, representative_phone, representative_email, address, req.params.id]
+            `UPDATE owners SET ${fieldsToUpdate.join(', ')} WHERE id = ?`,
+            values
         );
 
         res.json({ message: "Owner updated successfully" });
     } catch (err) {
+        console.error("UPDATE OWNER ERROR:", err);
         res.status(500).json({ message: "Failed to update owner" });
     }
 };
@@ -361,16 +399,71 @@ exports.removeUnitFromOwner = async (req, res) => {
 exports.getKycStats = async (req, res) => {
     try {
         const [total] = await pool.query(`SELECT COUNT(*) as count FROM owners`);
+        const [pending] = await pool.query(`SELECT COUNT(*) as count FROM owners WHERE kyc_status = 'pending' OR kyc_status IS NULL`);
+        const [verified] = await pool.query(`SELECT COUNT(*) as count FROM owners WHERE kyc_status = 'verified'`);
+        const [rejected] = await pool.query(`SELECT COUNT(*) as count FROM owners WHERE kyc_status = 'rejected'`);
 
-        // Default everything to Pending since column doesn't exist
         res.json({
             total: total[0].count,
-            pending: total[0].count,
-            verified: 0,
-            rejected: 0
+            pending: pending[0].count,
+            verified: verified[0].count,
+            rejected: rejected[0].count
         });
     } catch (err) {
-        console.error("GET KYC STATS ERROR:", err);
         res.status(500).json({ message: "Failed to fetch KYC stats" });
+    }
+};
+
+/* =========================
+   OWNER DOCUMENTS APIs
+========================= */
+exports.getOwnerDocuments = async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            "SELECT * FROM owner_documents WHERE owner_id = ? ORDER BY uploaded_at DESC",
+            [req.params.id]
+        );
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to get documents" });
+    }
+};
+
+exports.uploadDocument = async (req, res) => {
+    // Assuming multer middleware handles file upload and puts it in req.file
+    try {
+        const ownerId = req.params.id;
+        const { document_type } = req.body;
+        const filePath = req.file ? req.file.path : null;
+
+        if (!filePath) return res.status(400).json({ message: "No file uploaded" });
+
+        await pool.query(
+            "INSERT INTO owner_documents (owner_id, document_type, document_path) VALUES (?, ?, ?)",
+            [ownerId, document_type || "General", filePath]
+        );
+
+        res.json({ message: "Document uploaded successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to upload document" });
+    }
+};
+
+/* =========================
+   OWNER MESSAGES APIs
+========================= */
+exports.sendMessage = async (req, res) => {
+    try {
+        const ownerId = req.params.id;
+        const { subject, message } = req.body;
+
+        await pool.query(
+            "INSERT INTO owner_messages (owner_id, subject, message) VALUES (?, ?, ?)",
+            [ownerId, subject || "No Subject", message]
+        );
+
+        res.json({ message: "Message sent successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to send message" });
     }
 };

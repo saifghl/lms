@@ -16,7 +16,9 @@ const tenantRoutes = require("./routes/tenantRoutes");
 const ownerRoutes = require("./routes/ownerRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
 const unitRoutes = require("./routes/unitRoutes");
-const userRoutes = require("./routes/userRoutes");
+const userRoutes = require("./routes/userRoutes"); // New Route
+
+const roleRoutes = require("./routes/roleRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -55,16 +57,18 @@ app.get("/", (req, res) => {
    API ROUTES
 ========================= */
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/activity", activityLogRoutes);
-app.use("/api/management", managementRoutes);
-app.use("/api/leases", leaseRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/tenants", tenantRoutes);
-app.use("/api/owners", ownerRoutes);
+app.use("/api/leases", leaseRoutes);
+app.use("/api/owners", ownerRoutes); // Updated Owner Route
+app.use("/api/management", managementRoutes); // Management Rep Routes
+// app.use("/api/notifications", notificationRoutes);
 app.use("/api/settings", settingsRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/activity-logs", activityLogRoutes);
+app.use("/api/roles", roleRoutes); // Mounted Route
+app.use("/api/dashboard", dashboardRoutes);
 
 /* =========================
    HEALTH CHECK (RENDER)

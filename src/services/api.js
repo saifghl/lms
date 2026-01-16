@@ -35,7 +35,7 @@ export const login = (data) => API.post("/auth/login", data);
 export const register = (data) => API.post("/auth/register", data);
 
 // Project APIs
-export const getProjects = () => API.get("/projects");
+export const getProjects = (params) => API.get("/projects", { params });
 export const getProjectById = (id) => API.get(`/projects/${id}`);
 export const addProject = (data) => API.post("/projects", data, {
   headers: { "Content-Type": "multipart/form-data" }
@@ -47,7 +47,7 @@ export const deleteProject = (id) => API.delete(`/projects/${id}`);
 
 // OWNERS APIs
 export const ownerAPI = {
-  getOwners: () => API.get("/owners"),
+  getOwners: (params) => API.get("/owners", { params }),
   getKycStats: () => API.get("/owners/stats"), // New stats API
   exportOwners: () => API.get("/owners/export", { responseType: 'blob' }),
   getOwnerById: (id) => API.get(`/owners/${id}`),
@@ -70,11 +70,9 @@ export const unitAPI = {
 
 // ---------------- TENANTS ----------------
 export const tenantAPI = {
-  getTenants: () => API.get("/tenants"),
+  getTenants: (params) => API.get("/tenants", { params }),
   getTenantById: (id) => API.get(`/tenants/${id}`),
-  createTenant: (data) => API.post("/tenants", data, {
-    headers: { "Content-Type": "multipart/form-data" }
-  }),
+  createTenant: (data) => API.post("/tenants", data),
   updateTenant: (id, data) => API.put(`/tenants/${id}`, data, {
     headers: { "Content-Type": "multipart/form-data" }
   }),
@@ -99,7 +97,7 @@ export const roleAPI = {
 
 // ---------------- USERS ----------------
 export const userAPI = {
-  getUsers: () => API.get("/users"),
+  getUsers: (params) => API.get("/users", { params }),
   createUser: (data) => API.post("/users", data),
   updateUser: (id, data) => API.put(`/users/${id}`, data),
   deleteUser: (id) => API.delete(`/users/${id}`),

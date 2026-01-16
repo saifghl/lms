@@ -164,10 +164,10 @@ exports.getAllTenants = async (req, res) => {
             FROM tenants t
             LEFT JOIN tenant_units tu ON t.id = tu.tenant_id
             LEFT JOIN units u ON tu.unit_id = u.id
-            WHERE (? = '' OR t.company_name LIKE ? OR t.contact_person_email LIKE ?)
+            WHERE (? = '' OR t.company_name LIKE ? OR t.contact_person_name LIKE ? OR t.contact_person_email LIKE ?)
             GROUP BY t.id
             ORDER BY t.created_at DESC
-        `, [search, `%${search}%`, `%${search}%`]);
+        `, [search, `%${search}%`, `%${search}%`, `%${search}%`]);
 
         res.json(rows);
     } catch (err) {

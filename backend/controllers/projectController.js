@@ -66,10 +66,37 @@ const addProject = async (req, res) => {
 };
 
 /* ================= GET ALL PROJECTS ================= */
+/* ================= GET ALL PROJECTS ================= */
 const getProjects = async (req, res) => {
   try {
-    // Using promise-based execute() method, not callback-based query()
-    const [projects] = await pool.execute("SELECT * FROM projects ORDER BY created_at DESC");
+    const { search, location, type } = req.query;
+    let query = "SELECT * FROM projects";
+    const conditions = [];
+    const params = [];
+
+    if (search) {
+      conditions.push("(project_name LIKE ? OR location LIKE ? OR id LIKE ?)");
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    if (location && location !== 'All') {
+      conditions.push("location = ?");
+      params.push(location);
+    }
+
+    if (type && type !== 'All') {
+      conditions.push("project_type = ?");
+      params.push(type);
+    }
+
+    if (conditions.length > 0) {
+      query += " WHERE " + conditions.join(" AND ");
+    }
+
+    query += " ORDER BY created_at DESC";
+
+    // Using promise-based execute() method
+    const [projects] = await pool.execute(query, params);
     res.json(projects);
   } catch (error) {
     console.error("Get projects error:", error);

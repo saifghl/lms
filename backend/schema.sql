@@ -74,6 +74,35 @@ CREATE TABLE IF NOT EXISTS owners (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS owner_units (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  owner_id INT NOT NULL,
+  unit_id INT NOT NULL,
+  assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
+  FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS owner_documents (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  owner_id INT NOT NULL,
+  document_type VARCHAR(100),
+  document_path VARCHAR(255),
+  status ENUM('pending', 'verified', 'rejected') DEFAULT 'pending',
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS owner_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  owner_id INT NOT NULL,
+  subject VARCHAR(255),
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS tenants (
   id INT AUTO_INCREMENT PRIMARY KEY,
   company_name VARCHAR(255) NOT NULL,
@@ -189,4 +218,14 @@ CREATE TABLE IF NOT EXISTS settings (
   theme_color VARCHAR(50),
   currency VARCHAR(10) DEFAULT 'INR',
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS documents (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  entity_type ENUM('project', 'unit', 'tenant', 'owner') NOT NULL,
+  entity_id INT,
+  document_type VARCHAR(100),
+  file_path VARCHAR(255) NOT NULL,
+  uploaded_by INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

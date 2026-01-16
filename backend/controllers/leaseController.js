@@ -280,8 +280,8 @@ exports.getAllLeases = async (req, res) => {
         }
 
         if (search) {
-            query += ` AND (t.company_name LIKE ? OR u.unit_number LIKE ? OR p.project_name LIKE ?)`;
-            params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+            query += ` AND (t.company_name LIKE ? OR u.unit_number LIKE ? OR p.project_name LIKE ? OR CAST(l.id AS CHAR) LIKE ?)`;
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
         }
 
         query += ` ORDER BY l.created_at DESC`;

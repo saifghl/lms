@@ -112,9 +112,10 @@ const AddTenant = () => {
 
         try {
             // Validate
-            if (formData.unit_ids.length === 0) {
-                throw new Error("At least one unit is required.");
-            }
+            // Validate
+            // if (formData.unit_ids.length === 0) {
+            //     throw new Error("At least one unit is required.");
+            // }
 
             const payload = {
                 ...formData,
@@ -243,7 +244,7 @@ const AddTenant = () => {
                             <div className="section-header-row">
                                 <h3>Unit Selection</h3>
                             </div>
-                            <p className="section-subtitle">Select the unit(s) to assign to this corporate tenant. At least one unit is required.</p>
+                            <p className="section-subtitle">Select the unit(s) to assign to this corporate tenant. (Optional)</p>
 
                             <div className="form-group" style={{ maxWidth: '300px' }}>
                                 <label>Project</label>

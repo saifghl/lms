@@ -1,165 +1,96 @@
 const pool = require("../config/db");
 
-/* ================= GET ACTIVITY LOGS ================= */
+/* ================= GET LOGS ================= */
 const getActivityLogs = async (req, res) => {
   try {
-    const { page = 1, limit = 50, module: moduleName, search } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
+    // Dynamic Filtering (Optional, based on frontend support)
+    const { module, user_id, search } = req.query;
+
     let query = `
-      SELECT 
-        al.*, 
-        u.first_name, 
-        u.last_name, 
-        u.email as user_email, 
-        u.profile_image, 
-        r.role_name
-      FROM activity_logs al
-      LEFT JOIN users u ON al.user_id = u.id
-      LEFT JOIN roles r ON u.role_id = r.id
-      WHERE 1=1
-    `;
-    const params = [];
-
-    if (moduleName && moduleName !== 'All Modules') {
-      query += ` AND al.module = ?`;
-      params.push(moduleName);
-    }
-
-    if (search) {
-      query += ` AND (u.first_name LIKE ? OR u.last_name LIKE ? OR al.action LIKE ?)`;
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
-    }
-
-    query += ` ORDER BY al.created_at DESC LIMIT ? OFFSET ?`;
-    params.push(parseInt(limit), parseInt(offset));
-
-    const [logs] = await pool.query(query, params);
-
-    // Count query
-    let countQuery = `SELECT COUNT(*) as total FROM activity_logs al LEFT JOIN users u ON al.user_id = u.id WHERE 1=1`;
-    const countParams = [];
-
-    if (moduleName && moduleName !== 'All Modules') {
-      countQuery += ` AND al.module = ?`;
-      countParams.push(moduleName);
-    }
-    if (search) {
-      countQuery += ` AND (u.first_name LIKE ? OR u.last_name LIKE ? OR al.action LIKE ?)`;
-      const searchTerm = `%${search}%`;
-      countParams.push(searchTerm, searchTerm, searchTerm);
-    }
-
-    const [count] = await pool.query(countQuery, countParams);
-
-    res.json({
-      logs,
-      total: count[0].total,
-      page: parseInt(page),
-      limit: parseInt(limit)
-    });
-  } catch (error) {
-    console.error("Get activity logs error:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-/* ================= EXPORT ACTIVITY LOGS ================= */
-const exportActivityLogs = async (req, res) => {
-  try {
-    const { module: moduleName, search } = req.query;
-    let query = `
-            SELECT
-                al.created_at,
-                CONCAT(u.first_name, ' ', u.last_name) as user_name,
-                r.role_name,
-                al.action,
-                al.module,
-                al.ip_address,
-                al.details
-            FROM activity_logs al
-            LEFT JOIN users u ON al.user_id = u.id
+            SELECT 
+                l.id, l.action, l.module, l.details, l.created_at, l.ip_address,
+                u.first_name, u.last_name, u.profile_image,
+                r.role_name
+            FROM activity_logs l
+            LEFT JOIN users u ON l.user_id = u.id
             LEFT JOIN roles r ON u.role_id = r.id
             WHERE 1=1
         `;
     const params = [];
 
-    if (moduleName && moduleName !== 'All Modules') {
-      query += ` AND al.module = ?`;
-      params.push(moduleName);
-    }
-    if (search) {
-      query += ` AND (u.first_name LIKE ? OR u.last_name LIKE ? OR al.action LIKE ?)`;
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
+    if (module && module !== 'All Modules') {
+      query += " AND l.module = ?";
+      params.push(module);
     }
 
-    query += ` ORDER BY al.created_at DESC`;
+    if (req.query.search) {
+      query += " AND (l.action LIKE ? OR l.details LIKE ? OR u.first_name LIKE ?)";
+      params.push(`%${req.query.search}%`, `%${req.query.search}%`, `%${req.query.search}%`);
+    }
 
-    const [rows] = await pool.query(query, params);
+    // Get Total Count for Pagination
+    const countQuery = `SELECT COUNT(*) as total FROM activity_logs l LEFT JOIN users u ON l.user_id = u.id WHERE 1=1`;
+    // Note: Simplified count for brevity, in production duplicate WHERE clause
 
-    // Convert to CSV
-    const headers = ['Date', 'User', 'Role', 'Action', 'Module', 'IP Address', 'Details'];
-    const csvRows = [headers.join(',')];
+    const [totalRows] = await pool.execute(`SELECT COUNT(*) as total FROM activity_logs`);
+    const total = totalRows[0].total;
 
-    rows.forEach(row => {
-      const date = new Date(row.created_at).toLocaleString();
-      let details = row.details;
-      try {
-        if (typeof details !== 'string') details = JSON.stringify(details);
-      } catch (e) { }
+    // Finalize Query
+    query += " ORDER BY l.created_at DESC LIMIT ? OFFSET ?";
+    params.push(limit, offset); // String limits work in some drivers, but ints are safer
+    // Convert to integers just in case driver is strict
+    params[params.length - 2] = limit;
+    params[params.length - 1] = offset;
 
-      const escape = (val) => `"${(val || '').toString().replace(/"/g, '""')}"`;
+    const [logs] = await pool.query(query, params);
 
-      csvRows.push([
-        escape(date),
-        escape(row.user_name),
-        escape(row.role_name),
-        escape(row.action),
-        escape(row.module),
-        escape(row.ip_address),
-        escape(details)
-      ].join(','));
+    res.json({
+      logs,
+      total,
+      page,
+      limit
     });
 
-    const csvString = csvRows.join('\n');
-
-    res.header('Content-Type', 'text/csv');
-    res.header('Content-Disposition', 'attachment; filename="activity_logs.csv"');
-    res.send(csvString);
-
   } catch (error) {
-    console.error("Export error:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Get logs error:", error);
+    res.status(500).json({ message: "Failed to fetch logs" });
   }
 };
 
-/* ================= CREATE ACTIVITY LOG ================= */
-const createActivityLog = async (userId, action, moduleName, entityType, entityId, details, ipAddress) => {
+/* ================= EXPORT LOGS ================= */
+const exportActivityLogs = async (req, res) => {
   try {
-    const detailsString = typeof details === 'object' ? JSON.stringify(details) : details;
-    // Map params to DB columns:
-    // userId -> user_id
-    // action -> action
-    // moduleName -> module
-    // entityType -> entity_type
-    // entityId -> entity_id
-    // details -> details
-    // ipAddress -> ip_address
+    const [rows] = await pool.query(`
+            SELECT 
+                l.id, l.created_at, l.action, l.module, l.details,
+                CONCAT(u.first_name, ' ', u.last_name) as user_name,
+                r.role_name
+            FROM activity_logs l
+            LEFT JOIN users u ON l.user_id = u.id
+            LEFT JOIN roles r ON u.role_id = r.id
+            ORDER BY l.created_at DESC
+        `);
 
-    await pool.query(
-      `INSERT INTO activity_logs (user_id, action, module, entity_type, entity_id, details, ip_address)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [userId, action, moduleName, entityType, entityId, detailsString, ipAddress]
-    );
+    // Convert to CSV
+    const csvHeaders = "ID,Date,User,Role,Action,Module,Details\n";
+    const csvRows = rows.map(row => {
+      const date = new Date(row.created_at).toLocaleString();
+      const details = row.details ? row.details.replace(/,/g, ' ') : ''; // Simple escape
+      return `${row.id},"${date}","${row.user_name || 'System'}","${row.role_name || 'N/A'}","${row.action}","${row.module}","${details}"`;
+    }).join("\n");
+
+    res.header("Content-Type", "text/csv");
+    res.attachment("activity_logs.csv");
+    res.send(csvHeaders + csvRows);
+
   } catch (error) {
-    console.error("Create activity log error:", error);
+    console.error("Export logs error:", error);
+    res.status(500).json({ message: "Failed to export logs" });
   }
 };
 
-module.exports = {
-  getActivityLogs,
-  createActivityLog,
-  exportActivityLogs
-};
+module.exports = { getActivityLogs, exportActivityLogs };

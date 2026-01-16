@@ -28,8 +28,8 @@ exports.exportReports = async (req, res) => {
           COALESCE(u.unit_number, 'N/A') as unit_number,
           COALESCE(t.company_name, 'N/A') as tenant,
           COALESCE(l.monthly_rent, 0) as rent,
-          l.term_start as lease_start,
-          l.term_end as lease_end,
+          l.lease_start,
+          l.lease_end,
           l.status
         FROM projects p
         LEFT JOIN units u ON p.id = u.project_id
@@ -89,110 +89,68 @@ exports.getRepDashboardStats = async (req, res) => {
 
     try {
       // Get total projects
-      let totalProjects = 0;
-      try {
-        const [projects] = await connection.query("SELECT COUNT(*) as count FROM projects");
-        totalProjects = projects[0]?.count || 0;
-      } catch (e) {
-        console.log("Projects table may not exist:", e.message);
-      }
+      const [projects] = await connection.query("SELECT COUNT(*) as count FROM projects");
+      const totalProjects = projects[0]?.count || 0;
 
       // Get total units
-      let totalUnits = 0;
-      try {
-        const [units] = await connection.query("SELECT COUNT(*) as count FROM units");
-        totalUnits = units[0]?.count || 0;
-      } catch (e) {
-        console.log("Units table may not exist:", e.message);
-      }
+      const [units] = await connection.query("SELECT COUNT(*) as count FROM units");
+      const totalUnits = units[0]?.count || 0;
 
       // Get total owners
-      let totalOwners = 0;
-      try {
-        const [owners] = await connection.query("SELECT COUNT(*) as count FROM owners");
-        totalOwners = owners[0]?.count || 0;
-      } catch (e) {
-        console.log("Owners table may not exist:", e.message);
-      }
+      const [owners] = await connection.query("SELECT COUNT(*) as count FROM owners");
+      const totalOwners = owners[0]?.count || 0;
 
       // Get total tenants
-      let totalTenants = 0;
-      try {
-        const [tenants] = await connection.query("SELECT COUNT(*) as count FROM tenants");
-        totalTenants = tenants[0]?.count || 0;
-      } catch (e) {
-        console.log("Tenants table may not exist:", e.message);
-      }
+      const [tenants] = await connection.query("SELECT COUNT(*) as count FROM tenants");
+      const totalTenants = tenants[0]?.count || 0;
 
       // Get total leases
-      let totalLeases = 0;
-      try {
-        const [leases] = await connection.query("SELECT COUNT(*) as count FROM leases");
-        totalLeases = leases[0]?.count || 0;
-      } catch (e) {
-        console.log("Leases table may not exist:", e.message);
-      }
+      const [leases] = await connection.query("SELECT COUNT(*) as count FROM leases");
+      const totalLeases = leases[0]?.count || 0;
 
       // Get total revenue
-      let totalRevenue = 0;
-      try {
-        const [revenue] = await connection.query(`
-          SELECT COALESCE(SUM(monthly_rent), 0) as total_revenue 
-          FROM leases 
-          WHERE status = 'active'
-        `);
-        totalRevenue = revenue[0]?.total_revenue || 0;
-      } catch (e) {
-        console.log("Revenue calculation error:", e.message);
-      }
+      const [revenue] = await connection.query(`
+        SELECT COALESCE(SUM(monthly_rent), 0) as total_revenue 
+        FROM leases 
+        WHERE status = 'active'
+      `);
+      const totalRevenue = revenue[0]?.total_revenue || 0;
 
       // Get upcoming renewals
-      let renewals = [];
-      try {
-        const [renewalData] = await connection.query(`
-          SELECT 
-            l.id,
-            l.id as lease_id,
-            u.unit_number,
-            t.company_name as tenant_name,
-            l.term_end,
-            DATEDIFF(l.term_end, CURDATE()) as days_remaining
-          FROM leases l
-          JOIN units u ON l.unit_id = u.id
-          JOIN tenants t ON l.tenant_id = t.id
-          WHERE l.status = 'active' 
-            AND l.term_end BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)
-          ORDER BY l.term_end ASC
-          LIMIT 3
-        `);
-        renewals = renewalData;
-      } catch (e) {
-        console.log("Renewals query error:", e.message);
-      }
+      const [renewals] = await connection.query(`
+        SELECT 
+          l.id,
+          l.id as lease_id,
+          u.unit_number,
+          t.company_name as tenant_name,
+          l.lease_end,
+          DATEDIFF(l.lease_end, CURDATE()) as days_remaining
+        FROM leases l
+        JOIN units u ON l.unit_id = u.id
+        JOIN tenants t ON l.tenant_id = t.id
+        WHERE l.status = 'active' 
+          AND l.lease_end BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)
+        ORDER BY l.lease_end ASC
+        LIMIT 3
+      `);
 
       // Get upcoming expiries
-      let expiries = [];
-      try {
-        const [expiryData] = await connection.query(`
-          SELECT 
-            l.id,
-            l.id as lease_id,
-            u.unit_number,
-            t.company_name as tenant_name,
-            l.term_end,
-            DATEDIFF(l.term_end, CURDATE()) as days_remaining
-          FROM leases l
-          JOIN units u ON l.unit_id = u.id
-          JOIN tenants t ON l.tenant_id = t.id
-          WHERE l.status = 'active' 
-            AND l.term_end BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)
-          ORDER BY l.term_end ASC
-          LIMIT 3
-        `);
-        expiries = expiryData;
-      } catch (e) {
-        console.log("Expiries query error:", e.message);
-      }
+      const [expiries] = await connection.query(`
+        SELECT 
+          l.id,
+          l.id as lease_id,
+          u.unit_number,
+          t.company_name as tenant_name,
+          l.lease_end,
+          DATEDIFF(l.lease_end, CURDATE()) as days_remaining
+        FROM leases l
+        JOIN units u ON l.unit_id = u.id
+        JOIN tenants t ON l.tenant_id = t.id
+        WHERE l.status = 'active' 
+          AND l.lease_end BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+        ORDER BY l.lease_end ASC
+        LIMIT 3
+      `);
 
       const stats = {
         metrics: {
@@ -232,7 +190,7 @@ exports.getRepDashboardStats = async (req, res) => {
           leaseId: r.lease_id,
           unit: `Unit ${r.unit_number}`,
           tenant: r.tenant_name,
-          date: r.term_end,
+          date: r.lease_end,
           daysRemaining: r.days_remaining,
           badge: `${r.days_remaining} Days`,
           badgeType: r.days_remaining < 30 ? 'warning' : 'success'
@@ -242,7 +200,7 @@ exports.getRepDashboardStats = async (req, res) => {
           leaseId: e.lease_id,
           unit: `Unit ${e.unit_number}`,
           tenant: e.tenant_name,
-          date: e.term_end,
+          date: e.lease_end,
           daysRemaining: e.days_remaining,
           badge: e.days_remaining < 30 ? 'HIGH RISK' : e.days_remaining < 60 ? 'MEDIUM' : 'LOW',
           badgeType: e.days_remaining < 30 ? 'danger' : e.days_remaining < 60 ? 'warning' : 'success'
@@ -257,7 +215,7 @@ exports.getRepDashboardStats = async (req, res) => {
 
       for (let i = 0; i < 12; i++) {
         const monthIndex = (currentMonth + i + 1) % 12;
-        const baseRev = totalRevenue || 0;
+        const baseRev = parseFloat(totalRevenue) || 0;
         const randomFactor = 0.8 + Math.random() * 0.4;
         revenueTrends.push({
           month: months[monthIndex],
@@ -281,14 +239,7 @@ exports.getRepDashboardStats = async (req, res) => {
     }
   } catch (error) {
     console.error("Rep dashboard stats error:", error);
-    res.json({
-      metrics: {},
-      upcomingRenewals: [],
-      upcomingExpiries: [],
-      // rentEscalations: [], // removed duplicate
-      revenueTrends: [],
-      areaStats: {}
-    });
+    res.status(500).json({ error: error.message });
   }
 };
 

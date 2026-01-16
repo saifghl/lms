@@ -15,6 +15,13 @@ const Dashboard = () => {
         revenue: { value: "₹0", change: "0%" }
     });
     const [loading, setLoading] = useState(true);
+    const [areaStats, setAreaStats] = useState(null);
+    const [lists, setLists] = useState({
+        renewals: [],
+        expiries: [],
+        escalations: []
+    });
+    const [revenueTrends, setRevenueTrends] = useState([]);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -22,15 +29,27 @@ const Dashboard = () => {
                 // Fetch stats from backend
                 const response = await getDashboardStats();
                 const data = response.data;
-                // Assuming data structure from backend matches or mapping it here
-                setStats({
-                    projects: { value: data.total_projects || 0, change: "+2%" },
-                    units: { value: data.total_units || 0, change: "+5%" },
-                    owners: { value: data.total_owners || 0, change: "0%" },
-                    tenants: { value: data.total_tenants || 0, change: "+3%" },
-                    leases: { value: data.total_leases || 0, change: "+4%" },
-                    revenue: { value: `₹${data.total_revenue || 0}`, change: "+12%" }
-                });
+
+                if (data.stats) {
+                    setStats({
+                        projects: { value: data.stats.totalProjects || 0, change: "+2%" }, // Mock change for now
+                        units: { value: data.stats.totalUnits || 0, change: "+5%" },
+                        owners: { value: data.stats.totalOwners || 0, change: "0%" },
+                        tenants: { value: data.stats.totalTenants || 0, change: "+3%" },
+                        leases: { value: data.stats.totalLeases || 0, change: "+4%" },
+                        revenue: { value: `₹${parseFloat(data.stats.totalRevenue || 0).toLocaleString('en-IN')}`, change: "+12%" }
+                    });
+                }
+
+                if (data.areaStats) {
+                    setAreaStats(data.areaStats);
+                }
+
+                if (data.upcomingRenewals) setLists(prev => ({ ...prev, renewals: data.upcomingRenewals }));
+                if (data.upcomingExpiries) setLists(prev => ({ ...prev, expiries: data.upcomingExpiries }));
+                if (data.rentEscalations) setLists(prev => ({ ...prev, escalations: data.rentEscalations }));
+                if (data.revenueTrends) setRevenueTrends(data.revenueTrends);
+
             } catch (error) {
                 console.error("Failed to fetch dashboard stats", error);
             } finally {
@@ -40,6 +59,16 @@ const Dashboard = () => {
 
         fetchStats();
     }, []);
+
+    const formatDate = (dateString) => {
+        if (!dateString) return { m: "UNK", d: "00", full: "Unknown" };
+        const date = new Date(dateString);
+        return {
+            m: date.toLocaleString('default', { month: 'short' }),
+            d: date.getDate().toString().padStart(2, '0'),
+            full: date.toLocaleDateString()
+        };
+    };
 
     return (
         <div className="dashboard-container">
@@ -108,11 +137,11 @@ const Dashboard = () => {
                     <div className="area-card fade-in">
                         <div>
                             <h3>Area Occupied</h3>
-                            <p>Average Rent Achieved: ₹57.20 per sq ft</p>
+                            <p>Average Rent Achieved: ₹{areaStats?.occupied?.avgRentPerSqft ? parseFloat(areaStats.occupied.avgRentPerSqft).toFixed(2) : '0.00'} per sq ft</p>
                         </div>
 
                         <div className="area-value-block">
-                            <div className="area-value">245,000 sq ft</div>
+                            <div className="area-value">{areaStats?.occupied?.area ? parseFloat(areaStats.occupied.area).toLocaleString() : '0'} sq ft</div>
                             <span>Super / Leasable Area</span>
                         </div>
                     </div>
@@ -120,11 +149,11 @@ const Dashboard = () => {
                     <div className="area-card fade-in">
                         <div>
                             <h3>Area Vacant</h3>
-                            <p>Average Expected Rent: ₹53.82 per sq ft</p>
+                            <p>Average Expected Rent: ₹{areaStats?.vacant?.avgRentPerSqft ? parseFloat(areaStats.vacant.avgRentPerSqft).toFixed(2) : '0.00'} per sq ft</p>
                         </div>
 
                         <div className="area-value-block">
-                            <div className="area-value">42,000 sq ft</div>
+                            <div className="area-value">{areaStats?.vacant?.area ? parseFloat(areaStats.vacant.area).toLocaleString() : '0'} sq ft</div>
                             <span>Super / Leasable Area</span>
                         </div>
                     </div>
@@ -172,18 +201,17 @@ const Dashboard = () => {
                                 strokeWidth="3"
                             />
 
-                            <path
-                                d="M0,240 C120,225 240,205 360,185 S600,175 780,190 S960,215 1000,205"
-                                stroke="#BFC8D6"
-                                strokeDasharray="6 6"
-                                fill="none"
-                            />
-
                         </svg>
 
                         <div className="chart-labels">
-                            <span>Jan</span><span>Feb</span><span>Mar</span>
-                            <span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+                            {revenueTrends.length > 0 ? revenueTrends.map((t, i) => (
+                                <span key={i}>{t.month}</span>
+                            )) : (
+                                <>
+                                    <span>Jan</span><span>Feb</span><span>Mar</span>
+                                    <span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+                                </>
+                            )}
                         </div>
                     </div>
                 </section>
@@ -195,52 +223,50 @@ const Dashboard = () => {
                     <div className="list-card fade-in">
                         <div className="list-header">
                             <h3>Upcoming Renewals</h3>
-                            <button>View All</button>
+                            <button onClick={() => navigate('/admin/leases')}>View All</button>
                         </div>
 
-                        {[
-                            { m: "Nov", d: "15", t: "Unit 402 • Nov 15, 2024", c: "James Logistics", b: "30 Days", cls: "warning" },
-                            { m: "Dec", d: "01", t: "Unit 105 • Dec 01, 2024", c: "TechCorp Inc", b: "45 Days", cls: "success" },
-                            { m: "Dec", d: "12", t: "Unit 220 • Dec 12, 2024", c: "Star Bakery", b: "60 Days", cls: "success" },
-                        ].map((x, i) => (
-                            <div className="list-item" key={i}>
-                                <div className="list-icon-circle">
-                                    <span>{x.m}</span>
-                                    <span className="icon-day">{x.d}</span>
+                        {lists.renewals.length > 0 ? lists.renewals.map((x, i) => {
+                            const d = formatDate(x.lease_end_date);
+                            return (
+                                <div className="list-item" key={i}>
+                                    <div className="list-icon-circle">
+                                        <span>{d.m}</span>
+                                        <span className="icon-day">{d.d}</span>
+                                    </div>
+                                    <div className="list-info">
+                                        <h4>Unit {x.unit_number} • {d.full}</h4>
+                                        <p>{x.tenant_name}</p>
+                                    </div>
+                                    <span className={`badge warning`}>{x.days_remaining} Days</span>
                                 </div>
-                                <div className="list-info">
-                                    <h4>{x.t}</h4>
-                                    <p>{x.c}</p>
-                                </div>
-                                <span className={`badge ${x.cls}`}>{x.b}</span>
-                            </div>
-                        ))}
+                            )
+                        }) : <p className="text-muted p-3">No upcoming renewals</p>}
                     </div>
 
                     {/* EXPIRIES */}
                     <div className="list-card fade-in">
                         <div className="list-header">
                             <h3>Upcoming Expiries</h3>
-                            <button>View All</button>
+                            <button onClick={() => navigate('/admin/leases')}>View All</button>
                         </div>
 
-                        {[
-                            { m: "Oct", d: "31", t: "Unit 402 • Nov 15, 2024", c: "James Logistics", cls: "danger-pill", txt: "HIGH RISK" },
-                            { m: "Nov", d: "05", t: "Unit 105 • Dec 01, 2024", c: "TechCorp Inc", cls: "warning-pill", txt: "MEDIUM" },
-                            { m: "Nov", d: "20", t: "Unit 220 • Dec 12, 2024", c: "Star Bakery", cls: "success-pill", txt: "LOW" },
-                        ].map((x, i) => (
-                            <div className="list-item" key={i}>
-                                <div className="list-icon-circle">
-                                    <span>{x.m}</span>
-                                    <span className="icon-day">{x.d}</span>
+                        {lists.expiries.length > 0 ? lists.expiries.map((x, i) => {
+                            const d = formatDate(x.lease_end_date);
+                            return (
+                                <div className="list-item" key={i}>
+                                    <div className="list-icon-circle">
+                                        <span>{d.m}</span>
+                                        <span className="icon-day">{d.d}</span>
+                                    </div>
+                                    <div className="list-info">
+                                        <h4>Unit {x.unit_number} • {d.full}</h4>
+                                        <p>{x.tenant_name}</p>
+                                    </div>
+                                    <span className={`badge danger-pill`}>{x.days_remaining} Days</span>
                                 </div>
-                                <div className="list-info">
-                                    <h4>{x.t}</h4>
-                                    <p>{x.c}</p>
-                                </div>
-                                <span className={`badge ${x.cls}`}>{x.txt}</span>
-                            </div>
-                        ))}
+                            )
+                        }) : <p className="text-muted p-3">No upcoming expiries</p>}
 
                     </div>
 
@@ -248,26 +274,25 @@ const Dashboard = () => {
                     <div className="list-card fade-in">
                         <div className="list-header">
                             <h3>Rent Escalations</h3>
-                            <button>View All</button>
+                            <button onClick={() => navigate('/admin/leases')}>View All</button>
                         </div>
 
-                        {[
-                            { m: "JAN", d: "01", t: "Unit 402 • Nov 15, 2024", c: "CPI Adjustment", p: "+3.5%" },
-                            { m: "JAN", d: "01", t: "Unit 105 • Dec 01, 2024", c: "Fixed Increase", p: "+2.0%" },
-                            { m: "FEB", d: "01", t: "Unit 220 • Dec 12, 2024", c: "Market Review", p: "+5.0%" },
-                        ].map((x, i) => (
-                            <div className="list-item" key={i}>
-                                <div className="list-icon-circle gray">
-                                    <span>{x.m}</span>
-                                    <span className="icon-day">{x.d}</span>
+                        {lists.escalations.length > 0 ? lists.escalations.map((x, i) => {
+                            const d = formatDate(x.effective_date);
+                            return (
+                                <div className="list-item" key={i}>
+                                    <div className="list-icon-circle gray">
+                                        <span>{d.m}</span>
+                                        <span className="icon-day">{d.d}</span>
+                                    </div>
+                                    <div className="list-info">
+                                        <h4>Unit {x.unit_number} • {d.full}</h4>
+                                        <p>{x.increase_type}</p>
+                                    </div>
+                                    <span className="text-success">+{parseFloat(x.value).toLocaleString()}</span>
                                 </div>
-                                <div className="list-info">
-                                    <h4>{x.t}</h4>
-                                    <p>{x.c}</p>
-                                </div>
-                                <span className="text-success">{x.p}</span>
-                            </div>
-                        ))}
+                            )
+                        }) : <p className="text-muted p-3">No upcoming escalations</p>}
 
                     </div>
 

@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
+const upload = require('../middleware/upload'); // Import upload middleware
+
 const {
     getOwners,
     getOwnerById,
@@ -10,11 +12,14 @@ const {
     addUnitsToOwner,
     removeUnitFromOwner,
     exportOwners,
-    getKycStats, // Import new controller
+    getKycStats,
+    getOwnerDocuments,
+    uploadDocument,
+    sendMessage
 } = require('../controllers/ownerController');
 
 router.get('/export', exportOwners);
-router.get('/stats', getKycStats); // New stats route (Must be before /:id)
+router.get('/stats', getKycStats);
 router.get('/', getOwners);
 router.get('/:id', getOwnerById);
 router.post('/', createOwner);
@@ -23,5 +28,9 @@ router.delete('/:id', deleteOwner);
 
 router.post('/:id/units', addUnitsToOwner);
 router.delete('/:id/units/:unitId', removeUnitFromOwner);
+
+router.get('/:id/documents', getOwnerDocuments);
+router.post('/:id/documents', upload.single('file'), uploadDocument);
+router.post('/:id/message', sendMessage);
 
 module.exports = router;

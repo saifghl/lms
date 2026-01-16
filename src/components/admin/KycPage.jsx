@@ -9,13 +9,18 @@ const KycPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [searchTerm, setSearchTerm] = useState('');
+
     // Fetch Data
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const params = {};
+                if (searchTerm) params.search = searchTerm;
+
                 // Fetch stats and owners concurrently
                 const [ownersRes, statsRes] = await Promise.all([
-                    ownerAPI.getOwners(),
+                    ownerAPI.getOwners(params),
                     ownerAPI.getKycStats()
                 ]);
 
@@ -30,11 +35,12 @@ const KycPage = () => {
                 const mappedRequests = finalOwners.map(owner => ({
                     id: owner.id,
                     name: owner.name || owner.first_name + ' ' + owner.last_name || 'Unknown',
-                    type: 'Owner', // Currently hardcoded as we are only fetching owners
-                    documentType: owner.kyc_document_type || 'Aadhar Card', // Fallback or real field
-                    status: mapStatus(owner.kyc_status || owner.status), // Map DB status to UI
+                    type: 'Owner',
+                    documentType: owner.document_type || 'Aadhar Card',
+                    documentPath: owner.document_path, // Capture the path
+                    status: mapStatus(owner.kyc_status || owner.status),
                     date: owner.created_at ? new Date(owner.created_at).toLocaleDateString() : 'N/A',
-                    avatar: owner.id % 10 // Deterministic avatar for demo
+                    avatar: owner.id % 10
                 }));
 
                 setKycRequests(mappedRequests);
@@ -47,7 +53,7 @@ const KycPage = () => {
         };
 
         fetchData();
-    }, []);
+    }, [searchTerm]);
 
     const mapStatus = (dbStatus) => {
         if (!dbStatus) return 'Pending';
@@ -123,7 +129,12 @@ const KycPage = () => {
             <div className="top-search-bar">
                 <div className="search-input-wrapper">
                     <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" placeholder="Search by name, type or status..." />
+                    <input
+                        type="text"
+                        placeholder="Search by name, type or status..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
             </div>
 
@@ -218,7 +229,11 @@ const KycPage = () => {
                                 </div>
 
                                 <div className="actions">
-                                    <button className="icon-action-btn view" title="View">
+                                    <button
+                                        className="icon-action-btn view"
+                                        title="View"
+                                        onClick={() => item.documentPath ? window.open(`http://localhost:5000/${item.documentPath}`, '_blank') : alert("No document uploaded")}
+                                    >
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                     </button>
                                     {item.status === 'Pending' && (

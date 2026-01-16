@@ -9,6 +9,7 @@ const Leases = () => {
     const [leases, setLeases] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('');
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
         fetchLeases();
@@ -20,6 +21,7 @@ const Leases = () => {
             setLoading(true);
             const params = {};
             if (statusFilter) params.status = statusFilter;
+            if (search) params.search = search;
 
             const res = await leaseAPI.getAllLeases(params);
             setLeases(res.data);
@@ -69,7 +71,12 @@ const Leases = () => {
                                 <label>Search</label>
                                 <div className="search-wrapper" style={{ minWidth: '100%', maxWidth: '100%' }}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                    <input type="text" placeholder="Search by Tenant, Unit, or ID..." />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by Tenant, Unit, or ID..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
                                 </div>
                             </div>
                             <div className="filter-item">

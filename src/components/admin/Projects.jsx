@@ -7,12 +7,26 @@ import "./projects.css";
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [location, setLocation] = useState("All");
+  const [type, setType] = useState("All");
 
+  // Options for filters (hardcoded for now as per requirement to make it functional without major UI overhaul)
+  const LOCATIONS = ["All", "Mumbai", "Pune", "Bangalore", "Delhi"];
+  const TYPES = ["All", "Residential", "Commercial", "Industrial"];
+
+  /* ================= FETCH PROJECTS ================= */
   /* ================= FETCH PROJECTS ================= */
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await getProjects();
+        setLoading(true);
+        const params = {};
+        if (search) params.search = search;
+        if (location !== "All") params.location = location;
+        if (type !== "All") params.type = type;
+
+        const response = await getProjects(params);
         setProjects(response.data);
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -21,8 +35,34 @@ const Projects = () => {
       }
     };
 
-    fetchProjects();
-  }, []);
+    // Debounce search
+    const timer = setTimeout(() => {
+      fetchProjects();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, location, type]);
+
+  /* ================= HANDLERS ================= */
+  const handleSearch = (e) => setSearch(e.target.value);
+
+  const cycleLocation = () => {
+    const currentIndex = LOCATIONS.indexOf(location);
+    const nextIndex = (currentIndex + 1) % LOCATIONS.length;
+    setLocation(LOCATIONS[nextIndex]);
+  };
+
+  const cycleType = () => {
+    const currentIndex = TYPES.indexOf(type);
+    const nextIndex = (currentIndex + 1) % TYPES.length;
+    setType(TYPES[nextIndex]);
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setLocation("All");
+    setType("All");
+  };
 
   /* ================= DELETE PROJECT ================= */
   const handleDelete = async (id) => {
@@ -61,18 +101,23 @@ const Projects = () => {
           <div className="filters-bar">
             <div className="search-wrapper">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" placeholder="Search projects by key name, city, or ID..." />
+              <input
+                type="text"
+                placeholder="Search projects by key name, city, or ID..."
+                value={search}
+                onChange={handleSearch}
+              />
             </div>
             <div className="filter-actions">
-              <button className="filter-btn">
-                Location: All
+              <button className="filter-btn" onClick={cycleLocation}>
+                Location: {location}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </button>
-              <button className="filter-btn">
-                Type: Residential
+              <button className="filter-btn" onClick={cycleType}>
+                Type: {type}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </button>
-              <button className="clear-btn">Clear filters</button>
+              <button className="clear-btn" onClick={clearFilters}>Clear filters</button>
             </div>
           </div>
 

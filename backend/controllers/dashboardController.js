@@ -45,7 +45,7 @@ const getDashboardStats = async (req, res) => {
 
     // Get upcoming renewals (within 90 days)
     const [renewals] = await pool.execute(`
-      SELECT l.*, l.id as lease_id, p.project_name, u.unit_number, t.company_name as tenant_name,
+      SELECT l.lease_end as lease_end_date, l.id as lease_id, p.project_name, u.unit_number, t.company_name as tenant_name,
       DATEDIFF(l.lease_end, CURDATE()) as days_remaining
       FROM leases l
       LEFT JOIN projects p ON l.project_id = p.id
@@ -59,7 +59,7 @@ const getDashboardStats = async (req, res) => {
 
     // Get upcoming expiries
     const [expiries] = await pool.execute(`
-      SELECT l.*, l.id as lease_id, p.project_name, u.unit_number, t.company_name as tenant_name,
+      SELECT l.lease_end as lease_end_date, l.id as lease_id, p.project_name, u.unit_number, t.company_name as tenant_name,
       DATEDIFF(l.lease_end, CURDATE()) as days_remaining
       FROM leases l
       LEFT JOIN projects p ON l.project_id = p.id
@@ -73,7 +73,8 @@ const getDashboardStats = async (req, res) => {
 
     // Get rent escalations (within next 3 months)
     const [escalations] = await pool.execute(`
-      SELECT re.*, l.id as lease_id, p.project_name, u.unit_number,
+      SELECT re.effective_from as effective_date, re.escalation_type as increase_type, re.escalation_value as value, 
+      l.id as lease_id, p.project_name, u.unit_number,
       DATEDIFF(re.effective_from, CURDATE()) as days_until_escalation
       FROM lease_escalations re
       LEFT JOIN leases l ON re.lease_id = l.id

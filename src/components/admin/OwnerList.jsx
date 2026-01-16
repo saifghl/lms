@@ -9,14 +9,23 @@ const OwnerList = () => {
   const [owners, setOwners] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [search, setSearch] = useState('');
+
   useEffect(() => {
-    fetchOwners();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchOwners();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const fetchOwners = async () => {
     try {
       setLoading(true);
-      const res = await ownerAPI.getOwners();
+      setLoading(true);
+      const params = {};
+      if (search) params.search = search;
+
+      const res = await ownerAPI.getOwners(params);
       setOwners(res.data.data || res.data || []);
     } catch (error) {
       console.error("Failed to fetch owners", error);
@@ -44,7 +53,31 @@ const OwnerList = () => {
         </header>
 
         <div className="content-card">
-          {/* Add Filters here if needed later */}
+          {/* Filters Bar */}
+          <div className="filters-bar" style={{ display: 'flex', gap: '16px', padding: '16px', borderBottom: '1px solid #e2e8f0', alignItems: 'center' }}>
+            <div className="search-wrapper" style={{ flex: 1, maxWidth: '400px', position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <svg
+                width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                style={{ position: 'absolute', left: '12px', color: '#64748b' }}
+              >
+                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                type="text"
+                placeholder="Search owners by name, email, or phone..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px 10px 36px',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  outline: 'none'
+                }}
+              />
+            </div>
+          </div>
 
           <div className="owner-table-container">
             <table className="data-table">
