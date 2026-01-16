@@ -9,6 +9,10 @@
     padding: 30px 40px;
     margin-left: 250px;
     font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+    /* Prevent padding from adding to width */
+    width: calc(100% - 250px);
+    /* Explicit width calculation */
 }
 
 /* Header */
@@ -308,24 +312,37 @@
     color: #777;
 }
 
+/* Mobile Labels (Hidden by default) */
+.mobile-label {
+    display: none;
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-right: 8px;
+    min-width: 80px;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
 
     .kyc-table-header,
     .kyc-row {
-        grid-template-columns: 40px 2fr 1fr 1.5fr 1fr 1fr 1fr;
+        grid-template-columns: 50px 2fr 1fr 1.5fr 1fr 1fr 1fr;
         min-width: 900px;
     }
 
     .kyc-table-container {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
 @media (max-width: 1024px) {
     .kyc-content {
         margin-left: 0;
-        padding: 85px 20px 20px;
+        padding: 20px;
+        /* Padding top adjusted if sidebar/header is sticky, else normal padding */
+        padding-top: 80px;
     }
 
     .top-search-bar {
@@ -340,7 +357,13 @@
 
     .kyc-header {
         flex-direction: column;
+        align-items: stretch;
         gap: 15px;
+    }
+
+    .export-btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .table-footer {
@@ -349,8 +372,84 @@
     }
 }
 
+/* Mobile Card View (< 768px) */
+@media (max-width: 768px) {
+    .kyc-table-header {
+        display: none;
+    }
+
+    .kyc-row {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: unset;
+        /* Remove min-width from larger media query */
+        padding: 20px;
+        position: relative;
+    }
+
+    .kyc-table-container {
+        overflow-x: visible;
+        /* Disable scroll, we stack now */
+    }
+
+    .checkbox-wrapper {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+    }
+
+    /* User Info - Make prominent */
+    .user-info {
+        margin-left: 30px;
+        /* Space for checkbox */
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f1f5f9;
+        width: calc(100% - 30px);
+    }
+
+    .user-details h4 {
+        font-size: 1.1rem;
+    }
+
+    /* Data Columns as Rows */
+    .kyc-row>div:not(.user-info):not(.checkbox-wrapper):not(.actions) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .mobile-label {
+        display: inline-block;
+    }
+
+    .actions {
+        margin-top: 10px;
+        padding-top: 15px;
+        border-top: 1px solid #f1f5f9;
+        justify-content: flex-end;
+        width: 100%;
+    }
+
+    .icon-action-btn {
+        padding: 8px 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+}
+
 @media (max-width: 600px) {
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .kyc-content {
+        padding: 70px 15px 20px;
+    }
+
+    .kyc-title h2 {
+        font-size: 1.5rem;
     }
 }

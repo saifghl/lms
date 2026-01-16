@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "./Sidebar";
 import "./RoleManagement.css";
 // import api from services
-import { userAPI, roleAPI } from "../../services/api";
+import { userAPI } from "../../services/api";
 
 const RoleManagement = () => {
   const [users, setUsers] = useState([]);
@@ -70,6 +70,7 @@ const RoleManagement = () => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showToast = (message, type = "success") => {

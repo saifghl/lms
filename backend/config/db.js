@@ -1,22 +1,20 @@
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-const mysql = require('mysql2/promise');
+const mysql = require("mysql2/promise");
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'lms_db',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+if (!process.env.DATABASE_URL) {
+  console.error("❌ DATABASE_URL is missing");
+  process.exit(1);
+}
 
-console.log("DB Config:", {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    database: process.env.DB_NAME,
-    passwordLength: process.env.DB_PASSWORD ? process.env.DB_PASSWORD.length : 0
-});
+const pool = mysql.createPool(process.env.DATABASE_URL + "?ssl=true");
+
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log("✅ Database connected using DATABASE_URL");
+    conn.release();
+  } catch (err) {
+    console.error("❌ Database connection failed:", err.message);
+  }
+})();
 
 module.exports = pool;

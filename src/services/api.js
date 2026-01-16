@@ -9,7 +9,7 @@ const getBaseUrl = () => {
 export const FILE_BASE_URL = getBaseUrl();
 
 const API = axios.create({
-  baseURL: `${FILE_BASE_URL}/api`
+  baseURL: process.env.REACT_APP_API_URL || "https://backend1-ls90.onrender.com/"
 });
 
 // Add token to requests if available

@@ -31,15 +31,15 @@ const RepDashboard = () => {
 
     const s = stats?.metrics || {};
 
-    const revenueValue = s.totalRevenue?.value ? parseFloat(s.totalRevenue.value.replace(/[^0-9.]/g, '')) * 1000000 : 0; // rough parsing if string "₹1.2M" or similar
+    // const revenueValue = s.totalRevenue?.value ? parseFloat(s.totalRevenue.value.replace(/[^0-9.]/g, '')) * 1000000 : 0; // rough parsing if string "₹1.2M" or similar
     // Actually the controller returns formatted string.
     // Let's rely on the raw values if possible, but the controller returns formatted strings for "value".
     // Wait, I see "value: totalProjects" (number) in lines 200, but totalRevenue is formatted line 225.
     // "value: totalRevenue > 0 ? ... : ..."
     // This is tricky. I'll just display the string value directly for revenue.
 
-    const projectsVal = s.totalProjects?.value || 0;
-    const unitsVal = s.totalUnits?.value || 0;
+    // const projectsVal = s.totalProjects?.value || 0;
+    // const unitsVal = s.totalUnits?.value || 0;
 
     return (
         <div className="dashboard-container">
