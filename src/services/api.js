@@ -1,7 +1,15 @@
 import axios from "axios";
 
+const getBaseUrl = () => {
+  let url = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  // Remove trailing slash if present to avoid double slashes later
+  return url.endsWith('/') ? url.slice(0, -1) : url;
+};
+
+export const FILE_BASE_URL = getBaseUrl();
+
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+  baseURL: `${FILE_BASE_URL}/api`
 });
 
 // Add token to requests if available

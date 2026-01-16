@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import './Settings.css';
-import { settingsAPI } from '../../services/api';
+import { settingsAPI, FILE_BASE_URL } from '../../services/api';
 
 const Settings = () => {
 
@@ -130,7 +130,7 @@ const Settings = () => {
 
     // ✅ Correct image path or offline placeholder
     const profileImage = user.profile_image
-        ? `http://localhost:5000${user.profile_image}`
+        ? `${FILE_BASE_URL}${user.profile_image}`
         : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'%3E%3Cpath d='M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z' /%3E%3C/svg%3E";
 
     return (
