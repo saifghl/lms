@@ -16,18 +16,22 @@ const tenantRoutes = require("./routes/tenantRoutes");
 const ownerRoutes = require("./routes/ownerRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
 const unitRoutes = require("./routes/unitRoutes");
-const userRoutes = require("./routes/userRoutes"); // New Route
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+/* =========================
+   MIDDLEWARE
+========================= */
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 
-// Test database connection
+/* =========================
+   DATABASE CHECK
+========================= */
 pool.getConnection()
   .then((connection) => {
     console.log("✅ Database connected successfully!");
@@ -37,7 +41,19 @@ pool.getConnection()
     console.error("❌ Database connection failed:", err.message);
   });
 
-// Routes
+/* =========================
+   ROOT ROUTE (IMPORTANT)
+========================= */
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    message: "Backend API is running 🚀"
+  });
+});
+
+/* =========================
+   API ROUTES
+========================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -48,15 +64,22 @@ app.use("/api/units", unitRoutes);
 app.use("/api/tenants", tenantRoutes);
 app.use("/api/owners", ownerRoutes);
 app.use("/api/settings", settingsRoutes);
-app.use("/api/users", userRoutes); // Mounted Route
+app.use("/api/users", userRoutes);
 
-// Health check
+/* =========================
+   HEALTH CHECK (RENDER)
+========================= */
 app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", message: "Server is running" });
+  res.status(200).json({
+    status: "OK",
+    message: "Server health check passed ✅"
+  });
 });
 
-
-app.listen(PORT, '0.0.0.0',() => {
+/* =========================
+   SERVER START
+========================= */
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  
 });
+  
