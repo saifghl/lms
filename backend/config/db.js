@@ -1,7 +1,12 @@
 const mysql = require("mysql2/promise");
 
 const dbConfig = process.env.DATABASE_URL
-  ? process.env.DATABASE_URL
+  ? {
+    uri: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  }
   : {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -12,7 +17,13 @@ const dbConfig = process.env.DATABASE_URL
     queueLimit: 0,
   };
 
-const pool = mysql.createPool(dbConfig);
+const pool = mysql.createPool({
+  ...dbConfig,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
 
 (async () => {
   try {
