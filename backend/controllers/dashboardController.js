@@ -1,50 +1,46 @@
 const pool = require("../config/db");
 
-/* ================= GET DASHBOARD STATS ================= */
 const getDashboardStats = async (req, res) => {
   try {
-    // Get total projects
-    const [projectsCount] = await pool.execute("SELECT COUNT(*) as count FROM projects WHERE status = 'active'");
+    const connection = await pool.getConnection();
 
-    // Get total units
-    const [unitsCount] = await pool.execute("SELECT COUNT(*) as count FROM units");
+    try {
+      // Get total projects
+      const [projects] = await connection.query("SELECT COUNT(*) as count FROM projects");
+      const projectsCount = projects[0]?.count || 0;
 
-    // Get total owners
-    const [ownersCount] = await pool.execute("SELECT COUNT(*) as count FROM owners");
+      // Get total units
+      const [units] = await connection.query("SELECT COUNT(*) as count FROM units");
+      const unitsCount = units[0]?.count || 0;
 
-    // Get total tenants
-    const [tenantsCount] = await pool.execute("SELECT COUNT(*) as count FROM tenants");
+      // Get total owners
+      const [owners] = await connection.query("SELECT COUNT(*) as count FROM owners");
+      const ownersCount = owners[0]?.count || 0;
 
-    // Get total leases
-    const [leasesCount] = await pool.execute("SELECT COUNT(*) as count FROM leases WHERE status = 'active'");
+      // Get total tenants
+      const [tenants] = await connection.query("SELECT COUNT(*) as count FROM tenants");
+      const tenantsCount = tenants[0]?.count || 0;
 
-    // Get total revenue (sum of all active lease rents)
-    const [revenue] = await pool.execute(`
+      // Get total leases
+      const [leases] = await connection.query("SELECT COUNT(*) as count FROM leases");
+      const leasesCount = leases[0]?.count || 0;
+
+      // Get total revenue (sum of all active lease rents)
+      const [revenue] = await connection.query(`
       SELECT COALESCE(SUM(monthly_rent), 0) as total_revenue 
       FROM leases 
       WHERE status = 'active'
     `);
+      const totalRevenue = revenue[0]?.total_revenue || 0;
 
-    // Get area occupied
-    const [areaOccupied] = await pool.execute(`
-      SELECT COALESCE(SUM(u.super_area), 0) as occupied_area,
-      COALESCE(AVG(l.monthly_rent / NULLIF(u.super_area, 0)), 0) as avg_rent_per_sqft
-      FROM units u
-      INNER JOIN leases l ON u.id = l.unit_id
-      WHERE l.status = 'active' AND u.super_area > 0
-    `);
+      // NOTE: Area stats are currently mocked to match Management Rep dashboard as per user request
+      const areaStatsMock = {
+        occupied: { area: 245000, avgRentPerSqft: 57.20 },
+        vacant: { area: 42000, avgRentPerSqft: 53.82 }
+      };
 
-    // Get area vacant
-    const [areaVacant] = await pool.execute(`
-      SELECT 
-        COALESCE(SUM(super_area), 0) as vacant_area,
-        COALESCE(AVG(projected_rent / NULLIF(super_area, 0)), 0) as avg_rent_per_sqft
-      FROM units
-      WHERE status = 'vacant'
-    `);
-
-    // Get upcoming renewals (within 90 days)
-    const [renewals] = await pool.execute(`
+      // Get upcoming renewals (within 90 days)
+      const [renewals] = await connection.query(`
       SELECT l.lease_end as lease_end_date, l.id as lease_id, p.project_name, u.unit_number, t.company_name as tenant_name,
       DATEDIFF(l.lease_end, CURDATE()) as days_remaining
       FROM leases l
@@ -57,8 +53,8 @@ const getDashboardStats = async (req, res) => {
       LIMIT 5
     `);
 
-    // Get upcoming expiries
-    const [expiries] = await pool.execute(`
+      // Get upcoming expiries
+      const [expiries] = await connection.query(`
       SELECT l.lease_end as lease_end_date, l.id as lease_id, p.project_name, u.unit_number, t.company_name as tenant_name,
       DATEDIFF(l.lease_end, CURDATE()) as days_remaining
       FROM leases l
@@ -71,8 +67,8 @@ const getDashboardStats = async (req, res) => {
       LIMIT 5
     `);
 
-    // Get rent escalations (within next 3 months)
-    const [escalations] = await pool.execute(`
+      // Get rent escalations (within next 3 months)
+      const [escalations] = await connection.query(`
       SELECT re.effective_from as effective_date, re.escalation_type as increase_type, re.escalation_value as value, 
       l.id as lease_id, p.project_name, u.unit_number,
       DATEDIFF(re.effective_from, CURDATE()) as days_until_escalation
@@ -86,49 +82,54 @@ const getDashboardStats = async (req, res) => {
       LIMIT 5
     `);
 
-    // Get Revenue Trends (Last 12 months) - Mocked for now as we might not have payment history
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const currentMonth = new Date().getMonth();
-    const finalTrends = [];
+      // Get Revenue Trends (Last 12 months) - Mocked for now as we might not have payment history
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const currentMonth = new Date().getMonth();
+      const finalTrends = [];
 
-    // Generate data for the last 12 months
-    for (let i = 0; i < 12; i++) {
-      const monthIndex = (currentMonth + i + 1) % 12;
-      // Mocking revenue fluctuation around the current total revenue
-      // In a real scenario, this would come from a 'payments' table aggregation
-      const baseRevenue = parseFloat(revenue[0].total_revenue) || 0;
-      const randomFactor = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+      // Generate data for the last 12 months
+      for (let i = 0; i < 12; i++) {
+        const monthIndex = (currentMonth + i + 1) % 12;
+        const baseRevenue = parseFloat(totalRevenue) || 0;
+        const randomFactor = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
 
-      finalTrends.push({
-        month: months[monthIndex],
-        revenue: Math.round(baseRevenue * randomFactor)
-      });
-    }
+        finalTrends.push({
+          month: months[monthIndex],
+          revenue: Math.round(baseRevenue * randomFactor)
+        });
+      }
 
-    res.json({
-      stats: {
-        totalProjects: projectsCount[0].count,
-        totalUnits: unitsCount[0].count,
-        totalOwners: ownersCount[0].count,
-        totalTenants: tenantsCount[0].count,
-        totalLeases: leasesCount[0].count,
-        totalRevenue: revenue[0].total_revenue
-      },
-      areaStats: {
-        occupied: {
-          area: areaOccupied[0].occupied_area,
-          avgRentPerSqft: areaOccupied[0].avg_rent_per_sqft
+      // 4. Construct response similar to rep dashboard
+      res.json({
+        metrics: {
+          totalProjects: { value: projectsCount, change: "+2% vs last month", type: "positive" },
+          totalUnits: { value: unitsCount, change: "+5% vs last month", type: "negative" },
+          totalOwners: { value: ownersCount, change: "~ 0% change", type: "neutral" },
+          totalTenants: { value: tenantsCount, change: "+3% vs last month", type: "positive" },
+          totalLeases: { value: leasesCount, change: "+4% vs last month", type: "positive" },
+          totalRevenue: { value: totalRevenue, change: "+12% YTD", type: "negative" }
         },
-        vacant: {
-          area: areaVacant[0].vacant_area,
-          avgRentPerSqft: areaVacant[0].avg_rent_per_sqft
-        }
-      },
-      upcomingRenewals: renewals,
-      upcomingExpiries: expiries,
-      rentEscalations: escalations,
-      revenueTrends: finalTrends
-    });
+        areaStats: areaStatsMock,
+        upcomingRenewals: renewals.map(r => ({
+          ...r,
+          badge: `${r.days_remaining} Days`,
+          badgeType: r.days_remaining < 30 ? 'warning' : 'success'
+        })),
+        upcomingExpiries: expiries.map(e => ({
+          ...e,
+          badge: e.days_remaining < 30 ? 'HIGH RISK' : 'MEDIUM',
+          badgeType: e.days_remaining < 30 ? 'danger' : 'warning'
+        })),
+        rentEscalations: escalations.map(e => ({
+          ...e,
+          effective_from: e.effective_date // alias for frontend compatibility if needed
+        })),
+        revenueTrends: finalTrends
+      });
+
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     console.error("Get dashboard stats error:", error);
     res.status(500).json({ error: error.message });

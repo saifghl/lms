@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const getBaseUrl = () => {
-  let url = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  // Default to local backend with /api prefix if environmental variable is not set
+  let url = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
   // Remove trailing slash if present to avoid double slashes later
   return url.endsWith('/') ? url.slice(0, -1) : url;
 };
@@ -9,7 +10,7 @@ const getBaseUrl = () => {
 export const FILE_BASE_URL = getBaseUrl();
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "https://backend1-ls90.onrender.com/"
+  baseURL: getBaseUrl()
 });
 
 // Add token to requests if available

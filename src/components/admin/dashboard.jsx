@@ -4,6 +4,48 @@ import Sidebar from './Sidebar';
 import { getDashboardStats } from '../../services/api';
 import './dashboard.css';
 
+// Helper Component for Animation
+const AnimatedNumber = ({ value }) => {
+    const [displayValue, setDisplayValue] = useState(0);
+
+    useEffect(() => {
+        let start = 0;
+        const end = parseInt(value, 10) || 0;
+        if (start === end) return;
+
+        // Total duration 2000ms
+        const duration = 2000;
+        // 60 frames per second = ~16ms per frame
+        const incrementTime = (duration / end) * 1000;
+
+        // However, if end is very large, incrementTime is too small.
+        // Better approach: step based
+        let startTime = null;
+
+        const animate = (currentTime) => {
+            if (!startTime) startTime = currentTime;
+            const progress = currentTime - startTime;
+            const percentage = Math.min(progress / duration, 1);
+
+            // Ease out quart
+            const ease = 1 - Math.pow(1 - percentage, 4);
+
+            const current = Math.floor(ease * end);
+            setDisplayValue(current);
+
+            if (percentage < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                setDisplayValue(end);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }, [value]);
+
+    return <>{displayValue}</>;
+};
+
 const Dashboard = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
@@ -23,8 +65,14 @@ const Dashboard = () => {
         fetchStats();
     }, []);
 
-    // Helper data
-    const revenueValue = stats?.stats?.totalRevenue || 0;
+    // Helper data - handle the new nested structure
+    const s = stats?.metrics || {};
+    const revenueValue = s.totalRevenue?.value ? parseFloat(s.totalRevenue.value) : 0;
+
+    // Format large numbers for revenue
+    const formattedRevenue = revenueValue >= 1000000
+        ? `${(revenueValue / 1000000).toFixed(1)}M`
+        : revenueValue.toLocaleString();
 
     return (
         <div className="dashboard-container">
@@ -55,15 +103,17 @@ const Dashboard = () => {
                         <div className="loading-state">Loading...</div>
                     ) : (
                         [
-                            { title: "Total Projects", value: stats?.stats?.totalProjects || 0, change: "+2% vs last month", cls: "positive", stroke: "#2ED573" },
-                            { title: "Total Units", value: stats?.stats?.totalUnits || 0, change: "+5% vs last month", cls: "negative", stroke: "#FF4757" },
-                            { title: "Total Owners", value: stats?.stats?.totalOwners || 0, change: "-0% change", cls: "neutral", stroke: "#2E66FF" },
-                            { title: "Total Tenants", value: stats?.stats?.totalTenants || 0, change: "+3% vs last month", cls: "warning", stroke: "#FFA502" },
-                            { title: "Total Leases", value: stats?.stats?.totalLeases || 0, change: "+4% vs last month", cls: "info", stroke: "#5352ED" }
+                            { title: "Total Projects", value: s.totalProjects?.value || 0, change: s.totalProjects?.change, cls: "positive", stroke: "#2ED573" },
+                            { title: "Total Units", value: s.totalUnits?.value || 0, change: s.totalUnits?.change, cls: "negative", stroke: "#FF4757" },
+                            { title: "Total Owners", value: s.totalOwners?.value || 0, change: s.totalOwners?.change, cls: "neutral", stroke: "#2E66FF" },
+                            { title: "Total Tenants", value: s.totalTenants?.value || 0, change: s.totalTenants?.change, cls: "warning", stroke: "#FFA502" },
+                            { title: "Total Leases", value: s.totalLeases?.value || 0, change: s.totalLeases?.change, cls: "info", stroke: "#5352ED" }
                         ].map((item, idx) => (
                             <div className="stat-card" key={idx}>
                                 <h4>{item.title}</h4>
-                                <div className="stat-value">{item.value}</div>
+                                <div className="stat-value">
+                                    <AnimatedNumber value={item.value} />
+                                </div>
                                 <div className={`stat-change ${item.cls}`}>
                                     {item.change}
                                 </div>
@@ -89,9 +139,9 @@ const Dashboard = () => {
                     <div className="stat-card revenue-card">
                         <div>
                             <h4>Total Revenue</h4>
-                            <div className="stat-value">₹{revenueValue.toLocaleString()}</div>
+                            <div className="stat-value">₹{formattedRevenue}</div>
                             <div className="stat-change negative">
-                                +12% YTD
+                                {s.totalRevenue?.change || "+12% YTD"}
                             </div>
                         </div>
                         <div className="mini-chart-wave">
@@ -146,41 +196,31 @@ const Dashboard = () => {
                                     <stop offset="100%" stopColor="#2E66FF" stopOpacity="0" />
                                 </linearGradient>
                             </defs>
-
-                            {/* Grid Lines */}
                             <path d="M0,250 L1000,250" stroke="#F0F2F5" />
                             <path d="M0,200 L1000,200" stroke="#F0F2F5" />
                             <path d="M0,150 L1000,150" stroke="#F0F2F5" />
 
-                            {/* Main Trend Line (Dynamic) */}
                             {stats?.revenueTrends && (
                                 <path
                                     d={(() => {
                                         const data = stats.revenueTrends;
                                         if (!data || data.length === 0) return "";
 
-                                        const maxRev = Math.max(...data.map(d => d.revenue)) * 1.2 || 100; // ample headroom
+                                        const revenues = data.map(d => d.revenue);
+                                        const maxRev = Math.max(...revenues) * 1.2 || 100;
                                         const width = 1000;
                                         const height = 250;
                                         const step = width / (data.length - 1);
 
-                                        // Generate points
                                         const points = data.map((d, i) => {
                                             const x = i * step;
-                                            const y = height - (d.revenue / maxRev) * height; // Invert Y
+                                            const y = height - (d.revenue / maxRev) * height;
                                             return `${x},${y}`;
                                         });
-
-                                        // Create smooth curve (Catmull-Rom or similar simple smoothing)
-                                        // For simplicity, using a polyline-like path but with C commands for smoothing could be complex manually.
-                                        // Let's stick to a straightforward L (Line) path for robustness or a basic cubic bezier if possible.
-                                        // "L" is safest for generated code without a library. 
-                                        // To make it look curved like the design, we can use simple quadratic control points.
 
                                         let path = `M${points[0]}`;
                                         for (let i = 1; i < points.length; i++) {
                                             const [x, y] = points[i].split(',');
-                                            // Simple line for now to ensure correctness
                                             path += ` L ${x},${y}`;
                                         }
                                         return path;
@@ -216,11 +256,11 @@ const Dashboard = () => {
                                         <span className="day">{new Date(item.lease_end_date).getDate()}</span>
                                     </div>
                                     <div className="item-details">
-                                        <div className="primary-text">{item.unit_number} • {item.lease_end_date}</div>
+                                        <div className="primary-text">{item.unit_number} • {new Date(item.lease_end_date).toLocaleDateString()}</div>
                                         <div className="secondary-text">{item.tenant_name}</div>
                                     </div>
-                                    <span className={`status-pill ${item.days_remaining < 30 ? 'warning' : 'success'}`}>
-                                        {item.days_remaining} Days
+                                    <span className={`status-pill ${item.badgeType}`}>
+                                        {item.badge}
                                     </span>
                                 </div>
                             )) : <p className="empty-text">No upcoming renewals.</p>}
@@ -241,10 +281,12 @@ const Dashboard = () => {
                                         <span className="day">{new Date(item.lease_end_date).getDate()}</span>
                                     </div>
                                     <div className="item-details">
-                                        <div className="primary-text">{item.unit_number} • {item.lease_end_date}</div>
+                                        <div className="primary-text">{item.unit_number} • {new Date(item.lease_end_date).toLocaleDateString()}</div>
                                         <div className="secondary-text">{item.tenant_name}</div>
                                     </div>
-                                    <span className="status-pill danger">HIGH RISK</span>
+                                    <span className={`status-pill ${item.badgeType}`}>
+                                        {item.badge}
+                                    </span>
                                 </div>
                             )) : <p className="empty-text">No upcoming expiries.</p>}
                         </div>
@@ -264,11 +306,11 @@ const Dashboard = () => {
                                         <span className="day">{new Date(item.effective_date).getDate()}</span>
                                     </div>
                                     <div className="item-details">
-                                        <div className="primary-text">{item.unit_number} • {item.effective_date}</div>
+                                        <div className="primary-text">{item.unit_number} • {new Date(item.effective_date).toLocaleDateString()}</div>
                                         <div className="secondary-text">{item.increase_type}</div>
                                     </div>
                                     <span className="value-text success">
-                                        {item.increase_type === 'Percentage (%)' ? `+${item.value}%` : `+₹${item.value}`}
+                                        {item.increase_type === 'Percentage (%)' || item.increase_type === 'Percentage' ? `+${item.value}%` : `+₹${item.value}`}
                                     </span>
                                 </div>
                             )) : <p className="empty-text">No escalations.</p>}
