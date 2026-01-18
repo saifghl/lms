@@ -289,27 +289,45 @@
     width: 300px;
 }
 
+/* Search Bar Improvements */
 .search-input-wrapper {
     position: relative;
     background: #f1f2f4;
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 0;
+    /* Remove padding from wrapper, handle in input */
     display: flex;
+    /* Keep flex for vertical alignment if needed, but mainly for centering */
     align-items: center;
+    height: 40px;
+    /* Explicit height */
 }
 
 .search-input-wrapper input {
     background: transparent;
     border: none;
-    margin-left: 8px;
     outline: none;
     font-size: 0.9rem;
     width: 100%;
+    height: 100%;
     color: #555;
+    padding: 0 12px 0 40px;
+    /* Left padding clears the icon */
+    box-sizing: border-box;
+    margin: 0;
 }
 
 .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     color: #777;
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+    /* Click through to input */
+    display: block;
 }
 
 /* Mobile Labels (Hidden by default) */
@@ -338,17 +356,26 @@
 }
 
 @media (max-width: 1024px) {
+    .kyc-page-container {
+        flex-direction: column;
+    }
+
     .kyc-content {
         margin-left: 0;
         padding: 20px;
-        /* Padding top adjusted if sidebar/header is sticky, else normal padding */
-        padding-top: 80px;
+        /* Search bar is now static, so we don't need huge top padding */
+        padding-top: 10px;
+        width: 100%;
     }
 
     .top-search-bar {
         position: static;
         width: 100%;
-        margin-bottom: 20px;
+        margin: 0;
+        /* Position below the fixed sidebar toggle (approx 50px-60px) */
+        margin-top: 60px;
+        padding: 0 20px;
+        box-sizing: border-box;
     }
 
     .stats-grid {

@@ -42,10 +42,13 @@ import CreateUser from './components/admin/CreateUser';
 import EditTenant from './components/admin/EditTenant';
 import EditOwner from './components/admin/EditOwner';
 
+import TestKycModal from "./components/admin/TestKycModal";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/test-kyc-modal" element={<TestKycModal />} />
         {/* Default route redirects to Login or Dashboard */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
