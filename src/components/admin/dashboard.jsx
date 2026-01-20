@@ -49,7 +49,7 @@ const Dashboard = () => {
                     </div>
                 </header>
 
-                {/* VISUAL STATS ROW (5 Cards) */}
+                {/* ROW 1: 4 Main Entities */}
                 <section className="stats-grid-top">
                     {loading ? (
                         <div className="loading-state">Loading...</div>
@@ -58,8 +58,7 @@ const Dashboard = () => {
                             { title: "Total Projects", value: s.totalProjects?.value || 0, change: s.totalProjects?.change, cls: "positive", stroke: "#2ED573" },
                             { title: "Total Units", value: s.totalUnits?.value || 0, change: s.totalUnits?.change, cls: "negative", stroke: "#FF4757" },
                             { title: "Total Owners", value: s.totalOwners?.value || 0, change: s.totalOwners?.change, cls: "neutral", stroke: "#2E66FF" },
-                            { title: "Total Tenants", value: s.totalTenants?.value || 0, change: s.totalTenants?.change, cls: "warning", stroke: "#FFA502" },
-                            { title: "Total Leases", value: s.totalLeases?.value || 0, change: s.totalLeases?.change, cls: "info", stroke: "#5352ED" }
+                            { title: "Total Tenants", value: s.totalTenants?.value || 0, change: s.totalTenants?.change, cls: "warning", stroke: "#FFA502" }
                         ].map((item, idx) => (
                             <div className="stat-card" key={idx}>
                                 <h4>{item.title}</h4>
@@ -83,9 +82,29 @@ const Dashboard = () => {
                     )}
                 </section>
 
-                {/* SECONDARY ROW: Revenue & Area */}
-                <section className="stats-grid-secondary">
-                    {/* Revenue Card */}
+                {/* ROW 2: Leases & Revenue */}
+                <section className="stats-grid-middle">
+                    {/* Total Leases */}
+                    <div className="stat-card">
+                        <h4>Total Leases</h4>
+                        <div className="stat-value">{s.totalLeases?.value || 0}</div>
+                        <div className={`stat-change info`}>
+                            {s.totalLeases?.change}
+                        </div>
+                        <div className="mini-sparkline">
+                            <svg width="100%" height="35" viewBox="0 0 100 35" preserveAspectRatio="none">
+                                <path
+                                    d="M0,25 C12,15 30,30 50,20 S88,15 100,22"
+                                    fill="none"
+                                    stroke="#5352ED"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+
+                    {/* Total Revenue */}
                     <div className="stat-card revenue-card">
                         <div>
                             <h4>Total Revenue</h4>
@@ -100,7 +119,10 @@ const Dashboard = () => {
                             </svg>
                         </div>
                     </div>
+                </section>
 
+                {/* ROW 3: Area Stats (Stacked) */}
+                <section className="stats-area-stacked">
                     {/* Area Occupied */}
                     <div className="area-card">
                         <div className="area-info">
@@ -196,7 +218,7 @@ const Dashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Upcoming Renewals</h3>
-                            <button className="link-btn" onClick={() => navigate('/admin/leases')}>View All</button>
+                            <button className="link-btn" onClick={() => navigate('/admin/leases?filter=renewals')}>View All</button>
                         </div>
                         <div className="list-content">
                             {stats?.upcomingRenewals?.length > 0 ? stats.upcomingRenewals.map((item, idx) => (
@@ -221,7 +243,7 @@ const Dashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Upcoming Expiries</h3>
-                            <button className="link-btn" onClick={() => navigate('/admin/leases')}>View All</button>
+                            <button className="link-btn" onClick={() => navigate('/admin/leases?filter=expiries')}>View All</button>
                         </div>
                         <div className="list-content">
                             {stats?.upcomingExpiries?.length > 0 ? stats.upcomingExpiries.map((item, idx) => (
@@ -246,7 +268,7 @@ const Dashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Rent Escalations</h3>
-                            <button className="link-btn" onClick={() => navigate('/management/reports')}>View All</button>
+                            <button className="link-btn" onClick={() => navigate('/admin/leases?filter=escalations')}>View All</button>
                         </div>
                         <div className="list-content">
                             {stats?.rentEscalations?.length > 0 ? stats.rentEscalations.map((item, idx) => (

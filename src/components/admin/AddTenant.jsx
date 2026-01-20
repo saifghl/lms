@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { tenantAPI, getProjects, unitAPI } from '../../services/api';
+import { indianCities, indianStates } from '../../utils/indianLocations';
+import { indianIndustries } from '../../utils/indianIndustries';
 // Reusing OwnerList.css or similar generic styles for forms if available
 // Assuming we can use standard form styles or inline them for specific layout
 import './OwnerList.css';
@@ -88,13 +90,16 @@ const AddTenant = () => {
         });
     };
 
+    const [submitMessage, setSubmitMessage] = useState('');
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setSubmitMessage('');
         try {
             await tenantAPI.createTenant(formData);
-            alert('Tenant created successfully');
-            navigate('/admin/tenants');
+            setSubmitMessage('Tenant created successfully');
+            setTimeout(() => navigate('/admin/tenants'), 2000);
         } catch (err) {
             console.error(err);
             alert('Failed to create tenant: ' + (err.response?.data?.message || err.message));
@@ -168,14 +173,20 @@ const AddTenant = () => {
                                 </div>
                                 <div>
                                     <label style={labelStyle}>Industry</label>
-                                    <select name="industry" style={inputStyle} value={formData.industry} onChange={handleChange}>
-                                        <option value="">Select Industry</option>
-                                        <option value="IT">IT & Software</option>
-                                        <option value="Finance">Finance</option>
-                                        <option value="Healthcare">Healthcare</option>
-                                        <option value="Retail">Retail</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                                    <input
+                                        type="text"
+                                        name="industry"
+                                        list="industry-options"
+                                        placeholder="Search Industry"
+                                        style={inputStyle}
+                                        value={formData.industry}
+                                        onChange={handleChange}
+                                    />
+                                    <datalist id="industry-options">
+                                        {indianIndustries.map((ind, index) => (
+                                            <option key={index} value={ind} />
+                                        ))}
+                                    </datalist>
                                 </div>
                             </div>
                             <div style={gridStyle}>
@@ -214,11 +225,34 @@ const AddTenant = () => {
                             <div style={gridStyle}>
                                 <div>
                                     <label style={labelStyle}>City</label>
-                                    <input type="text" name="city" placeholder="e.g. New York" style={inputStyle} value={formData.city} onChange={handleChange} />
+                                    <input
+                                        type="text"
+                                        name="city"
+                                        list="city-options"
+                                        placeholder="Search City"
+                                        style={inputStyle}
+                                        value={formData.city}
+                                        onChange={handleChange}
+                                    />
+                                    <datalist id="city-options">
+                                        {indianCities.map((city, index) => (
+                                            <option key={index} value={city} />
+                                        ))}
+                                    </datalist>
                                 </div>
                                 <div>
                                     <label style={labelStyle}>State</label>
-                                    <input type="text" name="state" placeholder="e.g. NY" style={inputStyle} value={formData.state} onChange={handleChange} />
+                                    <select
+                                        name="state"
+                                        style={inputStyle}
+                                        value={formData.state}
+                                        onChange={handleChange}
+                                    >
+                                        <option value="">Select State</option>
+                                        {indianStates.map((state, index) => (
+                                            <option key={index} value={state}>{state}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                             <div style={gridStyle}>
@@ -310,6 +344,12 @@ const AddTenant = () => {
                                 </div>
                             )}
                         </div>
+
+                        {submitMessage && (
+                            <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+                                {submitMessage}
+                            </div>
+                        )}
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '15px' }}>
                             <button

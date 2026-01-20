@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { tenantAPI, getProjects, unitAPI } from '../../services/api';
+import { indianIndustries } from '../../utils/indianIndustries';
 import './AddTenant.css';
 
 const EditTenant = () => {
@@ -65,6 +66,7 @@ const EditTenant = () => {
                     state: data.state || '',
                     zip_code: data.zip_code || '',
                     country: data.country || '',
+                    kyc_status: data.kyc_status || 'pending',
                     unit_ids: data.units ? data.units.map(u => u.id) : [] // Pre-select units
                 });
 
@@ -158,10 +160,13 @@ const EditTenant = () => {
         setSubTenants(updated);
     };
 
+    const [submitMessage, setSubmitMessage] = useState('');
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
         setError('');
+        setSubmitMessage('');
 
         try {
             const payload = {
@@ -169,7 +174,8 @@ const EditTenant = () => {
                 subtenants: subTenants
             };
             await tenantAPI.updateTenant(id, payload);
-            navigate('/admin/tenants'); // Redirect to list
+            setSubmitMessage('Tenant updated successfully');
+            setTimeout(() => navigate('/admin/tenants'), 2000);
         } catch (err) {
             const serverError = err.response?.data?.error || err.response?.data?.message || err.message;
             setError(`Update failed: ${serverError}`);
@@ -218,14 +224,19 @@ const EditTenant = () => {
                                     </div>
                                     <div className="form-group">
                                         <label>Industry</label>
-                                        <select name="industry" value={formData.industry} onChange={handleChange}>
-                                            <option value="">Select Industry</option>
-                                            <option value="IT">IT / Technology</option>
-                                            <option value="Finance">Finance</option>
-                                            <option value="Retail">Retail</option>
-                                            <option value="Healthcare">Healthcare</option>
-                                            <option value="Other">Other</option>
-                                        </select>
+                                        <input
+                                            type="text"
+                                            name="industry"
+                                            list="industry-options"
+                                            value={formData.industry}
+                                            onChange={handleChange}
+                                            placeholder="Select Industry"
+                                        />
+                                        <datalist id="industry-options">
+                                            {indianIndustries.map((ind, i) => (
+                                                <option key={i} value={ind} />
+                                            ))}
+                                        </datalist>
                                     </div>
                                 </div>
                                 <div className="form-row three-cols">
@@ -236,6 +247,14 @@ const EditTenant = () => {
                                     <div className="form-group">
                                         <label>Website</label>
                                         <input type="text" name="website" value={formData.website} onChange={handleChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>KYC Status</label>
+                                        <select name="kyc_status" value={formData.kyc_status} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                                            <option value="pending">Pending</option>
+                                            <option value="verified">Verified</option>
+                                            <option value="rejected">Rejected</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -344,6 +363,12 @@ const EditTenant = () => {
                                     </div>
                                 ))}
                             </div>
+
+                            {submitMessage && (
+                                <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+                                    {submitMessage}
+                                </div>
+                            )}
 
                             <div className="form-footer">
                                 <button type="button" className="cancel-btn" onClick={() => navigate('/admin/tenant')}>Cancel</button>

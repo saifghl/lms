@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import './ActivityLogs.css';
 
+import { indianCities } from '../../utils/indianLocations';
 import { getActivityLogs, exportActivityLogs, getProjectLocations, FILE_BASE_URL } from '../../services/api';
 
 const ActivityLogs = () => {
@@ -22,11 +23,12 @@ const ActivityLogs = () => {
         const fetchLocs = async () => {
             try {
                 const res = await getProjectLocations();
-                if (res.data) {
-                    setAvailableLocations(["All Locations", ...res.data]);
-                }
+                const apiLocations = res.data || [];
+                const unique = [...new Set([...apiLocations, ...indianCities])].sort();
+                setAvailableLocations(["All Locations", ...unique]);
             } catch (err) {
                 console.error("Failed to fetch locations", err);
+                setAvailableLocations(["All Locations", ...indianCities]);
             }
         };
         fetchLocs();

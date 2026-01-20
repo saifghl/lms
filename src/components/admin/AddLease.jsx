@@ -143,7 +143,10 @@ const AddLease = () => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const [submitMessage, setSubmitMessage] = useState('');
+
     const handleSubmit = async () => {
+        setSubmitMessage('');
         try {
             // Validate required fields
             if (!formData.project_id || !formData.unit_id || !formData.tenant_id ||
@@ -206,9 +209,8 @@ const AddLease = () => {
             };
 
             await leaseAPI.createLease(payload);
-
-            alert('Lease created successfully');
-            navigate('/admin/leases');
+            setSubmitMessage('Lease created successfully');
+            setTimeout(() => navigate('/admin/leases'), 2000);
         } catch (err) {
             console.error(err);
             const msg = err.response?.data?.message || err.message;
@@ -662,6 +664,12 @@ const AddLease = () => {
                             Add Escalation Step
                         </button>
                     </div>
+
+                    {submitMessage && (
+                        <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+                            {submitMessage}
+                        </div>
+                    )}
 
                     <div className="form-actions">
                         <button className="cancel-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>

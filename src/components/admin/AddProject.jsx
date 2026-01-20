@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import { addProject, getProjectLocations } from "../../services/api";
+import { indianCities } from "../../utils/indianLocations";
 import "./AddProject.css";
 
 const AddProject = () => {
@@ -26,13 +27,14 @@ const AddProject = () => {
     const fetchLocations = async () => {
       try {
         const response = await getProjectLocations();
-        // Seed with some default Indian cities if empty
-        const defaultLocations = ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Pune", "Kolkata"];
+        // Seed with all Indian cities from utility
         const fetched = response.data || [];
-        const unique = [...new Set([...defaultLocations, ...fetched])].sort();
+        const unique = [...new Set([...indianCities, ...fetched])].sort();
         setLocations(unique);
       } catch (error) {
         console.error("Failed to fetch locations:", error);
+        // Fallback to just Indian cities if API fails
+        setLocations(indianCities);
       }
     };
     fetchLocations();
@@ -54,9 +56,12 @@ const AddProject = () => {
     setImage(e.target.files[0]);
   };
 
+  const [submitMessage, setSubmitMessage] = useState('');
+
   /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitMessage('');
 
     try {
       const data = new FormData();
@@ -72,8 +77,8 @@ const AddProject = () => {
 
       await addProject(data);
 
-      alert("Project Added Successfully");
-      navigate("/admin/projects");
+      setSubmitMessage('Project created successfully');
+      setTimeout(() => navigate("/admin/projects"), 2000);
     } catch (error) {
       console.error("Add project error:", error);
       const errorMessage = error.response?.data?.error || error.message || "Failed to add project";
@@ -203,6 +208,12 @@ const AddProject = () => {
                   onChange={handleImageChange}
                 />
               </div>
+
+              {submitMessage && (
+                <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+                  {submitMessage}
+                </div>
+              )}
 
               <div className="form-footer">
                 <button type="submit" className="create-btn">

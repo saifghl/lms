@@ -206,7 +206,8 @@ const getUnitById = async (req, res) => {
                 u.projected_rent,
                 u.status,
                 p.project_name,
-                p.id as project_id
+                p.id as project_id,
+                (SELECT image_path FROM unit_images WHERE unit_id = u.id LIMIT 1) as unit_image
             FROM units u
             JOIN projects p ON p.id = u.project_id
             WHERE u.id = ?

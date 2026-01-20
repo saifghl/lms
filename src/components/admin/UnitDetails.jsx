@@ -17,6 +17,7 @@ const UnitDetails = () => {
         const fetchUnit = async () => {
             try {
                 const res = await unitAPI.getUnitById(id);
+                console.log("Unit Data:", res.data.data || res.data);
                 setUnit(res.data.data || res.data);
             } catch (err) {
                 console.error("Error fetching unit:", err);
@@ -124,13 +125,25 @@ const UnitDetails = () => {
                             <div className="gallery-grid">
                                 <div className="gallery-item main">
                                     <div className="image-placeholder main-placeholder">
-                                        <svg width="40" height="40" viewBox="0 0 24 24"
-                                            fill="none" stroke="#cbd5e1" strokeWidth="2"
-                                            strokeLinecap="round" strokeLinejoin="round">
-                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                            <circle cx="8.5" cy="8.5" r="1.5" />
-                                            <polyline points="21 15 16 10 5 21" />
-                                        </svg>
+                                        {unit.unit_image ? (
+                                            <img
+                                                src={`http://localhost:5000/uploads/units/${unit.unit_image}`}
+                                                alt={`Unit ${unit.unit_number}`}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = `http://localhost:5000/uploads/${unit.unit_image}`;
+                                                }}
+                                            />
+                                        ) : (
+                                            <svg width="40" height="40" viewBox="0 0 24 24"
+                                                fill="none" stroke="#cbd5e1" strokeWidth="2"
+                                                strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                <polyline points="21 15 16 10 5 21" />
+                                            </svg>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="gallery-side">
@@ -139,7 +152,6 @@ const UnitDetails = () => {
                                     </div>
                                     <div className="gallery-item">
                                         <div className="image-placeholder">
-                                            <button className="view-map-btn">View Map</button>
                                         </div>
                                     </div>
                                 </div>

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './dashboard.css';
 import './leases.css';
 import { leaseAPI, getProjects, getProjectLocations } from '../../services/api';
 
 const Leases = () => {
+    const [searchParams] = useSearchParams();
     const [leases, setLeases] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('');
@@ -18,7 +19,13 @@ const Leases = () => {
 
     useEffect(() => {
         fetchFilters();
-    }, []);
+
+        // Handle URL params
+        const filterParam = searchParams.get('filter');
+        if (filterParam === 'renewals') setEventFilter('30');
+        if (filterParam === 'expiries') setEventFilter('90');
+        if (filterParam === 'escalations') setEventFilter('escalation');
+    }, [searchParams]);
 
     useEffect(() => {
         fetchLeases();
@@ -45,7 +52,13 @@ const Leases = () => {
             if (statusFilter) params.status = statusFilter;
             if (projectFilter) params.project_id = projectFilter;
             if (locationFilter) params.location = locationFilter;
-            if (eventFilter) params.expires_in = eventFilter;
+            if (eventFilter) {
+                if (eventFilter === 'escalation') {
+                    params.upcoming_escalations = true;
+                } else {
+                    params.expires_in = eventFilter;
+                }
+            }
             if (search) params.search = search;
 
             const res = await leaseAPI.getAllLeases(params);
@@ -114,6 +127,7 @@ const Leases = () => {
                                         <option value="">All Events</option>
                                         <option value="30">Expiring in 30 Days</option>
                                         <option value="90">Expiring in 90 Days</option>
+                                        <option value="escalation">Rent Escalations Due</option>
                                     </select>
                                     <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </div>
@@ -164,15 +178,8 @@ const Leases = () => {
                             </button>
 
                         </div>
-                        <div className="view-actions">
-                            <button className="view-btn list active">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                            </button>
-                            <button className="view-btn grid">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                            </button>
-                        </div>
                     </div>
+
 
                     {/* Leases Table */}
                     <div className="table-container">
@@ -261,8 +268,8 @@ const Leases = () => {
                     </div>
 
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 };
 

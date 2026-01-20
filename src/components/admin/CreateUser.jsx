@@ -75,6 +75,7 @@ const CreateUser = () => {
             });
 
             alert("User created successfully");
+            //setSubmitMessage('User created successfully!');
             navigate("/admin/role-management");
 
         } catch (err) {

@@ -10,6 +10,7 @@ const EditLease = () => {
     const { id } = useParams();
 
     const [saving, setSaving] = useState(false);
+    const [submitMessage, setSubmitMessage] = useState('');
 
     // Form Fields
     const [formData, setFormData] = useState({
@@ -382,6 +383,12 @@ const EditLease = () => {
                         </button>
                     </div>
 
+                    {submitMessage && (
+                        <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+                            {submitMessage}
+                        </div>
+                    )}
+
                     <div className="form-actions">
                         <button className="cancel-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>
                         <button
@@ -390,6 +397,7 @@ const EditLease = () => {
                             onClick={async () => {
                                 try {
                                     setSaving(true);
+                                    setSubmitMessage('');
 
                                     const payload = {
                                         project_id: formData.project,
@@ -426,8 +434,8 @@ const EditLease = () => {
 
                                     await leaseAPI.updateLease(id, payload);
 
-                                    alert('Lease updated successfully');
-                                    navigate('/admin/leases');
+                                    setSubmitMessage('Lease updated successfully');
+                                    setTimeout(() => navigate('/admin/leases'), 2000);
                                 } catch (err) {
                                     console.error(err);
                                     alert(err.response?.data?.message || err.message || 'Failed to update lease');

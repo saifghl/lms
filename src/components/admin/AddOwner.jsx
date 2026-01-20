@@ -58,13 +58,16 @@ const AddOwner = () => {
 
   const handleCancel = () => navigate('/admin/owner');
 
+  const [submitMessage, setSubmitMessage] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setSubmitMessage('');
     try {
       await ownerAPI.createOwner(formData);
-      // alert("Owner added successfully!"); // Removed alert to match cleaner UX if preferred, or keep
-      navigate("/admin/owner");
+      setSubmitMessage('Owner created successfully');
+      setTimeout(() => navigate("/admin/owner"), 2000);
     } catch (err) {
       console.error(err);
       alert("Failed to add owner: " + (err.response?.data?.message || err.message));
@@ -74,6 +77,7 @@ const AddOwner = () => {
   };
 
   return (
+
     <div className="add-owner-container">
       <Sidebar />
       <main className="add-owner-content">
@@ -204,6 +208,11 @@ const AddOwner = () => {
         </div>
 
         {/* ACTIONS */}
+        {submitMessage && (
+          <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+            {submitMessage}
+          </div>
+        )}
         <div className="form-actions">
           <button className="btn-cancel" onClick={handleCancel}>
             Log Out

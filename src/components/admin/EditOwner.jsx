@@ -59,11 +59,14 @@ const EditOwner = () => {
 
   const handleCancel = () => navigate(-1);
 
+  const [submitMessage, setSubmitMessage] = useState('');
+
   const handleUpdate = async () => {
+    setSubmitMessage('');
     try {
       await ownerAPI.updateOwner(id, formData);
-      alert("Owner updated successfully");
-      navigate("/admin/owner");
+      setSubmitMessage('Owner updated successfully');
+      setTimeout(() => navigate("/admin/owner"), 2000);
     } catch (err) {
       console.error(err);
       alert("Failed to update owner");
@@ -192,6 +195,11 @@ const EditOwner = () => {
         </div>
 
         {/* ACTIONS */}
+        {submitMessage && (
+          <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+            {submitMessage}
+          </div>
+        )}
         <div className="form-actions">
           <button className="btn-cancel" onClick={handleCancel}>
             Cancel

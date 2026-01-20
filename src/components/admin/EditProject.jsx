@@ -34,6 +34,7 @@ const EditProject = () => {
     fetchProject();
   }, [id]);
 
+  /* ================= HANDLERS ================= */
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -42,7 +43,10 @@ const EditProject = () => {
     setImage(e.target.files[0]);
   };
 
+  const [submitMessage, setSubmitMessage] = useState('');
+
   const handleUpdate = async () => {
+    setSubmitMessage('');
     try {
       const data = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
@@ -53,8 +57,8 @@ const EditProject = () => {
       }
 
       await updateProject(id, data);
-      alert("Project Updated Successfully");
-      navigate("/admin/projects");
+      setSubmitMessage('Project Updated successfully');
+      setTimeout(() => navigate("/admin/projects"), 2000);
     } catch (error) {
       console.error("Update error:", error);
       alert("Error updating project");
@@ -147,13 +151,19 @@ const EditProject = () => {
             </div>
           </div>
 
+          {submitMessage && (
+            <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+              {submitMessage}
+            </div>
+          )}
+
           <div className="edit-footer">
             <Link to="/admin/projects" className="cancel-btn">Cancel</Link>
             <button className="update-btn" onClick={handleUpdate}>Update Project</button>
           </div>
-        </div>
-      </main>
-    </div>
+        </div >
+      </main >
+    </div >
   );
 };
 

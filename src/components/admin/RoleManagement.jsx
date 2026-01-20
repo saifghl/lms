@@ -331,7 +331,6 @@ const RoleManagement = () => {
             <div></div>
             <div>User Info</div>
             <div>Role</div>
-            <div>Module Access</div>
             <div>Status</div>
             <div>Actions</div>
           </div>
@@ -362,29 +361,6 @@ const RoleManagement = () => {
                 <span className={`role-badge ${user.roleClass}`}>
                   {user.role}
                 </span>
-              </div>
-
-              {/* MODULE ACCESS */}
-              <div className="module-access">
-                {user.isAll ? (
-                  <div className="toggle-group">
-                    <label className="switch">
-                      <input type="checkbox" defaultChecked />
-                      <span className="slider"></span>
-                    </label>
-                    <span>All</span>
-                  </div>
-                ) : (
-                  ["Lease", "Finance", "Maintenance"].map((m, i) => (
-                    <div className="toggle-group" key={i}>
-                      <label className="switch">
-                        <input type="checkbox" />
-                        <span className="slider"></span>
-                      </label>
-                      <span>{m}</span>
-                    </div>
-                  ))
-                )}
               </div>
 
               {/* STATUS */}

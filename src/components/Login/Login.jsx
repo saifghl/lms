@@ -32,7 +32,7 @@ const Login = () => {
         redirectPath = '/admin/dashboard';
         userRole = 'admin';
         break;
-      case 'Lease Manager':
+      case 'Lease manager':
         redirectPath = '/lease/dashboard';
         userRole = 'lease_manager';
         break;

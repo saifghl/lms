@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { getProjects, deleteProject as deleteProjectAPI, getProjectLocations } from "../../services/api";
+import { indianCities } from "../../utils/indianLocations";
 import "./projects.css";
 
 const Projects = () => {
@@ -19,9 +20,12 @@ const Projects = () => {
     const fetchLocations = async () => {
       try {
         const response = await getProjectLocations();
-        setAvailableLocations(["All", ...response.data]);
+        const apiLocations = response.data || [];
+        const unique = [...new Set([...apiLocations, ...indianCities])].sort();
+        setAvailableLocations(["All", ...unique]);
       } catch (error) {
         console.error("Error fetching locations:", error);
+        setAvailableLocations(["All", ...indianCities]);
       }
     };
     fetchLocations();

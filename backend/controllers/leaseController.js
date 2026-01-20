@@ -383,6 +383,10 @@ const getAllLeases = async (req, res) => {
             params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
         }
 
+        if (req.query.upcoming_escalations) {
+            query += ` AND EXISTS (SELECT 1 FROM lease_escalations le WHERE le.lease_id = l.id AND le.effective_from <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND le.effective_from >= CURDATE())`;
+        }
+
         query += ` ORDER BY l.created_at DESC`;
 
         const [rows] = await pool.query(query, params);
