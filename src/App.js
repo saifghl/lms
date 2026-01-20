@@ -2,9 +2,10 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./components/admin/dashboard";
 import Projects from "./components/admin/Projects";
+import ProjectDetails from "./components/admin/ProjectDetails";
 import Settings from "./components/admin/Settings";
 import RoleManagement from "./components/admin/RoleManagement";
-import Tenant from "./components/admin/Tenant";
+import TenantList from "./components/admin/TenantList"; // Updated import
 import AddTenant from "./components/admin/AddTenant";
 import TenantDetails from "./components/admin/TenantDetails";
 import OwnerList from "./components/admin/OwnerList";
@@ -18,6 +19,10 @@ import AddUnit from "./components/admin/AddUnit";
 import EditUnit from "./components/admin/EditUnit";
 import UnitDetails from "./components/admin/UnitDetails";
 import LeaseDashboard from "./components/lease-management/LeaseDashboard";
+import LeaseReports from "./components/lease-management/LeaseReports";
+import ReviewCenter from "./components/lease-management/ReviewCenter";
+import LeaseNotifications from "./components/lease-management/LeaseNotifications";
+import LeaseTracker from "./components/lease-management/LeaseTracker";
 import RepDashboard from "./components/management-rep/RepDashboard";
 import Reports from "./components/management-rep/Reports";
 import SearchFilters from "./components/management-rep/SearchFilters";
@@ -29,7 +34,6 @@ import EditLease from "./components/admin/EditLease";
 import LeaseDetails from "./components/admin/LeaseDetails";
 import LeaseValidation from "./components/lease-management/LeaseValidation";
 import LeaseLifecycle from "./components/lease-management/LeaseLifecycle";
-import LeaseReports from "./components/lease-management/LeaseReports";
 import LeaseReminders from "./components/lease-management/LeaseReminders";
 import KycPage from "./components/admin/KycPage";
 import DocRepo from "./components/management-rep/doc-repo";
@@ -57,6 +61,7 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/admin/projects" element={<Projects />} />
+        <Route path="/admin/projects/:id" element={<ProjectDetails />} />
         <Route path="/admin/add-project" element={<AddProject />} />
         <Route path="/admin/edit-project/:id" element={<EditProject />} />
 
@@ -74,33 +79,43 @@ function App() {
         <Route path="/admin/settings" element={<Settings />} />
         <Route path="/admin/role-management" element={<RoleManagement />} />
         <Route path="/admin/create-user" element={<CreateUser />} />
-        <Route path="/admin/tenant" element={<Tenant />} />
+
+        {/* Tenant Routes */}
+        <Route path="/admin/tenants" element={<TenantList />} />
+        <Route path="/admin/tenant" element={<Navigate to="/admin/tenants" replace />} />
         <Route path="/admin/tenant/add" element={<AddTenant />} />
-        <Route path="/admin/add-tenant" element={<AddTenant />} /> {/* User Access URL */}
+        <Route path="/admin/add-tenant" element={<AddTenant />} />
         <Route path="/admin/tenant/edit/:id" element={<EditTenant />} />
         <Route path="/admin/tenant/:id" element={<TenantDetails />} />
+
+        {/* Owner Routes */}
         <Route path="/admin/owner" element={<OwnerList />} />
-        <Route path="/admin/owners" element={<OwnerList />} /> {/* Possible Alias */}
+        <Route path="/admin/owners" element={<OwnerList />} />
         <Route path="/admin/owner/add" element={<AddOwner />} />
-        <Route path="/admin/owners/add" element={<AddOwner />} /> {/* Possible Alias */}
+        <Route path="/admin/owners/add" element={<AddOwner />} />
         <Route path="/admin/owner/edit/:id" element={<EditOwner />} />
         <Route path="/admin/owner/:id" element={<OwnerDetails />} />
+
         <Route path="/admin/activity-logs" element={<ActivityLogs />} />
         <Route path="/admin/kyc" element={<KycPage />} />
 
         {/* Management Rep Routes */}
         <Route path="/doc-repo" element={<DocRepo />} />
-        {/* Lease Manager Routes */}
-        <Route path="/lease" element={<Navigate to="/lease/dashboard" replace />} />
+        {/* Lease Management Suite */}
         <Route path="/lease/dashboard" element={<LeaseDashboard />} />
+        <Route path="/lease/reports" element={<LeaseReports />} />
+        {/* <Route path="/admin/notifications" element={<LeaseNotifications />} />  -- Kept locally or removed if unused */}
+
+        {/* Legacy/Other Routes */}
         <Route path="/lease/validation" element={<LeaseValidation />} />
         <Route path="/lease/lifecycle" element={<LeaseLifecycle />} />
-        <Route path="/lease/reports" element={<LeaseReports />} />
         <Route path="/lease/reminders" element={<LeaseReminders />} />
         <Route path="/management/dashboard" element={<RepDashboard />} />
         <Route path="/management/reports" element={<Reports />} />
         <Route path="/management/search" element={<SearchFilters />} />
         <Route path="/management/notifications" element={<Notifications />} />
+        <Route path="/management/review-center" element={<ReviewCenter />} />
+        <Route path="/management/lease-tracker" element={<LeaseTracker />} />
         <Route path="/management/settings" element={<RepSettings />} />
 
       </Routes >

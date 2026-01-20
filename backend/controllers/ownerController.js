@@ -30,27 +30,41 @@ exports.getOwnerDetails = async (req, res) => {
 /* =========================
    GET ALL OWNERS
 ========================= */
+/* =========================
+   GET ALL OWNERS
+========================= */
 exports.getOwners = async (req, res) => {
     try {
-        const { search } = req.query;
+        const { search, location } = req.query; // Added location
         let query = `
             SELECT 
                 o.id,
                 o.name,
                 o.email,
                 o.phone,
+                o.gst_number,
+                o.total_owned_area,
                 o.kyc_status,
                 o.created_at,
-                (SELECT document_path FROM owner_documents WHERE owner_id = o.id ORDER BY uploaded_at DESC LIMIT 1) as document_path,
-                (SELECT document_type FROM owner_documents WHERE owner_id = o.id ORDER BY uploaded_at DESC LIMIT 1) as document_type
+                (SELECT document_path FROM owner_documents WHERE owner_id = o.id ORDER BY uploaded_at DESC LIMIT 1) as document_path
             FROM owners o
         `;
 
         const params = [];
+        const conditions = [];
 
         if (search) {
-            query += ` WHERE o.name LIKE ? OR o.email LIKE ? OR o.phone LIKE ? OR o.kyc_status LIKE ?`;
-            params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+            conditions.push("(o.name LIKE ? OR o.email LIKE ? OR o.phone LIKE ?)");
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        }
+
+        if (location && location !== 'All') {
+            conditions.push("o.address LIKE ?"); // Assuming location filtering is based on address city/area
+            params.push(`%${location}%`);
+        }
+
+        if (conditions.length > 0) {
+            query += " WHERE " + conditions.join(" AND ");
         }
 
         query += ` ORDER BY o.created_at DESC`;
@@ -62,9 +76,29 @@ exports.getOwners = async (req, res) => {
         console.error("GET OWNERS ERROR:", err);
         res.status(500).json({
             message: "Failed to fetch owners",
-            error: err.message,
-            stack: err.stack
+            error: err.message
         });
+    }
+};
+
+/* =========================
+   GET OWNER LOCATIONS
+========================= */
+exports.getOwnerLocations = async (req, res) => {
+    try {
+        // Extract distinct cities/locations from addresses
+        // This is a simple implementation; ideally address would be structured or we'd have a separate location column
+        const [rows] = await pool.query("SELECT DISTINCT address FROM owners WHERE address IS NOT NULL AND address != ''");
+
+        // Simple heuristic to get "London" from "123 St, London, UK" if needed, 
+        // but for now let's just return unique address strings or you might want to extract city.
+        // Given the prompt "location bar should work... as dropdown", we'll just return full addresses or cities if possible.
+        // Let's assume the user wants unique addresses for now as "Locations".
+        const locations = rows.map(r => r.address);
+        res.json(locations);
+    } catch (err) {
+        console.error("GET OWNER LOCATIONS ERROR:", err);
+        res.status(500).json({ message: "Failed to fetch locations" });
     }
 };
 

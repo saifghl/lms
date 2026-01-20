@@ -55,8 +55,8 @@ const EditLease = () => {
                     tenantAPI.getTenants(),
                     ownerAPI.getOwners()
                 ]);
-                setProjects(projRes.data || []);
-                setUnits(unitRes.data || []);
+                setProjects(projRes.data?.data || []);
+                setUnits(unitRes.data?.data || []);
                 setTenants(tenantRes.data || []);
                 setOwners(ownerRes.data || []);
 
@@ -167,9 +167,11 @@ const EditLease = () => {
                                 <label>Unit</label>
                                 <select name="unit" value={formData.unit} onChange={handleChange}>
                                     <option value="" disabled>Select Unit</option>
-                                    {units.map(u => (
-                                        <option key={u.id} value={u.id}>{u.unit_number}</option>
-                                    ))}
+                                    {units
+                                        .filter(u => !formData.project || u.project_id == formData.project) // Filter by project
+                                        .map(u => (
+                                            <option key={u.id} value={u.id}>{u.unit_number}</option>
+                                        ))}
                                 </select>
                             </div>
                         </div>

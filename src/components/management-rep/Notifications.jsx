@@ -39,8 +39,8 @@ const Notifications = () => {
   };
 
   const filteredNotifications = notifications.filter(n => {
-    if (activeTab === "unread") return !n.read;
-    return true;
+    if (activeTab === "all") return true;
+    return n.type === activeTab || n.category === activeTab;
   });
 
   const getRelativeTime = (dateString) => {
@@ -82,13 +82,28 @@ const Notifications = () => {
               All
             </div>
             <div
-              className={`tab ${activeTab === "unread" ? "active" : ""}`}
-              onClick={() => setActiveTab("unread")}
+              className={`tab ${activeTab === "lease_alert" ? "active" : ""}`}
+              onClick={() => setActiveTab("lease_alert")}
             >
-              Unread
-              {notifications.filter(n => !n.read).length > 0 && (
-                <span className="unread-badge-count">{notifications.filter(n => !n.read).length}</span>
-              )}
+              Lease alerts
+            </div>
+            <div
+              className={`tab ${activeTab === "escalation" ? "active" : ""}`}
+              onClick={() => setActiveTab("escalation")}
+            >
+              Escalations
+            </div>
+            <div
+              className={`tab ${activeTab === "expiry" ? "active" : ""}`}
+              onClick={() => setActiveTab("expiry")}
+            >
+              Expiries
+            </div>
+            <div
+              className={`tab ${activeTab === "system" ? "active" : ""}`}
+              onClick={() => setActiveTab("system")}
+            >
+              System alerts
             </div>
           </div>
 

@@ -1,17 +1,60 @@
 const pool = require("../config/db");
 
 // Dashboard Summary
-exports.getLeaseStats = async (req, res) => {
+const getLeaseDashboardStats = async (req, res) => {
     try {
         const [pending] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE status='draft'`);
         const [active] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE status='active'`);
-        const [expiring] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)`);
+        const [expiring] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND status='active'`);
+        const [renewals] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND status='active'`);
+
+        // Mocking escalations count for now as it requires complex join logic or a status flag in escalations table
+        // Assuming leases with escalations due this month
+        const [escalations] = await pool.query(`
+            SELECT COUNT(DISTINCT l.id) as total 
+            FROM leases l 
+            JOIN lease_escalations le ON l.id = le.lease_id 
+            WHERE le.effective_from <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) 
+            AND le.effective_from >= CURDATE()
+        `);
 
         res.json({
-            pending: pending[0].total,
-            active: active[0].total,
-            expiring: expiring[0].total,
+            pending_approvals: pending[0].total,
+            active_leases: active[0].total,
+            lease_expiries: expiring[0].total,
+            renewals_due: renewals[0].total,
+            rental_escalation: escalations[0].total || 0,
+            growth: "5% vs last month" // Placeholder for now or calculate real growth
         });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// Need Attention List
+const getNeedAttentionLeases = async (req, res) => {
+    try {
+        // Fetch Drafts, Disputes (mock status), and Escalations
+        const [rows] = await pool.query(`
+            SELECT 
+                l.id, 
+                t.company_name as tenant_name, 
+                l.status, 
+                l.lease_end as date,
+                CASE 
+                    WHEN l.status = 'draft' THEN 'New Lease'
+                    WHEN l.status = 'dispute' THEN 'Dispute'
+                    ELSE 'Escalation'
+                END as type
+            FROM leases l
+            JOIN tenants t ON l.tenant_id = t.id
+            WHERE l.status IN ('draft', 'dispute') 
+            OR (l.status = 'active' AND l.lease_end <= DATE_ADD(CURDATE(), INTERVAL 30 DAY))
+            ORDER BY l.created_at DESC
+            LIMIT 5
+        `);
+        res.json(rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
@@ -20,7 +63,7 @@ exports.getLeaseStats = async (req, res) => {
 
 
 // Pending Approvals
-exports.getPendingLeases = async (req, res) => {
+const getPendingLeases = async (req, res) => {
     try {
         const [rows] = await pool.query(`
             SELECT l.id, t.company_name, l.monthly_rent, l.lease_start, l.lease_end
@@ -38,7 +81,7 @@ exports.getPendingLeases = async (req, res) => {
 
 
 // Approve Lease
-exports.approveLease = async (req, res) => {
+const approveLease = async (req, res) => {
     try {
         const { id } = req.params;
         await pool.query(`UPDATE leases SET status='approved' WHERE id=?`, [id]);
@@ -50,8 +93,8 @@ exports.approveLease = async (req, res) => {
 };
 
 
-// Expiring Leases
-exports.getExpiringLeases = async (req, res) => {
+// Expiring Leases (Kept for compatibility)
+const getExpiringLeases = async (req, res) => {
     try {
         const [rows] = await pool.query(`
             SELECT l.id, t.company_name, l.monthly_rent, l.lease_end
@@ -66,9 +109,29 @@ exports.getExpiringLeases = async (req, res) => {
     }
 };
 
+// Lease Report Stats
+const getLeaseReportStats = async (req, res) => {
+    try {
+        const [exp30] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND status='active'`);
+        const [exp60] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end <= DATE_ADD(CURDATE(), INTERVAL 60 DAY) AND status='active'`);
+        const [riskValue] = await pool.query(`SELECT SUM(monthly_rent) as total FROM leases WHERE lease_end <= DATE_ADD(CURDATE(), INTERVAL 60 DAY) AND status='active'`);
+        const [notice] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE notice_period_months > 0 AND status='active'`); // Simplified logic for notice pending
+
+        res.json({
+            expiring_30_days: exp30[0].total,
+            expiring_60_days: exp60[0].total,
+            total_value_risk: riskValue[0].total || 0,
+            notice_pending: notice[0].total
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 
 // Notifications
-exports.getLeaseNotifications = async (req, res) => {
+const getLeaseNotifications = async (req, res) => {
     try {
         // Check if notifications table exists first, if not return empty
         const [rows] = await pool.query(`
@@ -83,9 +146,35 @@ exports.getLeaseNotifications = async (req, res) => {
     }
 };
 
+// Lease Tracker Stats
+const getLeaseTrackerStats = async (req, res) => {
+    try {
+        const [exp90] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end <= DATE_ADD(CURDATE(), INTERVAL 90 DAY) AND status='active'`);
+        const [renewals] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY) AND status='active'`); // Slightly broader for renewals pending
+        const [escalations] = await pool.query(`
+            SELECT COUNT(DISTINCT l.id) as total 
+            FROM leases l 
+            JOIN lease_escalations le ON l.id = le.lease_id 
+            WHERE le.effective_from <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) 
+            AND le.effective_from >= CURDATE()
+        `);
+        const [lockIn] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE DATE_ADD(lease_start, INTERVAL lockin_period_months MONTH) <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND DATE_ADD(lease_start, INTERVAL lockin_period_months MONTH) >= CURDATE()`);
+
+        res.json({
+            expiring_90_days: exp90[0].total,
+            renewals_pending: renewals[0].total,
+            escalation_due: escalations[0].total || 0,
+            lock_in_ending: lockIn[0].total
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 
 // Create Lease
-exports.createLease = async (req, res) => {
+const createLease = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
@@ -239,9 +328,9 @@ exports.createLease = async (req, res) => {
 };
 
 // Get All Leases
-exports.getAllLeases = async (req, res) => {
+const getAllLeases = async (req, res) => {
     try {
-        const { status, project_id, search } = req.query;
+        const { status, project_id, location, search } = req.query;
 
         let query = `
             SELECT 
@@ -279,6 +368,16 @@ exports.getAllLeases = async (req, res) => {
             params.push(project_id);
         }
 
+        if (location) {
+            query += ` AND p.location = ?`;
+            params.push(location);
+        }
+
+        if (req.query.expires_in) {
+            query += ` AND l.lease_end <= DATE_ADD(CURDATE(), INTERVAL ? DAY) AND l.lease_end >= CURDATE()`;
+            params.push(req.query.expires_in);
+        }
+
         if (search) {
             query += ` AND (t.company_name LIKE ? OR u.unit_number LIKE ? OR p.project_name LIKE ? OR CAST(l.id AS CHAR) LIKE ?)`;
             params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
@@ -299,16 +398,16 @@ exports.getAllLeases = async (req, res) => {
 };
 
 // Get Lease By ID
-exports.getLeaseById = async (req, res) => {
+const getLeaseById = async (req, res) => {
     try {
         const leaseId = req.params.id;
 
         // Get lease details
         const [leaseRows] = await pool.query(
             `SELECT l.*, 
-                    p.project_name,
-                    u.unit_number, u.floor_number, u.super_area,
-                    t.company_name AS tenant_name, t.contact_person_name, t.contact_person_email, t.contact_person_phone,
+                    p.project_name, p.location as project_location,
+                    u.unit_number, u.floor_number, u.super_area, u.carpet_area, u.unit_condition,
+                    t.company_name AS tenant_name, t.contact_person_name, t.contact_person_email, t.contact_person_phone, t.industry,
                     o.name AS owner_name,
                     st.company_name AS sub_tenant_name
              FROM leases l
@@ -356,7 +455,7 @@ exports.getLeaseById = async (req, res) => {
 };
 
 // Update Lease
-exports.updateLease = async (req, res) => {
+const updateLease = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
@@ -483,4 +582,19 @@ exports.updateLease = async (req, res) => {
     } finally {
         connection.release();
     }
+};
+
+module.exports = {
+    getLeaseDashboardStats,
+    getNeedAttentionLeases,
+    getExpiringLeases, // Kept for compatibility if used elsewhere
+    getPendingLeases,
+    getLeaseNotifications,
+    getLeaseReportStats,
+    getLeaseTrackerStats,
+    createLease,
+    getAllLeases,
+    getLeaseById,
+    updateLease,
+    approveLease
 };

@@ -1,168 +1,216 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { tenantAPI } from '../../services/api';
-import './TenantDetails.css';
+import { tenantAPI, FILE_BASE_URL } from '../../services/api';
+// Reusing OwnerDetails.css for consistent layout and responsiveness
+import './OwnerDetails.css';
 
 const TenantDetails = () => {
     const { id } = useParams();
-    const navigate = useNavigate();
-
     const [tenant, setTenant] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchTenant = async () => {
-            try {
-                setLoading(true);
-                const res = await tenantAPI.getTenantById(id);
-                setTenant(res.data);
-            } catch (err) {
-                console.error("Error loading tenant:", err);
-                setError("Failed to load tenant details.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (id) fetchTenant();
+        fetchDetails();
     }, [id]);
 
-    if (loading) return (
-        <div className="dashboard-container">
-            <Sidebar />
-            <main className="main-content">
-                <div style={{ padding: '40px', textAlign: 'center' }}>Loading tenant details...</div>
-            </main>
-        </div>
-    );
+    const fetchDetails = async () => {
+        try {
+            setLoading(true);
+            const res = await tenantAPI.getTenantById(id);
+            setTenant(res.data);
+        } catch (err) {
+            console.error("Failed to fetch tenant details", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    if (error || !tenant) return (
-        <div className="dashboard-container">
-            <Sidebar />
-            <main className="main-content">
-                <div style={{ padding: '40px', textAlign: 'center', color: 'red' }}>{error || "Tenant not found"}</div>
-            </main>
-        </div>
-    );
+    if (loading) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar />
+                <main className="main-content">
+                    <div style={{ padding: '20px', textAlign: 'center' }}>Loading tenant details...</div>
+                </main>
+            </div>
+        );
+    }
 
-    // Initial of company name for avatar
-    const initial = tenant.company_name ? tenant.company_name.charAt(0).toUpperCase() : 'T';
+    if (!tenant) {
+        return (
+            <div className="dashboard-container">
+                <Sidebar />
+                <main className="main-content">
+                    <div style={{ padding: '20px', textAlign: 'center' }}>Tenant not found.</div>
+                </main>
+            </div>
+        );
+    }
 
     return (
-        <div className="dashboard-container">
+        <div className="owner-details-container">
             <Sidebar />
-            <main className="main-content">
-                <div className="tenant-details-container">
+            <div className="owner-details-content">
+                {/* Breacrumbs */}
+                <div className="breadcrumb" style={{ marginBottom: '20px' }}>
+                    <Link to="/admin/dashboard">HOME</Link> &gt; <Link to="/admin/tenants">TENANT</Link> &gt; <Link to="/admin/tenants">LIST</Link> &gt; <span className="active">DETAILS</span>
+                </div>
 
-                    {/* Header */}
-                    <div className="details-header">
-                        <div className="title-row">
-                            <div className="back-btn" onClick={() => navigate('/admin/tenant')} style={{ cursor: 'pointer', marginRight: '10px' }}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                {/* Profile Header */}
+                <header className="owner-profile-header">
+                    <div className="profile-main">
+                        <div className="profile-avatar-large" style={{ backgroundColor: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '32px', fontWeight: 'bold' }}>
+                            {tenant.company_name?.charAt(0) || 'T'}
+                        </div>
+                        <div className="profile-info">
+                            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                {tenant.company_name}
+                                <span className="badge-verified" style={{ fontSize: '12px' }}>
+                                    {tenant.status === 'active' ? 'Active Tenant' : tenant.status}
+                                </span>
+                            </h2>
+                            <p>ID: #TN-{new Date().getFullYear()}-{tenant.id}</p>
+                        </div>
+                    </div>
+                    <div className="header-actions">
+                        <Link to={`/admin/tenant/edit/${tenant.id}`} className="btn-edit" style={{ textDecoration: 'none' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            Edit
+                        </Link>
+                    </div>
+                </header>
+
+                <div className="details-layout">
+                    {/* Left Column: Personal Information */}
+                    <div className="left-column">
+                        <div className="side-card">
+                            <h3>Personal Information</h3>
+
+                            <div className="personal-info-row">
+                                <div className="info-content">
+                                    <label>Full Name</label>
+                                    <p>{tenant.contact_person_name || 'N/A'}</p>
+                                </div>
+                                <div className="info-content">
+                                    <label>Email Address</label>
+                                    <p>{tenant.contact_person_email || 'N/A'}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h1>{tenant.company_name}</h1>
-                                <p className="subtitle">ID: TEN-{tenant.id} • {tenant.industry}</p>
+
+                            <div className="personal-info-row">
+                                <div className="info-content">
+                                    <label>Phone Number</label>
+                                    <p>{tenant.contact_person_phone || 'N/A'}</p>
+                                </div>
+                                <div className="info-content">
+                                    <label>Date of Birth</label>
+                                    <p>N/A</p> {/* Not in DB currently */}
+                                </div>
+                            </div>
+
+                            <div className="personal-info-row">
+                                <div className="info-content">
+                                    <label>Occupation</label>
+                                    <p>{tenant.industry || 'N/A'}</p>
+                                </div>
+                                <div className="info-content">
+                                    <label>Emergency Contact</label>
+                                    <p>N/A</p> {/* Not in DB currently */}
+                                </div>
                             </div>
                         </div>
-                        <button className="edit-btn" onClick={() => navigate(`/admin/tenant/edit/${tenant.id}`)}>
-                            Edit Tenant
-                        </button>
                     </div>
 
-                    <div className="details-grid">
-
-                        {/* Left Column: Basic Info & Contact */}
-                        <div className="details-column">
-                            <div className="info-card">
-                                <h3>Corporate Information</h3>
-                                <div className="info-row">
-                                    <label>Reg. Number</label>
-                                    <span>{tenant.company_registration_number || 'N/A'}</span>
+                    {/* Right Column: Key Terms & Current Lease */}
+                    <div className="right-column">
+                        {/* Key Terms Card (Blue) */}
+                        {/* Key Terms Card (Blue) */}
+                        <div className="side-card" style={{ background: '#1e40af', color: 'white' }}>
+                            <h3 style={{ color: 'white' }}>Key Terms</h3>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', opacity: 0.8, marginBottom: '5px' }}>Monthly Rent</label>
+                                <div style={{ fontSize: '32px', fontWeight: 'bold' }}>
+                                    {tenant.active_lease ? `₹${parseFloat(tenant.active_lease.monthly_rent).toLocaleString()}` : 'N/A'} <span style={{ fontSize: '14px', fontWeight: 'normal', opacity: 0.8 }}>({tenant.active_lease?.rent_model === 'Fixed' ? 'Fixed' : 'Variable'})</span>
                                 </div>
-                                <div className="info-row">
-                                    <label>Tax ID / VAT</label>
-                                    <span>{tenant.tax_id || 'N/A'}</span>
-                                </div>
-                                <div className="info-row">
-                                    <label>Website</label>
-                                    <span>{tenant.website ? <a href={tenant.website} target="_blank" rel="noreferrer">{tenant.website}</a> : 'N/A'}</span>
+                                <div style={{ fontSize: '13px', opacity: 0.8 }}>
+                                    {tenant.active_lease?.rent_model === 'RevenueShare' ? '+ Revenue Share' : ''}
                                 </div>
                             </div>
 
-                            <div className="info-card">
-                                <h3>Primary Contact</h3>
-                                <div className="contact-display">
-                                    <div className="avatar-circle">{initial}</div>
-                                    <div>
-                                        <strong>{tenant.contact_person_name}</strong>
-                                        <div className="email-text">{tenant.contact_person_email}</div>
-                                        <div className="phone-text">{tenant.contact_person_phone}</div>
+                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.2)', marginBottom: '20px' }}></div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '13px', opacity: 0.8, marginBottom: '5px' }}>Date of Lease</label>
+                                    <div style={{ fontSize: '18px', fontWeight: '600' }}>
+                                        {tenant.active_lease?.lease_start ? new Date(tenant.active_lease.lease_start).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: '2-digit' }) : 'N/A'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '13px', opacity: 0.8, marginBottom: '5px' }}>Lockin Date</label>
+                                    <div style={{ fontSize: '18px', fontWeight: '600' }}>
+                                        {/* Assuming lockin date logic or just showing end date if no lockin specific field */}
+                                        {tenant.active_lease?.lease_end ? new Date(tenant.active_lease.lease_end).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: '2-digit' }) : 'N/A'}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="info-card">
-                                <h3>Address</h3>
-                                <p className="address-text">
-                                    {tenant.street_address}<br />
-                                    {tenant.city}, {tenant.state} {tenant.zip_code}<br />
-                                    {tenant.country}
-                                </p>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '13px', opacity: 0.8, marginBottom: '5px' }}>Area Occupied</label>
+                                <div style={{ fontSize: '18px', fontWeight: '600' }}>
+                                    {tenant.area_occupied ? parseFloat(tenant.area_occupied).toLocaleString() : '0'} <span style={{ fontSize: '14px', fontWeight: 'normal' }}>Sq. ft</span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Right Column: Units & Subtenants */}
-                        <div className="details-column">
-                            <div className="info-card">
-                                <h3>Leased Units</h3>
-                                {tenant.units && tenant.units.length > 0 ? (
-                                    <div className="units-grid">
-                                        {tenant.units.map(unit => (
-                                            <div key={unit.id} className="unit-mini-card">
-                                                <div className="unit-icon">🏢</div>
+                        {/* Current Lease */}
+                        <div className="side-card">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <h3>Current Lease</h3>
+                                <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontWeight: '500' }}>View Contract</button>
+                            </div>
+
+                            {tenant.units && tenant.units.length > 0 ? (
+                                tenant.units.map(unit => (
+                                    <div key={unit.id} style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                                        <div style={{ width: '150px', height: '100px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+                                            <img
+                                                src={unit.image ? `${FILE_BASE_URL}${unit.image}` : 'https://via.placeholder.com/150'}
+                                                alt="Unit"
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <h4 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>{unit.project_name || tenant.active_lease?.project_name} – Unit {unit.unit_number}</h4>
+                                            <p style={{ margin: '0 0 15px 0', fontSize: '13px', color: '#666' }}>
+                                                {tenant.active_lease?.project_location || 'Location N/A'}
+                                            </p>
+
+                                            <div style={{ display: 'flex', gap: '30px' }}>
                                                 <div>
-                                                    <strong>Unit {unit.unit_number}</strong>
-                                                    <div>{unit.super_area} sqft</div>
-                                                    <div className="floor-text">Floor {unit.floor_number}</div>
+                                                    <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '2px' }}>Lease Start:</label>
+                                                    <div style={{ fontSize: '14px', fontWeight: '500' }}>
+                                                        {tenant.active_lease?.lease_start ? new Date(tenant.active_lease.lease_start).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '2px' }}>Lease End:</label>
+                                                    <div style={{ fontSize: '14px', fontWeight: '500' }}>
+                                                        {tenant.active_lease?.lease_end ? new Date(tenant.active_lease.lease_end).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        ))}
+                                        </div>
                                     </div>
-                                ) : (
-                                    <p className="empty-text">No units assigned.</p>
-                                )}
-                            </div>
-
-                            <div className="info-card">
-                                <h3>Subtenants</h3>
-                                {tenant.subtenants && tenant.subtenants.length > 0 ? (
-                                    <div className="subtenants-list">
-                                        {tenant.subtenants.map((st, i) => (
-                                            <div key={i} className="subtenant-item">
-                                                <div className="st-header">
-                                                    <strong>{st.company_name}</strong>
-                                                    <span className="area-badge">{st.allotted_area_sqft} sqft</span>
-                                                </div>
-                                                <div className="st-details">
-                                                    <div>Reg: {st.registration_number}</div>
-                                                    <div>Contact: {st.contact_person_name}</div>
-                                                    <div>{st.contact_person_email}</div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="empty-text">No subtenants registered.</p>
-                                )}
-                            </div>
+                                ))
+                            ) : (
+                                <p>No units assigned.</p>
+                            )}
                         </div>
-
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     );
 };

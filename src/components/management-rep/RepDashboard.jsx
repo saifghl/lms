@@ -211,7 +211,7 @@ const RepDashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Upcoming Renewals</h3>
-                            <button className="link-btn">View All</button>
+                            <button className="link-btn" onClick={() => navigate('/admin/leases')}>View All</button>
                         </div>
                         <div className="list-content">
                             {stats?.upcomingRenewals?.length > 0 ? stats.upcomingRenewals.map((item, idx) => (
@@ -236,7 +236,7 @@ const RepDashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Upcoming Expiries</h3>
-                            <button className="link-btn">View All</button>
+                            <button className="link-btn" onClick={() => navigate('/admin/leases')}>View All</button>
                         </div>
                         <div className="list-content">
                             {stats?.upcomingExpiries?.length > 0 ? stats.upcomingExpiries.map((item, idx) => (
@@ -261,7 +261,7 @@ const RepDashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Rent Escalations</h3>
-                            <button className="link-btn">View All</button>
+                            <button className="link-btn" onClick={() => navigate('/management/reports')}>View All</button>
                         </div>
                         <div className="list-content">
                             {stats?.rentEscalations?.length > 0 ? stats.rentEscalations.map((item, idx) => (
@@ -271,7 +271,7 @@ const RepDashboard = () => {
                                         <span className="day">{new Date(item.effective_from).getDate()}</span>
                                     </div>
                                     <div className="item-details">
-                                        <div className="primary-text">{item.unit_number} • {item.effective_from}</div>
+                                        <div className="primary-text">{item.unit_number} • {new Date(item.effective_from).getFullYear()}</div>
                                         <div className="secondary-text">{item.increase_type}</div>
                                     </div>
                                     <span className="value-text success">

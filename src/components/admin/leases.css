@@ -379,3 +379,36 @@
         font-size: 0.8rem;
     }
 }
+
+/* Actions */
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    /* justifyContent handled inline or here */
+}
+
+.action-btn {
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    background: #eff6ff;
+}
+
+.action-btn.delete:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+    background: #fef2f2;
+}

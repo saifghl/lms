@@ -42,8 +42,10 @@ const EditTenant = () => {
             try {
                 // 1. Fetch Projects
                 const projRes = await getProjects();
-                const projectList = projRes.data?.projects || projRes.data || [];
-                setProjects(projectList);
+                // Ensure we get an array. Matches AddTenant.jsx logic
+                const projectList = Array.isArray(projRes.data) ? projRes.data
+                    : (projRes.data?.data || projRes.data?.projects || []);
+                setProjects(Array.isArray(projectList) ? projectList : []);
 
                 // 2. Fetch Tenant Details
                 const tenantRes = await tenantAPI.getTenantById(id);
@@ -51,14 +53,14 @@ const EditTenant = () => {
 
                 setFormData({
                     company_name: data.company_name || '',
-                    company_registration_number: data.company_registration_number || '',
+                    company_registration_number: data.registration_no || data.company_registration_number || '',
                     industry: data.industry || '',
                     tax_id: data.tax_id || '',
                     contact_person_name: data.contact_person_name || '',
                     contact_person_email: data.contact_person_email || '',
                     contact_person_phone: data.contact_person_phone || '',
                     website: data.website || '',
-                    street_address: data.street_address || '',
+                    street_address: data.address || data.street_address || '',
                     city: data.city || '',
                     state: data.state || '',
                     zip_code: data.zip_code || '',
@@ -70,19 +72,16 @@ const EditTenant = () => {
                 if (data.subtenants) {
                     setSubTenants(data.subtenants.map(st => ({
                         company_name: st.company_name,
-                        registration_number: st.registration_number,
-                        allotted_area_sqft: st.allotted_area_sqft,
-                        contact_person_name: st.contact_person_name,
-                        contact_person_email: st.contact_person_email,
-                        contact_person_phone: st.contact_person_phone
+                        registration_number: st.registration_no || st.registration_number || '',
+                        allotted_area_sqft: st.allotted_area || st.allotted_area_sqft || '',
+                        contact_person_name: st.contact_person || st.contact_person_name || '',
+                        contact_person_email: st.email || st.contact_person_email || '',
+                        contact_person_phone: st.phone || st.contact_person_phone || ''
                     })));
                 }
 
                 // If tenant has units, try to deduce project from first unit (Optional - assuming single project for now)
-                // In a real scenario, we might need a way to know which project the units belong to if not explicitly stored on tenant
-                // For now, we'll leave project selection manual if they want to add more units, or try to find it.
                 if (data.units && data.units.length > 0 && projectList.length > 0) {
-                    // logic to find project id from unit could go here if unit object has project_id
                     const firstUnit = data.units[0];
                     if (firstUnit.project_id) setSelectedProjectId(firstUnit.project_id);
                 }
@@ -109,7 +108,10 @@ const EditTenant = () => {
         try {
             setLoadingUnits(true);
             const res = await unitAPI.getUnitsByProject(pid);
-            setUnits(res.data?.units || res.data || []);
+            // Response structure is { data: { data: [...] } } or similar check
+            // Based on controller: res.json({ data: rows }) -> axios res.data.data
+            const unitsList = res.data?.data || [];
+            setUnits(Array.isArray(unitsList) ? unitsList : []);
         } catch (err) {
             console.error("Error fetching units:", err);
             setUnits([]);
@@ -167,10 +169,11 @@ const EditTenant = () => {
                 subtenants: subTenants
             };
             await tenantAPI.updateTenant(id, payload);
-            navigate('/admin/tenant');
+            navigate('/admin/tenants'); // Redirect to list
         } catch (err) {
-            setError(err.response?.data?.message || err.message || 'Failed to update tenant.');
-            console.error(err);
+            const serverError = err.response?.data?.error || err.response?.data?.message || err.message;
+            setError(`Update failed: ${serverError}`);
+            console.error("Update error details:", err.response?.data);
         } finally {
             setSaving(false);
         }

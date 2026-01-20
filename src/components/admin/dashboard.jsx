@@ -1,50 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getDashboardStats } from '../../services/api';
+import { managementAPI } from '../../services/api';
 import './dashboard.css';
-
-// Helper Component for Animation
-const AnimatedNumber = ({ value }) => {
-    const [displayValue, setDisplayValue] = useState(0);
-
-    useEffect(() => {
-        let start = 0;
-        const end = parseInt(value, 10) || 0;
-        if (start === end) return;
-
-        // Total duration 2000ms
-        const duration = 2000;
-        // 60 frames per second = ~16ms per frame
-        const incrementTime = (duration / end) * 1000;
-
-        // However, if end is very large, incrementTime is too small.
-        // Better approach: step based
-        let startTime = null;
-
-        const animate = (currentTime) => {
-            if (!startTime) startTime = currentTime;
-            const progress = currentTime - startTime;
-            const percentage = Math.min(progress / duration, 1);
-
-            // Ease out quart
-            const ease = 1 - Math.pow(1 - percentage, 4);
-
-            const current = Math.floor(ease * end);
-            setDisplayValue(current);
-
-            if (percentage < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                setDisplayValue(end);
-            }
-        };
-
-        requestAnimationFrame(animate);
-    }, [value]);
-
-    return <>{displayValue}</>;
-};
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -54,7 +12,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await getDashboardStats();
+                const response = await managementAPI.getDashboardStats();
                 setStats(response.data);
             } catch (error) {
                 console.error("Error fetching dashboard stats:", error);
@@ -67,12 +25,6 @@ const Dashboard = () => {
 
     // Helper data - handle the new nested structure
     const s = stats?.metrics || {};
-    const revenueValue = s.totalRevenue?.value ? parseFloat(s.totalRevenue.value) : 0;
-
-    // Format large numbers for revenue
-    const formattedRevenue = revenueValue >= 1000000
-        ? `${(revenueValue / 1000000).toFixed(1)}M`
-        : revenueValue.toLocaleString();
 
     return (
         <div className="dashboard-container">
@@ -111,9 +63,7 @@ const Dashboard = () => {
                         ].map((item, idx) => (
                             <div className="stat-card" key={idx}>
                                 <h4>{item.title}</h4>
-                                <div className="stat-value">
-                                    <AnimatedNumber value={item.value} />
-                                </div>
+                                <div className="stat-value">{item.value}</div>
                                 <div className={`stat-change ${item.cls}`}>
                                     {item.change}
                                 </div>
@@ -139,9 +89,9 @@ const Dashboard = () => {
                     <div className="stat-card revenue-card">
                         <div>
                             <h4>Total Revenue</h4>
-                            <div className="stat-value">₹{formattedRevenue}</div>
+                            <div className="stat-value">{s.totalRevenue?.value || "₹0.0M"}</div>
                             <div className="stat-change negative">
-                                {s.totalRevenue?.change || "+12% YTD"}
+                                {s.totalRevenue?.change}
                             </div>
                         </div>
                         <div className="mini-chart-wave">
@@ -246,18 +196,18 @@ const Dashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Upcoming Renewals</h3>
-                            <button className="link-btn">View All</button>
+                            <button className="link-btn" onClick={() => navigate('/admin/leases')}>View All</button>
                         </div>
                         <div className="list-content">
                             {stats?.upcomingRenewals?.length > 0 ? stats.upcomingRenewals.map((item, idx) => (
                                 <div className="list-item" key={idx}>
                                     <div className="date-badge">
-                                        <span className="month">{new Date(item.lease_end_date).toLocaleString('default', { month: 'short' })}</span>
-                                        <span className="day">{new Date(item.lease_end_date).getDate()}</span>
+                                        <span className="month">{new Date(item.date).toLocaleString('default', { month: 'short' })}</span>
+                                        <span className="day">{new Date(item.date).getDate()}</span>
                                     </div>
                                     <div className="item-details">
-                                        <div className="primary-text">{item.unit_number} • {new Date(item.lease_end_date).toLocaleDateString()}</div>
-                                        <div className="secondary-text">{item.tenant_name}</div>
+                                        <div className="primary-text">{item.unit} • {new Date(item.date).toLocaleDateString()}</div>
+                                        <div className="secondary-text">{item.tenant}</div>
                                     </div>
                                     <span className={`status-pill ${item.badgeType}`}>
                                         {item.badge}
@@ -271,18 +221,18 @@ const Dashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Upcoming Expiries</h3>
-                            <button className="link-btn">View All</button>
+                            <button className="link-btn" onClick={() => navigate('/admin/leases')}>View All</button>
                         </div>
                         <div className="list-content">
                             {stats?.upcomingExpiries?.length > 0 ? stats.upcomingExpiries.map((item, idx) => (
                                 <div className="list-item" key={idx}>
                                     <div className="date-badge">
-                                        <span className="month">{new Date(item.lease_end_date).toLocaleString('default', { month: 'short' })}</span>
-                                        <span className="day">{new Date(item.lease_end_date).getDate()}</span>
+                                        <span className="month">{new Date(item.date).toLocaleString('default', { month: 'short' })}</span>
+                                        <span className="day">{new Date(item.date).getDate()}</span>
                                     </div>
                                     <div className="item-details">
-                                        <div className="primary-text">{item.unit_number} • {new Date(item.lease_end_date).toLocaleDateString()}</div>
-                                        <div className="secondary-text">{item.tenant_name}</div>
+                                        <div className="primary-text">{item.unit} • {new Date(item.date).toLocaleDateString()}</div>
+                                        <div className="secondary-text">{item.tenant}</div>
                                     </div>
                                     <span className={`status-pill ${item.badgeType}`}>
                                         {item.badge}
@@ -296,21 +246,21 @@ const Dashboard = () => {
                     <div className="list-card">
                         <div className="list-header">
                             <h3>Rent Escalations</h3>
-                            <button className="link-btn">View All</button>
+                            <button className="link-btn" onClick={() => navigate('/management/reports')}>View All</button>
                         </div>
                         <div className="list-content">
                             {stats?.rentEscalations?.length > 0 ? stats.rentEscalations.map((item, idx) => (
                                 <div className="list-item" key={idx}>
                                     <div className="date-badge gray">
-                                        <span className="month">{new Date(item.effective_date).toLocaleString('default', { month: 'short' }).toUpperCase()}</span>
-                                        <span className="day">{new Date(item.effective_date).getDate()}</span>
+                                        <span className="month">{new Date(item.effective_from).toLocaleString('default', { month: 'short' }).toUpperCase()}</span>
+                                        <span className="day">{new Date(item.effective_from).getDate()}</span>
                                     </div>
                                     <div className="item-details">
-                                        <div className="primary-text">{item.unit_number} • {new Date(item.effective_date).toLocaleDateString()}</div>
+                                        <div className="primary-text">{item.unit_number} • {new Date(item.effective_from).getFullYear()}</div>
                                         <div className="secondary-text">{item.increase_type}</div>
                                     </div>
                                     <span className="value-text success">
-                                        {item.increase_type === 'Percentage (%)' || item.increase_type === 'Percentage' ? `+${item.value}%` : `+₹${item.value}`}
+                                        {item.increase_type === 'Percentage' ? `+${item.value}%` : `+₹${item.value}`}
                                     </span>
                                 </div>
                             )) : <p className="empty-text">No escalations.</p>}

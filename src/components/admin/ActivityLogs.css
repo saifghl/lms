@@ -82,7 +82,7 @@
     background: transparent;
     border: none;
     flex-wrap: nowrap;
-    gap: 15px;
+    gap: 20px;
 }
 
 .filter-group {
@@ -418,5 +418,79 @@
         width: 28px;
         height: 28px;
         font-size: 11px;
+    }
+}
+
+/* ================= NEW STYLES ================= */
+
+/* Search Wrapper (copied from projects.css for consistency) */
+.search-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+    max-width: 400px;
+}
+
+.search-wrapper svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    width: 16px;
+    height: 16px;
+}
+
+.search-wrapper input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    color: #333;
+    box-sizing: border-box;
+    transition: all 0.2s;
+    background: white;
+}
+
+.search-wrapper input:focus {
+    border-color: #2196f3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+/* Ensure select dropdowns match input style */
+.filter-dropdown-select {
+    padding: 9px 36px 9px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background-color: white;
+    color: #555;
+    font-size: 14px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    appearance: none;
+    -webkit-appearance: none;
+    min-width: 160px;
+}
+
+.filter-dropdown-select:focus {
+    outline: none;
+    border-color: #2196f3;
+}
+
+/* In mobile, ensure search takes full width */
+@media (max-width: 768px) {
+    .search-wrapper {
+        min-width: 100%;
+        max-width: 100%;
+        order: -1;
+        /* Put search on top */
+    }
+
+    .filter-dropdown-select {
+        flex: 1 1 calc(50% - 12px);
     }
 }

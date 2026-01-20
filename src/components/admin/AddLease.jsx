@@ -56,7 +56,7 @@ const AddLease = () => {
                     ownerAPI.getOwners()
                 ]);
 
-                setProjects(projectsRes.data || []);
+                setProjects(projectsRes.data?.data || []);
                 setTenants(tenantsRes.data || []);
                 setOwners(ownersRes.data || []);
             } catch (err) {
@@ -74,8 +74,12 @@ const AddLease = () => {
                 try {
                     const res = await unitAPI.getUnitsByProject(formData.project_id);
                     const allUnits = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-                    // Filter only vacant units
-                    setUnits(allUnits.filter(u => u.status === 'vacant'));
+                    setUnits(allUnits);
+
+                    // Auto-select if only 1 unit exists
+                    if (allUnits.length === 1) {
+                        handleUnitChange(allUnits[0].id);
+                    }
                 } catch (err) {
                     console.error('Failed to fetch units:', err);
                 }
@@ -83,9 +87,9 @@ const AddLease = () => {
             fetchUnits();
         } else {
             setUnits([]);
+            setFormData(prev => ({ ...prev, unit_id: '' })); // Reset unit if project changes
         }
     }, [formData.project_id]);
-
     // Fetch sub-tenants when tenant is selected
     useEffect(() => {
         if (formData.tenant_id && isSubLease) {
@@ -114,6 +118,25 @@ const AddLease = () => {
             owner_id: isSub ? '' : prev.owner_id,
             sub_tenant_id: isSub ? '' : ''
         }));
+    };
+
+    const handleUnitChange = (val) => {
+        const unitId = parseInt(val);
+        setFormData(prev => ({ ...prev, unit_id: val }));
+
+        // Auto-select owner if unit has one
+        const selectedUnit = units.find(u => u.id === unitId);
+
+        if (selectedUnit && selectedUnit.owner_id && !isSubLease) {
+            // Check if owner exists in owners list
+            const ownerExists = owners.find(o => o.id === selectedUnit.owner_id);
+            if (ownerExists) {
+                setFormData(prev => ({ ...prev, unit_id: val, owner_id: selectedUnit.owner_id }));
+            } else {
+                // In case owner list missing this owner (unlikely unless inactive)
+                console.warn("Owner for unit not found in owners list:", selectedUnit.owner_id);
+            }
+        }
     };
 
     const handleInputChange = (field, value) => {
@@ -300,13 +323,13 @@ const AddLease = () => {
                                 <label>Unit *</label>
                                 <select
                                     value={formData.unit_id}
-                                    onChange={(e) => handleInputChange('unit_id', e.target.value)}
+                                    onChange={(e) => handleUnitChange(e.target.value)}
                                     disabled={!formData.project_id}
                                 >
                                     <option value="">Select Unit</option>
                                     {units.map(unit => (
                                         <option key={unit.id} value={unit.id}>
-                                            {unit.unit_number} - {unit.super_area} sqft
+                                            {unit.unit_number} - {unit.super_area} sqft {unit.status !== 'vacant' ? `(${unit.status})` : ''}
                                         </option>
                                     ))}
                                 </select>

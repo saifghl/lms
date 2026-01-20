@@ -1,30 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { unitAPI } from '../../services/api';
+import { unitAPI, getProjects } from '../../services/api';
 import './units.css';
 
 const Units = () => {
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const initialProjectId = queryParams.get('projectId');
+
     const [units, setUnits] = useState([]);
     const [loading, setLoading] = useState(true);
-    // const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedBuilding, setSelectedBuilding] = useState('All');
-    const [selectedUnitType, setSelectedUnitType] = useState('All');
+    const [selectedBuilding, setSelectedBuilding] = useState(initialProjectId || 'All');
+    const [selectedUnitType, setSelectedUnitType] = useState('All'); // Acts as Status Filter
     const [error, setError] = useState(null);
-    // const [filters, setFilters] = useState({
-    //     search: '',
-    //     project_id: '',
-    //     status: ''
-    // });
+    const [projects, setProjects] = useState([]);
 
+    /* ================= FETCH PROJECTS FOR DROPDOWN ================= */
+    useEffect(() => {
+        const fetchProjectsList = async () => {
+            try {
+                const response = await getProjects();
+                // Ensure we handle the response structure correctly
+                const projData = response.data.data || response.data;
+                setProjects(projData);
+            } catch (err) {
+                console.error("Error fetching projects:", err);
+            }
+        };
+        fetchProjectsList();
+    }, []);
+
+    /* ================= FETCH UNITS ================= */
     useEffect(() => {
         const fetchUnits = async () => {
             try {
-                console.log('Fetching units from API...');
-                const response = await unitAPI.getUnits();
-                const data = response.data;
-                console.log('API Response:', data);
+                setLoading(true);
+
+
+                const params = {};
+                if (searchTerm) params.search = searchTerm;
+                if (selectedBuilding !== 'All') params.projectId = selectedBuilding;
+                if (selectedUnitType !== 'All') params.status = selectedUnitType; // Mapping Unit Type to Status filter
+
+                const response = await unitAPI.getUnits(params);
+                const data = response.data.data || response.data; // Handle wrapped/unwrapped
+
 
                 if (!Array.isArray(data)) {
                     throw new Error('API response is not an array');
@@ -49,37 +71,27 @@ const Units = () => {
                 setLoading(false);
             }
         };
-        fetchUnits();
-    }, []);
 
-    // Filter units based on search and filters
-    const filteredUnits = units.filter(unit => {
-        const matchesSearch = searchTerm === '' ||
-            unit.unitNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            unit.building.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            unit.area.toString().includes(searchTerm);
-        const matchesBuilding = selectedBuilding === 'All' || unit.building === selectedBuilding;
-        const matchesUnitType = selectedUnitType === 'All' || unit.status === selectedUnitType.toLowerCase();
-        return matchesSearch && matchesBuilding && matchesUnitType;
-    });
+        // Debounce search
+        const timer = setTimeout(() => {
+            fetchUnits();
+        }, 500);
 
-    // Get unique buildings for dropdown
-    const buildings = ['All', ...new Set(units.map(unit => unit.building))];
-
-    // Get unique statuses for unit type dropdown (as proxy)
-    const unitTypes = ['All', ...new Set(units.map(unit => unit.status))];
+        return () => clearTimeout(timer);
+    }, [searchTerm, selectedBuilding, selectedUnitType]);
 
     // Handlers
     const handleSearchChange = (e) => setSearchTerm(e.target.value);
     const handleBuildingChange = (e) => setSelectedBuilding(e.target.value);
     const handleUnitTypeChange = (e) => setSelectedUnitType(e.target.value);
+
     const handleClearFilters = () => {
         setSearchTerm('');
         setSelectedBuilding('All');
         setSelectedUnitType('All');
     };
 
-    if (loading) {
+    if (loading && units.length === 0) { // Only show full loading screen if no data
         return (
             <div className="dashboard-container">
                 <Sidebar />
@@ -90,7 +102,7 @@ const Units = () => {
         );
     }
 
-    if (error) {
+    if (error && units.length === 0) {
         return (
             <div className="dashboard-container">
                 <Sidebar />
@@ -127,17 +139,19 @@ const Units = () => {
                         <div className="filter-group">
                             <div className="dropdown-filter">
                                 <select value={selectedBuilding} onChange={handleBuildingChange}>
-                                    {buildings.map(building => (
-                                        <option key={building} value={building}>Building: {building}</option>
+                                    <option value="All">All Projects</option>
+                                    {projects.map(p => (
+                                        <option key={p.id} value={p.id}>{p.project_name}</option>
                                     ))}
                                 </select>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </div>
                             <div className="dropdown-filter">
                                 <select value={selectedUnitType} onChange={handleUnitTypeChange}>
-                                    {unitTypes.map(type => (
-                                        <option key={type} value={type}>Unit Type: {type}</option>
-                                    ))}
+                                    <option value="All">All Statuses</option>
+                                    <option value="vacant">Vacant</option>
+                                    <option value="occupied">Occupied</option>
+                                    <option value="maintenance">Maintenance</option>
                                 </select>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </div>
@@ -166,12 +180,12 @@ const Units = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredUnits.length === 0 ? (
+                                {units.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5">No units found.</td>
+                                        <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>No units found.</td>
                                     </tr>
                                 ) : (
-                                    filteredUnits.map((unit) => (
+                                    units.map((unit) => (
                                         <tr key={unit.id}>
                                             <td className="unit-id">{unit.unitNo}</td>
                                             <td>{unit.building}</td>
@@ -196,7 +210,7 @@ const Units = () => {
 
                     <div className="pagination">
                         <span>Rows per page: 10 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
-                        <span>1—{filteredUnits.length} of {units.length}</span>
+                        <span>1—{units.length} of {units.length}</span>
                         <div className="page-nav">
                             <button disabled>&lt;</button>
                             <span>1</span>

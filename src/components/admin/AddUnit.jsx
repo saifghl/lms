@@ -1,16 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { unitAPI, getProjects } from '../../services/api';
 import './AddUnit.css';
 
 const AddUnit = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const fileInputRef = useRef(null);
     // const [loading, setLoading] = useState(false);
     const [projects, setProjects] = useState([]);
+
+    // Get projectId from URL params if available
+    const queryParams = new URLSearchParams(location.search);
+    const preSelectedProjectId = queryParams.get('projectId') || '';
+
     const [formData, setFormData] = useState({
-        project_id: '',
+        project_id: preSelectedProjectId,
         unit_number: '',
         floor_number: '',
         super_area: '',
@@ -29,7 +35,7 @@ const AddUnit = () => {
         const fetchProjects = async () => {
             try {
                 const res = await getProjects();
-                setProjects(res.data);
+                setProjects(res.data.data || res.data);
             } catch (err) {
                 console.error("Failed to fetch projects", err);
             }

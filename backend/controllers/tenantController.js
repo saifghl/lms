@@ -152,8 +152,9 @@ exports.createTenant = async (req, res) => {
 exports.getAllTenants = async (req, res) => {
     try {
         const search = req.query.search || '';
+        const projectId = req.query.projectId;
 
-        const [rows] = await pool.query(`
+        let query = `
             SELECT 
                 t.id,
                 t.company_name,
@@ -165,9 +166,18 @@ exports.getAllTenants = async (req, res) => {
             LEFT JOIN tenant_units tu ON t.id = tu.tenant_id
             LEFT JOIN units u ON tu.unit_id = u.id
             WHERE (? = '' OR t.company_name LIKE ? OR t.contact_person_name LIKE ? OR t.contact_person_email LIKE ?)
-            GROUP BY t.id
-            ORDER BY t.created_at DESC
-        `, [search, `%${search}%`, `%${search}%`, `%${search}%`]);
+        `;
+
+        const params = [search, `%${search}%`, `%${search}%`, `%${search}%`];
+
+        if (projectId && projectId !== 'All') {
+            query += ` AND u.project_id = ?`;
+            params.push(projectId);
+        }
+
+        query += ` GROUP BY t.id ORDER BY t.created_at DESC`;
+
+        const [rows] = await pool.query(query, params);
 
         res.json(rows);
     } catch (err) {
@@ -208,6 +218,17 @@ exports.getTenantById = async (req, res) => {
             [tenantId]
         );
 
+        // Fetch Active Lease
+        const [leaseRows] = await pool.query(
+            `SELECT l.*, p.project_name, p.location as project_location
+             FROM leases l
+             LEFT JOIN projects p ON l.project_id = p.id
+             WHERE l.tenant_id = ? AND l.status = 'Active'
+             ORDER BY l.created_at DESC LIMIT 1`,
+            [tenantId]
+        );
+        const activeLease = leaseRows.length > 0 ? leaseRows[0] : null;
+
         // Calculate total area occupied
         const totalArea = units.reduce((sum, unit) => {
             return sum + (parseFloat(unit.super_area) || 0);
@@ -218,6 +239,7 @@ exports.getTenantById = async (req, res) => {
             ...tenant,
             units: units || [],
             subtenants: subtenants || [],
+            active_lease: activeLease,
             area_occupied: totalArea
         });
 
@@ -254,6 +276,10 @@ exports.updateTenant = async (req, res) => {
 
         await connection.beginTransaction();
 
+        console.log("--------------- UPDATE TENANT DEBUG ---------------");
+        console.log("Tenant ID:", tenantId);
+        console.log("Request Body:", JSON.stringify(req.body, null, 2));
+
         // Check if tenant exists
         const [existing] = await connection.query(
             `SELECT id FROM tenants WHERE id = ?`,
@@ -274,7 +300,7 @@ exports.updateTenant = async (req, res) => {
             updateValues.push(company_name);
         }
         if (company_registration_number !== undefined) {
-            updateFields.push('company_registration_number = ?');
+            updateFields.push('registration_no = ?');
             updateValues.push(company_registration_number);
         }
         if (industry !== undefined) {
@@ -302,7 +328,7 @@ exports.updateTenant = async (req, res) => {
             updateValues.push(contact_person_phone);
         }
         if (street_address !== undefined) {
-            updateFields.push('street_address = ?');
+            updateFields.push('address = ?');
             updateValues.push(street_address);
         }
         if (city !== undefined) {
@@ -333,6 +359,7 @@ exports.updateTenant = async (req, res) => {
         // Update tenant if there are fields to update
         if (updateFields.length > 0) {
             updateValues.push(tenantId);
+            console.log("Executing Query Fields:", updateFields); // DEBUG
             await connection.query(
                 `UPDATE tenants SET ${updateFields.join(', ')} WHERE id = ?`,
                 updateValues
@@ -356,9 +383,9 @@ exports.updateTenant = async (req, res) => {
 
                     await connection.query(
                         `INSERT INTO sub_tenants
-                        (tenant_id, company_name, registration_number,
-                         allotted_area_sqft, contact_person_name,
-                         contact_person_email, contact_person_phone)
+                        (tenant_id, company_name, registration_no,
+                         allotted_area, contact_person,
+                         email, phone)
                          VALUES (?, ?, ?, ?, ?, ?, ?)`,
                         [
                             tenantId,
@@ -435,3 +462,15 @@ exports.updateTenant = async (req, res) => {
         connection.release();
     }
 };
+
+exports.getTenantLocations = async (req, res) => {
+    try {
+        const [rows] = await pool.query("SELECT DISTINCT city FROM tenants WHERE city IS NOT NULL AND city != '' ORDER BY city");
+        const locations = rows.map(row => row.city);
+        res.json(locations);
+    } catch (err) {
+        console.error("Fetch locations error:", err);
+        res.status(500).json({ message: "Failed to fetch locations" });
+    }
+};
+

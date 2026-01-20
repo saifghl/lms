@@ -1,19 +1,46 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import './ActivityLogs.css';
 
-import { getActivityLogs, exportActivityLogs, FILE_BASE_URL } from '../../services/api';
-import { useEffect, useState } from 'react';
+import { getActivityLogs, exportActivityLogs, getProjectLocations, FILE_BASE_URL } from '../../services/api';
 
 const ActivityLogs = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
 
+    // Filters
+    const [search, setSearch] = useState("");
+    const [selectedLocation, setSelectedLocation] = useState("All Locations");
+    const [selectedModule, setSelectedModule] = useState("All Modules");
+    const [availableLocations, setAvailableLocations] = useState(["All Locations"]);
+
+    const MODULES = ["All Modules", "User Mgmt", "Lease Mgmt", "Properties", "Reports", "Financials"];
+
+    // Fetch Locations (using Project Locations as proxy for User/Office Locations)
+    useEffect(() => {
+        const fetchLocs = async () => {
+            try {
+                const res = await getProjectLocations();
+                if (res.data) {
+                    setAvailableLocations(["All Locations", ...res.data]);
+                }
+            } catch (err) {
+                console.error("Failed to fetch locations", err);
+            }
+        };
+        fetchLocs();
+    }, []);
+
     const fetchLogs = React.useCallback(async () => {
         try {
             setLoading(true);
-            const res = await getActivityLogs(pagination.page, pagination.limit);
+            const filters = {};
+            if (search) filters.search = search;
+            if (selectedLocation !== "All Locations") filters.location = selectedLocation;
+            if (selectedModule !== "All Modules") filters.module = selectedModule;
+
+            const res = await getActivityLogs(pagination.page, pagination.limit, filters);
             if (res.data && res.data.logs) {
                 setLogs(res.data.logs);
                 setPagination(prev => ({ ...prev, total: res.data.total }));
@@ -23,10 +50,14 @@ const ActivityLogs = () => {
         } finally {
             setLoading(false);
         }
-    }, [pagination.page, pagination.limit]);
+    }, [pagination.page, pagination.limit, search, selectedLocation, selectedModule]);
 
     useEffect(() => {
-        fetchLogs();
+        // Debounce search
+        const timer = setTimeout(() => {
+            fetchLogs();
+        }, 500);
+        return () => clearTimeout(timer);
     }, [fetchLogs]);
 
     // Helper to format date and time
@@ -40,7 +71,12 @@ const ActivityLogs = () => {
 
     const handleExport = async () => {
         try {
-            const res = await exportActivityLogs();
+            const filters = {};
+            if (search) filters.search = search;
+            if (selectedLocation !== "All Locations") filters.location = selectedLocation;
+            if (selectedModule !== "All Modules") filters.module = selectedModule;
+
+            const res = await exportActivityLogs(filters);
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -61,7 +97,7 @@ const ActivityLogs = () => {
 
     // Helper to generate page numbers
     const getPageNumbers = () => {
-        const totalPages = Math.ceil(pagination.total / pagination.limit);
+        const totalPages = Math.ceil(pagination.total / pagination.limit) || 1;
         const current = pagination.page;
         const delta = 2;
         const range = [];
@@ -88,6 +124,13 @@ const ActivityLogs = () => {
         return rangeWithDots;
     };
 
+    const handleClearFilters = () => {
+        setSearch("");
+        setSelectedLocation("All Locations");
+        setSelectedModule("All Modules");
+        setPagination(prev => ({ ...prev, page: 1 }));
+    };
+
     return (
         <div className="activity-logs-container">
             <Sidebar />
@@ -110,13 +153,41 @@ const ActivityLogs = () => {
                 </header>
 
                 <div className="filters-container">
+                    {/* Search Bar - Added as per requirement */}
+                    <div className="search-wrapper">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input
+                            type="text"
+                            placeholder="Search logs..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+
                     <div className="filter-group">
-                        <div className="filter-dropdown">All Modules <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
-                        <div className="filter-dropdown">User Management <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                        {/* Module Dropdown */}
+                        <select
+                            className="filter-dropdown-select"
+                            value={selectedModule}
+                            onChange={(e) => setSelectedModule(e.target.value)}
+                        >
+                            {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+
+                        {/* Location Dropdown - Replacing static "User Management" or added next to it */}
+                        <select
+                            className="filter-dropdown-select"
+                            value={selectedLocation}
+                            onChange={(e) => setSelectedLocation(e.target.value)}
+                        >
+                            {availableLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                        </select>
+
+                        {/* Removed static User Management text */}
                         <button className="btn-add-filter">+ Add Filter</button>
                     </div>
                     <div className="filter-controls">
-                        <span className="clear-filters">Clear filters</span>
+                        <span className="clear-filters" onClick={handleClearFilters}>Clear filters</span>
                     </div>
                 </div>
 
@@ -164,7 +235,7 @@ const ActivityLogs = () => {
                                         <span>{details}</span>
                                     </div>
                                     <div className="module-col">
-                                        <span className={`badge-module ${log.module?.toLowerCase()}`}>{log.module}</span>
+                                        <span className={`badge-module ${log.module?.toLowerCase().split(' ')[0]}`}>{log.module}</span>
                                     </div>
                                     <div className="timestamp-col">
                                         <span>{date}</span>

@@ -69,7 +69,7 @@ const addProject = async (req, res) => {
 /* ================= GET ALL PROJECTS ================= */
 const getProjects = async (req, res) => {
   try {
-    const { search, location, type } = req.query;
+    const { search, location, type, status } = req.query;
     let query = "SELECT * FROM projects";
     const conditions = [];
     const params = [];
@@ -89,6 +89,11 @@ const getProjects = async (req, res) => {
       params.push(type);
     }
 
+    if (status && status !== 'All') {
+      conditions.push("status = ?");
+      params.push(status);
+    }
+
     if (conditions.length > 0) {
       query += " WHERE " + conditions.join(" AND ");
     }
@@ -97,24 +102,55 @@ const getProjects = async (req, res) => {
 
     // Using promise-based execute() method
     const [projects] = await pool.execute(query, params);
-    res.json(projects);
+    res.json({ data: projects }); // Wrapped in data to match frontend expectation in some places or standardized
   } catch (error) {
     console.error("Get projects error:", error);
     res.status(500).json({ error: error.message });
   }
 };
 
-/* ================= GET SINGLE PROJECT ================= */
+/* ================= GET PROJECT LOCATIONS ================= */
+const getProjectLocations = async (req, res) => {
+  try {
+    const [rows] = await pool.execute("SELECT DISTINCT location FROM projects WHERE location IS NOT NULL AND location != '' ORDER BY location ASC");
+    const locations = rows.map(row => row.location);
+    res.json(locations);
+  } catch (error) {
+    console.error("Get project locations error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/* ================= GET PROJECT BY ID ================= */
 const getProjectById = async (req, res) => {
   try {
-    const [projects] = await pool.execute("SELECT * FROM projects WHERE id = ?", [req.params.id]);
-    if (projects.length === 0) {
+    const { id } = req.params;
+
+    // Fetch project details with stats
+    const query = `
+            SELECT 
+                p.*,
+                COUNT(u.id) AS total_units,
+                SUM(CASE WHEN u.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_units,
+                SUM(CASE WHEN u.status = 'vacant' THEN 1 ELSE 0 END) AS vacant_units,
+                COALESCE(SUM(u.super_area), 0) AS total_area,
+                COALESCE(SUM(CASE WHEN u.status = 'occupied' THEN u.super_area ELSE 0 END), 0) AS leased_area
+            FROM projects p
+            LEFT JOIN units u ON p.id = u.project_id
+            WHERE p.id = ?
+            GROUP BY p.id
+        `;
+
+    const [rows] = await pool.query(query, [id]);
+
+    if (rows.length === 0) {
       return res.status(404).json({ message: "Project not found" });
     }
-    res.json(projects[0]);
-  } catch (error) {
-    console.error("Get project by id error:", error);
-    res.status(500).json({ error: error.message });
+
+    res.json({ data: rows[0] });
+  } catch (err) {
+    console.error("Get project error:", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -208,6 +244,7 @@ module.exports = {
   addProject,
   getProjects,
   getProjectById,
+  getProjectLocations,
   updateProject,
   deleteProject,
   getUnitsByProject,

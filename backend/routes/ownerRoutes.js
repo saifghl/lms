@@ -5,6 +5,7 @@ const upload = require('../middleware/upload'); // Import upload middleware
 
 const {
     getOwners,
+    getOwnerLocations, // Expose new function
     getOwnerById,
     createOwner,
     updateOwner,
@@ -20,6 +21,7 @@ const {
 
 router.get('/export', exportOwners);
 router.get('/stats', getKycStats);
+router.get('/locations', getOwnerLocations); // New Route
 router.get('/', getOwners);
 router.get('/:id', getOwnerById);
 router.post('/', createOwner);

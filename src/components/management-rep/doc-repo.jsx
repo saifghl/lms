@@ -129,6 +129,33 @@ const DocumentRepository = () => {
                 </select>
                 <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </div>
+
+              {/* File Type Filter (Mocked for now) */}
+              <div className="select-wrapper">
+                <select
+                  className="filter-select"
+                  style={{ minWidth: '120px' }}
+                >
+                  <option value="">File Type</option>
+                  <option value="pdf">PDF</option>
+                  <option value="jpg">JPG/PNG</option>
+                  <option value="docx">DOCX</option>
+                </select>
+                <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+
+              {/* Upload Date Filter (Mocked) */}
+              <div className="select-wrapper">
+                <select
+                  className="filter-select"
+                  style={{ minWidth: '130px' }}
+                >
+                  <option value="">Upload Date</option>
+                  <option value="7">Last 7 Days</option>
+                  <option value="30">Last 30 Days</option>
+                </select>
+                <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
             </div>
           </div>
 

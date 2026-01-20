@@ -45,6 +45,7 @@ export const register = (data) => API.post("/auth/register", data);
 
 // ---------------- PROJECTS ----------------
 export const getProjects = (params) => API.get("/projects", { params });
+export const getProjectLocations = () => API.get("/projects/locations");
 export const getProjectById = (id) => API.get(`/projects/${id}`);
 export const addProject = (data) =>
   API.post("/projects", data, {
@@ -60,6 +61,7 @@ export const deleteProject = (id) =>
 // ---------------- OWNERS ----------------
 export const ownerAPI = {
   getOwners: (params) => API.get("/owners", { params }),
+  getOwnerLocations: () => API.get("/owners/locations"),
   getKycStats: () => API.get("/owners/stats"),
   exportOwners: () =>
     API.get("/owners/export", { responseType: "blob" }),
@@ -67,11 +69,19 @@ export const ownerAPI = {
   createOwner: (data) => API.post("/owners", data),
   updateOwner: (id, data) => API.put(`/owners/${id}`, data),
   deleteOwner: (id) => API.delete(`/owners/${id}`),
+  // New Methods
+  getDocuments: (id) => API.get(`/owners/${id}/documents`),
+  uploadDocument: (id, data) =>
+    API.post(`/owners/${id}/documents`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  addUnits: (id, data) => API.post(`/owners/${id}/units`, data),
+  removeUnit: (id, unitId) => API.delete(`/owners/${id}/units/${unitId}`),
 };
 
 // ---------------- UNITS ----------------
 export const unitAPI = {
-  getUnits: () => API.get("/units"),
+  getUnits: (params) => API.get("/units", { params }),
   getUnitById: (id) => API.get(`/units/${id}`),
   createUnit: (data) =>
     API.post("/units", data, {
@@ -85,13 +95,11 @@ export const unitAPI = {
 
 // ---------------- TENANTS ----------------
 export const tenantAPI = {
+  getLocations: () => API.get("/tenants/locations"),
   getTenants: (params) => API.get("/tenants", { params }),
   getTenantById: (id) => API.get(`/tenants/${id}`),
   createTenant: (data) => API.post("/tenants", data),
-  updateTenant: (id, data) =>
-    API.put(`/tenants/${id}`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+  updateTenant: (id, data) => API.put(`/tenants/${id}`, data),
   deleteTenant: (id) => API.delete(`/tenants/${id}`),
 };
 
@@ -178,20 +186,24 @@ export const leaseAPI = {
     API.post("/leases", data),
   updateLease: (id, data) =>
     API.put(`/leases/${id}`, data),
-  getStats: () => API.get("/leases/stats"),
-  getPending: () => API.get("/leases/pending"),
-  getExpiring: () => API.get("/leases/expiring"),
-  getNotifications: () =>
-    API.get("/leases/notifications"),
+  // Dashboard & Stats
+  getLeaseDashboardStats: () => API.get("/leases/stats"),
+  getNeedAttentionLeases: () => API.get("/leases/need-attention"),
+  getLeaseReportStats: () => API.get("/leases/report-stats"),
+  getLeaseTrackerStats: () => API.get("/leases/tracker-stats"),
+  getLeaseNotifications: () => API.get("/leases/notifications"),
+  // Specific Lists
+  getPendingLeases: () => API.get("/leases/pending"),
+  getExpiringLeases: () => API.get("/leases/expiring"), // kept for compatibility
   approveLease: (id) =>
     API.put(`/leases/approve/${id}`),
 };
 
 // Backward compatibility
-export const getLeaseStats = leaseAPI.getStats;
-export const getPendingLeases = leaseAPI.getPending;
-export const getExpiringLeases = leaseAPI.getExpiring;
-export const getNotifications = leaseAPI.getNotifications;
+export const getLeaseStats = leaseAPI.getLeaseDashboardStats;
+export const getPendingLeases = leaseAPI.getPendingLeases;
+export const getExpiringLeases = leaseAPI.getExpiringLeases;
+export const getNotifications = leaseAPI.getLeaseNotifications;
 export const approveLease = leaseAPI.approveLease;
 
 export default API;

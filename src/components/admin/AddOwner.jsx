@@ -1,27 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { ownerAPI } from '../../services/api';
+import { ownerAPI, unitAPI } from '../../services/api';
 import './AddOwner.css';
 
 const AddOwner = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [units, setUnits] = useState([]); // Vacant units
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    alternative_contact: '',
-    representative_name: '',
-    representative_phone: '',
-    representative_email: '',
-    address: ''
+    representative_name: '', // Added here as per image
+    alternative_contact: '', // Optional
+    address: '',
+    unit_ids: [] // Array of selected unit IDs
   });
+
+  const [selectedUnits, setSelectedUnits] = useState([]); // To track full unit objects for area calc
+
+  // Fetch vacant units on mount
+  useEffect(() => {
+    const fetchUnits = async () => {
+      try {
+        const res = await unitAPI.getUnits({ status: 'vacant' });
+        setUnits(res.data.data || res.data || []);
+      } catch (error) {
+        console.error("Failed to fetch vacant units", error);
+      }
+    };
+    fetchUnits();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const handleUnitSelect = (e) => {
+    const options = e.target.options;
+    const selectedValues = [];
+    const selectedObjs = [];
+
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].selected) {
+        selectedValues.push(options[i].value);
+        const unit = units.find(u => u.id == options[i].value); // loose comparison for string/number
+        if (unit) selectedObjs.push(unit);
+      }
+    }
+    setFormData({ ...formData, unit_ids: selectedValues });
+    setSelectedUnits(selectedObjs);
+  };
+
+  const totalArea = selectedUnits.reduce((acc, curr) => acc + (parseFloat(curr.super_area) || 0), 0);
 
   const handleCancel = () => navigate('/admin/owner');
 
@@ -30,11 +63,11 @@ const AddOwner = () => {
     setLoading(true);
     try {
       await ownerAPI.createOwner(formData);
-      alert("Owner added successfully!");
+      // alert("Owner added successfully!"); // Removed alert to match cleaner UX if preferred, or keep
       navigate("/admin/owner");
     } catch (err) {
       console.error(err);
-      alert("Failed to add owner");
+      alert("Failed to add owner: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -46,12 +79,12 @@ const AddOwner = () => {
       <main className="add-owner-content">
         <div className="breadcrumb">
           <Link to="/admin/dashboard">HOME</Link> &gt;
-          <Link to="/admin/owners"> OWNERS</Link> &gt; ADD
+          <Link to="/admin/owners"> OWNER</Link> &gt; ADD NEW
         </div>
 
         <header className="add-owner-header">
-          <h2>Add Property Owner</h2>
-          <p>Register a new property owner and their contact details.</p>
+          <h2>Add New Property Owner</h2>
+          <p>Register a new property owner by filling out the details below. Ensure all KYC documents are verified before submission.</p>
         </header>
 
         {/* PERSONAL INFO */}
@@ -73,29 +106,43 @@ const AddOwner = () => {
             </div>
 
             <div className="form-group">
-              <label>Email *</label>
+              <label>Email Address *</label>
               <input
                 className="form-input"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="e.g. john@example.com"
+                placeholder="john@example.com"
               />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Phone *</label>
+              <label>representatives name *</label>
+              <input
+                className="form-input"
+                name="representative_name"
+                value={formData.representative_name}
+                onChange={handleChange}
+                placeholder="Name of authorized Rep"
+              />
+              <span className="helper-text">Authorized Person to contact if owner is unavailable.</span>
+            </div>
+
+            <div className="form-group">
+              <label>Phone Number *</label>
               <input
                 className="form-input"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="e.g. +91 9876543210"
+                placeholder="+1 (555) 000-0000"
               />
             </div>
+          </div>
 
+          <div className="form-row">
             <div className="form-group">
               <label>Alternative Contact</label>
               <input
@@ -103,68 +150,55 @@ const AddOwner = () => {
                 name="alternative_contact"
                 value={formData.alternative_contact}
                 onChange={handleChange}
-                placeholder="e.g. +91 9998887776"
+                placeholder="Optional"
               />
             </div>
           </div>
         </div>
 
-        {/* REPRESENTATIVE */}
+        {/* PROPERTY UNITS */}
         <div className="form-section">
           <div className="section-header">
-            <h3>Representative Details</h3>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Representative Name</label>
-              <input
-                className="form-input"
-                name="representative_name"
-                value={formData.representative_name}
-                onChange={handleChange}
-                placeholder="e.g. Jane Smith"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Representative Phone</label>
-              <input
-                className="form-input"
-                name="representative_phone"
-                value={formData.representative_phone}
-                onChange={handleChange}
-                placeholder="e.g. +91 1122334455"
-              />
-            </div>
+            <h3>Property Units</h3>
+            {totalArea > 0 && <span className="total-area-badge">Total Owned Area : {totalArea} sqft</span>}
           </div>
 
           <div className="form-group">
-            <label>Representative Email</label>
-            <input
-              className="form-input"
-              name="representative_email"
-              value={formData.representative_email}
-              onChange={handleChange}
-              placeholder="e.g. jane@company.com"
-            />
+            <label>Select Units *</label>
+            <div className="unit-selection-box">
+              {/* Simple Multi-Select for now */}
+              <select
+                multiple
+                value={formData.unit_ids}
+                onChange={handleUnitSelect}
+                style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', height: '100px' }}
+              >
+                {units.length === 0 && <option disabled>No vacant units available</option>}
+                {units.map(u => (
+                  <option key={u.id} value={u.id}>
+                    Unit {u.unit_number} - {u.project_name || 'Project'} ({u.super_area} sqft)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <span className="helper-text">Select All units owned by this individual. Hold Ctrl/Cmd to select multiple.</span>
           </div>
         </div>
 
         {/* ADDRESS */}
         <div className="form-section">
           <div className="section-header">
-            <h3>Address</h3>
+            <h3>Correspondence Address</h3>
           </div>
 
           <div className="form-group">
-            <label>Address</label>
+            <label>Street Address</label>
             <input
               className="form-input"
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="e.g. 123 Main St, City, Country"
+              placeholder="123 Main St, Apt 4B"
             />
           </div>
         </div>
@@ -172,6 +206,12 @@ const AddOwner = () => {
         {/* ACTIONS */}
         <div className="form-actions">
           <button className="btn-cancel" onClick={handleCancel}>
+            Log Out
+          </button>
+          {/* Note: Image has Log Out on bottom left, but typically Cancel is near Submit. Will use Cancel logic. */}
+
+          {/* Real Submit Actions */}
+          <button className="btn-cancel" onClick={handleCancel} style={{ marginRight: 'auto' }}>
             Cancel
           </button>
           <button className="btn-submit" onClick={handleSubmit} disabled={loading}>

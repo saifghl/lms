@@ -3,24 +3,49 @@ import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './dashboard.css';
 import './leases.css';
-import { leaseAPI } from '../../services/api';
+import { leaseAPI, getProjects, getProjectLocations } from '../../services/api';
 
 const Leases = () => {
     const [leases, setLeases] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('');
+    const [projectFilter, setProjectFilter] = useState('');
+    const [locationFilter, setLocationFilter] = useState('');
+    const [eventFilter, setEventFilter] = useState('');
     const [search, setSearch] = useState('');
+    const [projects, setProjects] = useState([]);
+    const [locations, setLocations] = useState([]);
+
+    useEffect(() => {
+        fetchFilters();
+    }, []);
 
     useEffect(() => {
         fetchLeases();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [statusFilter]);
+    }, [statusFilter, projectFilter, locationFilter, eventFilter]);
+
+    const fetchFilters = async () => {
+        try {
+            const [projectsRes, locationsRes] = await Promise.all([
+                getProjects(),
+                getProjectLocations()
+            ]);
+            setProjects(projectsRes.data?.data || []);
+            setLocations(locationsRes.data || []);
+        } catch (err) {
+            console.error('Failed to fetch filter data:', err);
+        }
+    };
 
     const fetchLeases = async () => {
         try {
             setLoading(true);
             const params = {};
             if (statusFilter) params.status = statusFilter;
+            if (projectFilter) params.project_id = projectFilter;
+            if (locationFilter) params.location = locationFilter;
+            if (eventFilter) params.expires_in = eventFilter;
             if (search) params.search = search;
 
             const res = await leaseAPI.getAllLeases(params);
@@ -54,7 +79,7 @@ const Leases = () => {
                             <Link to="/admin/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>HOME</Link> &gt; <span className="active">LEASES</span>
                         </div>
                         <h1>Lease Management</h1>
-                        <p>View and manage all active lease agreements.</p>
+                        <p>View and manage all active lease agreements and contracts.</p>
                     </div>
                     {/* Link to Create Lease page */}
                     <Link to="/admin/add-lease" className="primary-btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
@@ -67,20 +92,8 @@ const Leases = () => {
                     {/* Filters Bar */}
                     <div className="filters-bar">
                         <div className="leases-filter-group">
-                            <div className="filter-item" style={{ flex: 2 }}>
-                                <label>Search</label>
-                                <div className="search-wrapper" style={{ minWidth: '100%', maxWidth: '100%' }}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                    <input
-                                        type="text"
-                                        placeholder="Search by Tenant, Unit, or ID..."
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                    />
-                                </div>
-                            </div>
                             <div className="filter-item">
-                                <label>Status</label>
+                                <label>Status Filter</label>
                                 <div className="select-wrapper">
                                     <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                                         <option value="">All Statuses</option>
@@ -93,6 +106,63 @@ const Leases = () => {
                                     <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </div>
                             </div>
+
+                            <div className="filter-item">
+                                <label>Upcoming Events</label>
+                                <div className="select-wrapper">
+                                    <select value={eventFilter} onChange={(e) => setEventFilter(e.target.value)}>
+                                        <option value="">All Events</option>
+                                        <option value="30">Expiring in 30 Days</option>
+                                        <option value="90">Expiring in 90 Days</option>
+                                    </select>
+                                    <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </div>
+                            </div>
+
+
+                            <div className="filter-item">
+                                <label>Project</label>
+                                <div className="select-wrapper">
+                                    <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
+                                        <option value="">All Projects</option>
+                                        {projects.map(p => (
+                                            <option key={p.id} value={p.id}>{p.project_name}</option>
+                                        ))}
+                                    </select>
+                                    <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </div>
+                            </div>
+
+                            <div className="filter-item">
+                                <label>Location</label>
+                                <div className="select-wrapper">
+                                    <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
+                                        <option value="">All Locations</option>
+                                        {locations.map((loc, index) => (
+                                            <option key={index} value={loc}>{loc}</option>
+                                        ))}
+                                    </select>
+                                    <svg className="chevron-down" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </div>
+                            </div>
+
+                            <div className="filter-item header-search" style={{ flex: 1.5, minWidth: '200px' }}>
+                                <div className="search-wrapper" style={{ width: '100%' }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    <input
+                                        type="text"
+                                        placeholder="Search leases..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && fetchLeases()}
+                                    />
+                                </div>
+                            </div>
+
+                            <button className="white-btn filter-btn">
+                                More Filters <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                            </button>
+
                         </div>
                         <div className="view-actions">
                             <button className="view-btn list active">
@@ -166,6 +236,9 @@ const Leases = () => {
                                         </td>
                                         <td>
                                             <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
+                                                <Link to={`/admin/view-lease/${lease.id}`} className="action-btn" title="View Details">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                </Link>
                                                 <Link to={`/admin/edit-lease/${lease.id}`} className="action-btn" title="Edit">
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                                 </Link>

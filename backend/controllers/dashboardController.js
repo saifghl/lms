@@ -5,33 +5,55 @@ const getDashboardStats = async (req, res) => {
     const connection = await pool.getConnection();
 
     try {
-      // Get total projects
-      const [projects] = await connection.query("SELECT COUNT(*) as count FROM projects");
-      const projectsCount = projects[0]?.count || 0;
+      // Helper to calculate percentage change
+      const calculateChange = (current, previous) => {
+        if (previous === 0) return current > 0 ? "+100%" : "0%";
+        const change = ((current - previous) / previous) * 100;
+        return `${change > 0 ? "+" : ""}${Math.round(change)}%`;
+      };
 
-      // Get total units
-      const [units] = await connection.query("SELECT COUNT(*) as count FROM units");
-      const unitsCount = units[0]?.count || 0;
+      const getChangeType = (current, previous) => {
+        if (current > previous) return "positive";
+        if (current < previous) return "negative";
+        return "neutral";
+      };
 
-      // Get total owners
-      const [owners] = await connection.query("SELECT COUNT(*) as count FROM owners");
-      const ownersCount = owners[0]?.count || 0;
+      // 1. Projects
+      const [projectsCurrent] = await connection.query("SELECT COUNT(*) as count FROM projects");
+      const [projectsPrev] = await connection.query("SELECT COUNT(*) as count FROM projects WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)");
+      const projectsCount = projectsCurrent[0]?.count || 0;
+      const prevProjects = projectsPrev[0]?.count || 0;
 
-      // Get total tenants
-      const [tenants] = await connection.query("SELECT COUNT(*) as count FROM tenants");
-      const tenantsCount = tenants[0]?.count || 0;
+      // 2. Units
+      const [unitsCurrent] = await connection.query("SELECT COUNT(*) as count FROM units");
+      const [unitsPrev] = await connection.query("SELECT COUNT(*) as count FROM units WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)");
+      const unitsCount = unitsCurrent[0]?.count || 0;
+      const prevUnits = unitsPrev[0]?.count || 0;
 
-      // Get total leases
-      const [leases] = await connection.query("SELECT COUNT(*) as count FROM leases");
-      const leasesCount = leases[0]?.count || 0;
+      // 3. Owners
+      const [ownersCurrent] = await connection.query("SELECT COUNT(*) as count FROM owners");
+      const [ownersPrev] = await connection.query("SELECT COUNT(*) as count FROM owners WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)");
+      const ownersCount = ownersCurrent[0]?.count || 0;
+      const prevOwners = ownersPrev[0]?.count || 0;
 
-      // Get total revenue (sum of all active lease rents)
-      const [revenue] = await connection.query(`
-      SELECT COALESCE(SUM(monthly_rent), 0) as total_revenue 
-      FROM leases 
-      WHERE status = 'active'
-    `);
-      const totalRevenue = revenue[0]?.total_revenue || 0;
+      // 4. Tenants
+      const [tenantsCurrent] = await connection.query("SELECT COUNT(*) as count FROM tenants");
+      const [tenantsPrev] = await connection.query("SELECT COUNT(*) as count FROM tenants WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)");
+      const tenantsCount = tenantsCurrent[0]?.count || 0;
+      const prevTenants = tenantsPrev[0]?.count || 0;
+
+      // 5. Leases
+      const [leasesCurrent] = await connection.query("SELECT COUNT(*) as count FROM leases");
+      const [leasesPrev] = await connection.query("SELECT COUNT(*) as count FROM leases WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)");
+      const leasesCount = leasesCurrent[0]?.count || 0;
+      const prevLeases = leasesPrev[0]?.count || 0;
+
+      // 6. Revenue
+      const [revenueCurrent] = await connection.query("SELECT COALESCE(SUM(monthly_rent), 0) as total_revenue FROM leases WHERE status = 'active'");
+      const [revenuePrev] = await connection.query("SELECT COALESCE(SUM(monthly_rent), 0) as total_revenue FROM leases WHERE status = 'active' AND created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)");
+
+      const totalRevenue = revenueCurrent[0]?.total_revenue || 0;
+      const prevRevenue = revenuePrev[0]?.total_revenue || 0;
 
       // NOTE: Area stats are currently mocked to match Management Rep dashboard as per user request
       const areaStatsMock = {
@@ -68,19 +90,26 @@ const getDashboardStats = async (req, res) => {
     `);
 
       // Get rent escalations (within next 3 months)
-      const [escalations] = await connection.query(`
-      SELECT re.effective_from as effective_date, re.escalation_type as increase_type, re.escalation_value as value, 
-      l.id as lease_id, p.project_name, u.unit_number,
-      DATEDIFF(re.effective_from, CURDATE()) as days_until_escalation
-      FROM lease_escalations re
-      LEFT JOIN leases l ON re.lease_id = l.id
-      LEFT JOIN projects p ON l.project_id = p.id
-      LEFT JOIN units u ON l.unit_id = u.id
-      WHERE re.effective_from BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)
-      AND l.status = 'active'
-      ORDER BY re.effective_from ASC
-      LIMIT 5
-    `);
+      let escalations = [];
+      try {
+        const [escRows] = await connection.query(`
+          SELECT re.effective_from as effective_date, re.increase_type, re.value, 
+          l.id as lease_id, p.project_name, u.unit_number,
+          DATEDIFF(re.effective_from, CURDATE()) as days_until_escalation
+          FROM lease_escalations re
+          LEFT JOIN leases l ON re.lease_id = l.id
+          LEFT JOIN projects p ON l.project_id = p.id
+          LEFT JOIN units u ON l.unit_id = u.id
+          WHERE re.effective_from BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)
+          AND l.status = 'active'
+          ORDER BY re.effective_from ASC
+          LIMIT 5
+        `);
+        escalations = escRows;
+      } catch (err) {
+        console.warn("Lease escalations fetch failed (table might be missing), returning empty.", err.message);
+        escalations = [];
+      }
 
       // Get Revenue Trends (Last 12 months) - Mocked for now as we might not have payment history
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -102,12 +131,36 @@ const getDashboardStats = async (req, res) => {
       // 4. Construct response similar to rep dashboard
       res.json({
         metrics: {
-          totalProjects: { value: projectsCount, change: "+2% vs last month", type: "positive" },
-          totalUnits: { value: unitsCount, change: "+5% vs last month", type: "negative" },
-          totalOwners: { value: ownersCount, change: "~ 0% change", type: "neutral" },
-          totalTenants: { value: tenantsCount, change: "+3% vs last month", type: "positive" },
-          totalLeases: { value: leasesCount, change: "+4% vs last month", type: "positive" },
-          totalRevenue: { value: totalRevenue, change: "+12% YTD", type: "negative" }
+          totalProjects: {
+            value: projectsCount,
+            change: `${calculateChange(projectsCount, prevProjects)} vs last month`,
+            type: getChangeType(projectsCount, prevProjects)
+          },
+          totalUnits: {
+            value: unitsCount,
+            change: `${calculateChange(unitsCount, prevUnits)} vs last month`,
+            type: getChangeType(unitsCount, prevUnits)
+          },
+          totalOwners: {
+            value: ownersCount,
+            change: `${calculateChange(ownersCount, prevOwners)} vs last month`,
+            type: "neutral"
+          },
+          totalTenants: {
+            value: tenantsCount,
+            change: `${calculateChange(tenantsCount, prevTenants)} vs last month`,
+            type: getChangeType(tenantsCount, prevTenants)
+          },
+          totalLeases: {
+            value: leasesCount,
+            change: `${calculateChange(leasesCount, prevLeases)} vs last month`,
+            type: getChangeType(leasesCount, prevLeases)
+          },
+          totalRevenue: {
+            value: totalRevenue,
+            change: `${calculateChange(totalRevenue, prevRevenue)} YTD`,
+            type: getChangeType(totalRevenue, prevRevenue)
+          }
         },
         areaStats: areaStatsMock,
         upcomingRenewals: renewals.map(r => ({

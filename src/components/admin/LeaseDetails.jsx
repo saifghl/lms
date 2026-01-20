@@ -80,86 +80,87 @@ const LeaseDetails = () => {
                     </div>
                 </div>
 
-                <div className="info-grid">
+                <div className="info-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px', marginBottom: '24px' }}>
                     {/* Tenant Information */}
                     <div className="info-card">
-                        <h3>{leaseType === 'sub_lease' ? 'Sub Tenant Information' : 'Tenant Information'}</h3>
-                        <div className="tenant-info">
-                            <div className="avatar-placeholder" style={{ backgroundColor: '#ebf8ff', color: '#3182ce' }}>
+                        <h3 style={{ fontSize: '0.95rem', color: '#718096', marginBottom: '16px' }}>Tenant Information</h3>
+                        <div className="tenant-card-content" style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '24px' }}>
+                            <div className="avatar-placeholder" style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#ebf8ff', color: '#3182ce', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
                                 {(lease.tenant_name || 'T')[0]}
                             </div>
-                            <div className="info-text">
-                                {/* Use tenant_name or determine if mapped from backend */}
-                                <h4>{lease.tenant_name || lease.sub_tenant_name || 'Unknown Tenant'}</h4>
-                                <p>Tenant ID: {lease.tenant_id}</p>
+                            <div>
+                                <h4 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', color: '#2d3748' }}>{lease.tenant_name || lease.sub_tenant_name || 'Unknown Tenant'}</h4>
+                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#718096' }}>{lease.industry || 'Business Tenant'}</p>
                             </div>
                         </div>
-                        {/* Assuming we might not have deep tenant details joined, we show what we have or placeholders if needed, 
-                            but optimally backend should join this. For now, showing basic available info. */}
-                        <div className="detail-row">
-                            <div className="detail-item">
-                                <label>Agreement Type</label>
-                                <span>{lease.lease_type || 'Standard'}</span>
+
+                        <div style={{ paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.8rem', color: '#718096', marginBottom: '4px' }}>Primary Contact:</label>
+                                <div style={{ fontWeight: 500, color: '#2d3748' }}>{lease.contact_person_name || 'N/A'}</div>
                             </div>
-                            <div className="detail-item">
-                                <label>Rent Model</label>
-                                <span>{lease.rent_model || 'Fixed'}</span>
+                            <div style={{ textAlign: 'right' }}>
+                                <label style={{ display: 'block', fontSize: '0.8rem', color: '#718096', marginBottom: '4px' }}>Phone:</label>
+                                <div style={{ fontWeight: 500, color: '#2d3748' }}>{lease.contact_person_phone || 'N/A'}</div>
                             </div>
                         </div>
                     </div>
 
                     {/* Unit Details */}
                     <div className="info-card">
-                        <h3>Unit Details</h3>
-                        <div className="unit-info">
-                            <div className="unit-img-placeholder">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-9a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v9"></path></svg>
+                        <h3 style={{ fontSize: '0.95rem', color: '#718096', marginBottom: '16px' }}>Unit Details</h3>
+                        <div className="unit-card-content" style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '24px' }}>
+                            <div className="unit-img-placeholder" style={{ width: '80px', height: '60px', borderRadius: '8px', backgroundColor: '#edf2f7', overflow: 'hidden' }}>
+                                <img src="https://via.placeholder.com/80x60" alt="Unit" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             </div>
-                            <div className="info-text">
-                                <h4>{lease.unit_number || 'N/A'}</h4>
-                                <p>{lease.project_name || 'N/A'}</p>
+                            <div>
+                                <h4 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', color: '#2d3748' }}>Unit {lease.unit_number || 'N/A'}</h4>
+                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#718096' }}>{lease.project_name || 'Project'}, {lease.project_location ? lease.project_location.split(',')[0] : ''}</p>
                             </div>
                         </div>
-                        <div className="detail-row">
-                            <div className="detail-item">
-                                <label>Unit ID</label>
-                                <span>{lease.unit_id}</span>
+
+                        <div style={{ paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.8rem', color: '#718096', marginBottom: '4px' }}>Type:</label>
+                                <div style={{ fontWeight: 500, color: '#2d3748' }}>Commercial {lease.unit_condition === 'bare_shell' ? 'Shell' : 'Office'}</div>
                             </div>
-                            {lease.sub_lease_area_sqft && (
-                                <div className="detail-item">
-                                    <label>Sub-Lease Area</label>
-                                    <span>{lease.sub_lease_area_sqft} sq ft</span>
-                                </div>
-                            )}
+                            <div style={{ textAlign: 'right' }}>
+                                <label style={{ display: 'block', fontSize: '0.8rem', color: '#718096', marginBottom: '4px' }}>Size:</label>
+                                <div style={{ fontWeight: 500, color: '#2d3748' }}>{lease.super_area ? parseInt(lease.super_area).toLocaleString() : '0'} sq ft</div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Expiry Status */}
                     <div className="info-card">
-                        <h3>Expiry Status</h3>
-                        <div className="expiry-stat">
-                            {/* Calculate days remaining roughly */}
-                            <div className="expiry-days">
-                                {lease.lease_end ? Math.ceil((new Date(lease.lease_end) - new Date()) / (1000 * 60 * 60 * 24)) : 'N/A'}
+                        <h3 style={{ fontSize: '0.95rem', color: '#718096', marginBottom: '16px' }}>Expiry Status</h3>
+                        <div style={{ marginBottom: '16px' }}>
+                            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#2d3748', lineHeight: 1 }}>
+                                {lease.days_remaining > 0 ? lease.days_remaining : 0}
                             </div>
-                            <span className="expiry-label">Days Remaining</span>
+                            <div style={{ fontSize: '0.9rem', color: '#718096' }}>Days Remaining</div>
                         </div>
-                        {/* Progress Bar Calculation */}
-                        <div className="progress-bar">
-                            <div className="progress-fill" style={{
-                                width: lease.lease_start && lease.lease_end
-                                    ? `${Math.min(100, Math.max(0, ((new Date() - new Date(lease.lease_start)) / (new Date(lease.lease_end) - new Date(lease.lease_start))) * 100))}%`
-                                    : '0%'
-                            }}></div>
-                        </div>
-                        <div className="detail-row" style={{ marginTop: '8px' }}>
-                            <div className="detail-item">
-                                <label>Started</label>
-                                <span>{formatDate(lease.lease_start)}</span>
+
+                        <div className="progress-bar-container" style={{ marginBottom: '16px' }}>
+                            <div style={{ width: '100%', height: '8px', backgroundColor: '#edf2f7', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{
+                                    width: lease.lease_start && lease.lease_end
+                                        ? `${Math.min(100, Math.max(0, ((new Date() - new Date(lease.lease_start)) / (new Date(lease.lease_end) - new Date(lease.lease_start))) * 100))}%`
+                                        : '0%',
+                                    height: '100%',
+                                    backgroundColor: '#3182ce'
+                                }}></div>
                             </div>
-                            <div className="detail-item">
-                                <label>Ends</label>
-                                <span>{formatDate(lease.lease_end)}</span>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                            <div>
+                                <span style={{ color: '#718096', marginRight: '4px' }}>Started:</span>
+                                <span style={{ fontWeight: 500, color: '#2d3748' }}>{formatDate(lease.lease_start)}</span>
+                            </div>
+                            <div>
+                                <span style={{ color: '#718096', marginRight: '4px' }}>Ends:</span>
+                                <span style={{ fontWeight: 500, color: '#2d3748' }}>{formatDate(lease.lease_end)}</span>
                             </div>
                         </div>
                     </div>

@@ -3,7 +3,7 @@ const router = express.Router();
 const leaseController = require("../controllers/leaseController");
 
 // Stats & Dashboard
-router.get("/stats", leaseController.getLeaseStats);
+router.get("/stats", leaseController.getLeaseDashboardStats);
 router.get("/pending", leaseController.getPendingLeases);
 router.get("/expiring", leaseController.getExpiringLeases);
 router.get("/notifications", leaseController.getLeaseNotifications);

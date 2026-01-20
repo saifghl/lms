@@ -1,20 +1,51 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import RepSidebar from "./RepSidebar";
-import { managementAPI } from "../../services/api";
+import { managementAPI, getProjects, ownerAPI, tenantAPI } from "../../services/api";
 import "./Reports.css";
 
 const Reports = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState("");
+
+  // Lists for Dropdowns
+  const [projectsList, setProjectsList] = useState([]);
+  const [ownersList, setOwnersList] = useState([]);
+  const [tenantsList, setTenantsList] = useState([]);
+
+  // Filter States
+  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedOwner, setSelectedOwner] = useState("");
+  const [selectedTenant, setSelectedTenant] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    // Fetch dropdown options on mount
+    const fetchOptions = async () => {
+      try {
+        const [pRes, oRes, tRes] = await Promise.all([
+          getProjects(),
+          ownerAPI.getOwners(),
+          tenantAPI.getTenants()
+        ]);
+        setProjectsList(pRes.data.data || pRes.data || []);
+        setOwnersList(oRes.data.data || oRes.data || []);
+        setTenantsList(tRes.data.data || tRes.data || []);
+      } catch (err) {
+        console.error("Error fetching filter options:", err);
+      }
+    };
+    fetchOptions();
+  }, []);
 
   const fetchReports = React.useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
-      if (filterType) params.type = filterType;
+
+      if (selectedProject) params.project_id = selectedProject;
+      if (selectedOwner) params.owner_id = selectedOwner;
+      if (selectedTenant) params.tenant_id = selectedTenant;
       if (searchQuery) params.search = searchQuery;
 
       const res = await managementAPI.getReports(params);
@@ -27,26 +58,19 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterType, searchQuery]);
+  }, [selectedProject, selectedOwner, selectedTenant, searchQuery]);
 
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-    });
-  };
-
   const handleExport = async () => {
     try {
       const res = await managementAPI.exportReports({
         search: searchQuery,
-        type: filterType
+        project_id: selectedProject,
+        owner_id: selectedOwner,
+        tenant_id: selectedTenant
       });
 
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -93,20 +117,52 @@ const Reports = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+
+              {/* Project Filter */}
               <div className="select-wrapper">
                 <select
                   className="filter-select"
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
+                  value={selectedProject}
+                  onChange={(e) => setSelectedProject(e.target.value)}
                   style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '150px' }}
                 >
-                  <option value="">All Types</option>
-                  <option value="Financial">Financial</option>
-                  <option value="Operational">Operational</option>
-                  <option value="Occupancy">Occupancy</option>
-                  <option value="Maintenance">Maintenance</option>
+                  <option value="">All Projects</option>
+                  {projectsList.map(p => (
+                    <option key={p.id} value={p.id}>{p.project_name}</option>
+                  ))}
                 </select>
               </div>
+
+              {/* Owner Filter */}
+              <div className="select-wrapper">
+                <select
+                  className="filter-select"
+                  value={selectedOwner}
+                  onChange={(e) => setSelectedOwner(e.target.value)}
+                  style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '150px' }}
+                >
+                  <option value="">All Owners</option>
+                  {ownersList.map(o => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tenant Filter */}
+              <div className="select-wrapper">
+                <select
+                  className="filter-select"
+                  value={selectedTenant}
+                  onChange={(e) => setSelectedTenant(e.target.value)}
+                  style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '150px' }}
+                >
+                  <option value="">All Tenants</option>
+                  {tenantsList.map(t => (
+                    <option key={t.id} value={t.id}>{t.company_name}</option>
+                  ))}
+                </select>
+              </div>
+
             </div>
             <div className="filter-date-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -119,9 +175,9 @@ const Reports = () => {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Report Name</th>
+                  <th>Project Name</th>
+                  <th>Date</th>
                   <th>Type</th>
-                  <th>Generated Date</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -150,11 +206,11 @@ const Reports = () => {
                         </div>
                       </div>
                     </td>
+                    <td>{r.date}</td>
                     <td>{r.type}</td>
-                    <td>{formatDate(r.date)}</td>
                     <td>
-                      <span className={`status-badge ${r.status ? r.status.toLowerCase() : 'completed'}`}>
-                        {r.status || 'Completed'}
+                      <span className={`status-badge ${r.status ? r.status.toLowerCase() : 'ready'}`}>
+                        {r.status || 'Ready'}
                       </span>
                     </td>
                     <td>

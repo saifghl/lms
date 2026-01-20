@@ -5,46 +5,53 @@ import { settingsAPI, FILE_BASE_URL } from '../../services/api';
 
 const Settings = () => {
 
-    // TEMP → later replace with JWT user id
-    const userId = 3;
-
+    // Display state (Profile Card)
     const [user, setUser] = useState(null);
+    // Form state (Inputs)
+    const [formData, setFormData] = useState({});
+
     const [loading, setLoading] = useState(true);
 
     // password states
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
 
+    // Dynamic User ID
+    const [userId, setUserId] = useState(1); // Default to 1, will update from fetch
+
     /* ============================
        LOAD USER FROM DB
     ============================ */
     useEffect(() => {
-        // Changed to use getSettings()
         settingsAPI.getSettings()
             .then(res => {
                 setUser(res.data);
+                setFormData(res.data);
+                if (res.data.id) setUserId(res.data.id);
                 setLoading(false);
             })
             .catch(err => {
                 console.error("Load user error:", err);
-                // Fallback mock data if API fails (for demo)
-                setUser({
+                const mock = {
+                    id: 1,
                     first_name: "Admin",
                     last_name: "User",
                     email: "admin@example.com",
                     role: "Super Admin",
                     profile_image: null
-                });
+                };
+                setUser(mock);
+                setFormData(mock);
                 setLoading(false);
             });
-    }, [userId]);
+    }, []);
 
     /* ============================
        HANDLE INPUT CHANGE
     ============================ */
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setUser(prev => ({
+        setFormData(prev => ({
             ...prev,
             [name]: value
         }));
@@ -54,8 +61,12 @@ const Settings = () => {
        SAVE PROFILE
     ============================ */
     const handleSave = () => {
-        settingsAPI.updateSettings(user)
-            .then(() => alert("Profile updated successfully"))
+        settingsAPI.updateSettings(formData)
+            .then(() => {
+                alert("Profile updated successfully");
+                // Update display state only on success
+                setUser(formData);
+            })
             .catch(() => alert("Update failed"));
     };
 
@@ -71,29 +82,27 @@ const Settings = () => {
             return;
         }
 
-        const formData = new FormData();
-        formData.append("photo", file);
+        const data = new FormData();
+        data.append("photo", file);
 
-        settingsAPI.uploadPhoto(userId, formData)
+        settingsAPI.uploadPhoto(userId, data)
             .then(res => {
-                setUser(prev => ({
-                    ...prev,
-                    profile_image: res.data.image
-                }));
+                // Update both states with new image
+                const newImage = res.data.image;
+                setUser(prev => ({ ...prev, profile_image: newImage }));
+                setFormData(prev => ({ ...prev, profile_image: newImage }));
             })
             .catch(() => alert("Photo upload failed"));
     };
 
     /* ============================
-       REMOVE PHOTO (FIXED)
+       REMOVE PHOTO
     ============================ */
     const handleRemovePhoto = () => {
         settingsAPI.removePhoto(userId)
             .then(() => {
-                setUser(prev => ({
-                    ...prev,
-                    profile_image: null
-                }));
+                setUser(prev => ({ ...prev, profile_image: null }));
+                setFormData(prev => ({ ...prev, profile_image: null }));
             })
             .catch(() => alert("Failed to remove photo"));
     };
@@ -128,7 +137,7 @@ const Settings = () => {
     if (loading) return <div style={{ padding: 30 }}>Loading...</div>;
     if (!user) return <div style={{ padding: 30 }}>User not found</div>;
 
-    // ✅ Correct image path or offline placeholder
+    // Correct image path or offline placeholder
     const profileImage = user.profile_image
         ? `${FILE_BASE_URL}${user.profile_image}`
         : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cccccc'%3E%3Cpath d='M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z' /%3E%3C/svg%3E";
@@ -145,7 +154,7 @@ const Settings = () => {
                     </div>
                 </header>
 
-                {/* ================= PROFILE CARD ================= */}
+                {/* ================= PROFILE CARD (Display Only) ================= */}
                 <div className="profile-card">
                     <div className="profile-info-left">
                         <div className="profile-avatar-container">
@@ -180,7 +189,6 @@ const Settings = () => {
                         </div>
                     </div>
 
-                    {/* ✅ FIXED BUTTONS */}
                     <div className="profile-actions" style={{ zIndex: 5 }}>
                         <button
                             type="button"
@@ -200,7 +208,7 @@ const Settings = () => {
                     </div>
                 </div>
 
-                {/* ================= PERSONAL INFO ================= */}
+                {/* ================= PERSONAL INFO (Form Input) ================= */}
                 <section className="settings-section">
                     <h3>Personal Information</h3>
 
@@ -210,7 +218,7 @@ const Settings = () => {
                             <input
                                 type="text"
                                 name="first_name"
-                                value={user.first_name || ""}
+                                value={formData.first_name || ""}
                                 onChange={handleChange}
                             />
                         </div>
@@ -220,7 +228,7 @@ const Settings = () => {
                             <input
                                 type="text"
                                 name="last_name"
-                                value={user.last_name || ""}
+                                value={formData.last_name || ""}
                                 onChange={handleChange}
                             />
                         </div>
@@ -230,7 +238,7 @@ const Settings = () => {
                             <input
                                 type="text"
                                 name="job_title"
-                                value={user.job_title || ""}
+                                value={formData.job_title || ""}
                                 onChange={handleChange}
                             />
                         </div>
@@ -240,7 +248,7 @@ const Settings = () => {
                             <input
                                 type="text"
                                 name="phone"
-                                value={user.phone || ""}
+                                value={formData.phone || ""}
                                 onChange={handleChange}
                             />
                         </div>

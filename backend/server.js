@@ -66,7 +66,7 @@ app.use("/api/owners", ownerRoutes); // Updated Owner Route
 app.use("/api/management", managementRoutes); // Management Rep Routes
 // app.use("/api/notifications", notificationRoutes);
 app.use("/api/settings", settingsRoutes);
-app.use("/api/activity-logs", activityLogRoutes);
+app.use("/api/activity", activityLogRoutes);
 app.use("/api/roles", roleRoutes); // Mounted Route
 app.use("/api/dashboard", dashboardRoutes);
 
@@ -87,4 +87,4 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 
 });
-  
+

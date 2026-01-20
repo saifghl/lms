@@ -1,12 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
-import { addProject } from "../../services/api";
+import { addProject, getProjectLocations } from "../../services/api";
 import "./AddProject.css";
 
 const AddProject = () => {
   const navigate = useNavigate();
 
+  /* ================= STATE ================= */
   const [formData, setFormData] = useState({
     project_name: "",
     location: "",
@@ -17,7 +18,27 @@ const AddProject = () => {
     description: "",
   });
 
+  const [locations, setLocations] = useState([]);
   const [image, setImage] = useState(null);
+
+  /* ================= FETCH DATA ================= */
+  useState(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await getProjectLocations();
+        // Seed with some default Indian cities if empty
+        const defaultLocations = ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Pune", "Kolkata"];
+        const fetched = response.data || [];
+        const unique = [...new Set([...defaultLocations, ...fetched])].sort();
+        setLocations(unique);
+      } catch (error) {
+        console.error("Failed to fetch locations:", error);
+      }
+    };
+    fetchLocations();
+  }, []);
+
+
 
   /* ================= HANDLE INPUT CHANGE ================= */
   const handleChange = (e) => {
@@ -97,10 +118,17 @@ const AddProject = () => {
                   <input
                     type="text"
                     name="location"
+                    list="location-options"
                     value={formData.location}
                     onChange={handleChange}
+                    placeholder="Search or enter location"
                     required
                   />
+                  <datalist id="location-options">
+                    {locations.map((loc, index) => (
+                      <option key={index} value={loc} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
 

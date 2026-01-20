@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { getProjects, deleteProject as deleteProjectAPI } from "../../services/api";
+import { getProjects, deleteProject as deleteProjectAPI, getProjectLocations } from "../../services/api";
 import "./projects.css";
 
 const Projects = () => {
@@ -10,12 +10,23 @@ const Projects = () => {
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("All");
   const [type, setType] = useState("All");
+  const [availableLocations, setAvailableLocations] = useState(["All"]);
 
-  // Options for filters (hardcoded for now as per requirement to make it functional without major UI overhaul)
-  const LOCATIONS = ["All", "Mumbai", "Pune", "Bangalore", "Delhi"];
   const TYPES = ["All", "Residential", "Commercial", "Industrial"];
 
-  /* ================= FETCH PROJECTS ================= */
+  /* ================= FETCH LOCATIONS ================= */
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await getProjectLocations();
+        setAvailableLocations(["All", ...response.data]);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
+    };
+    fetchLocations();
+  }, []);
+
   /* ================= FETCH PROJECTS ================= */
   useEffect(() => {
     const fetchProjects = async () => {
@@ -27,7 +38,7 @@ const Projects = () => {
         if (type !== "All") params.type = type;
 
         const response = await getProjects(params);
-        setProjects(response.data);
+        setProjects(response.data.data || response.data);
       } catch (error) {
         console.error("Error fetching projects:", error);
       } finally {
@@ -47,9 +58,9 @@ const Projects = () => {
   const handleSearch = (e) => setSearch(e.target.value);
 
   const cycleLocation = () => {
-    const currentIndex = LOCATIONS.indexOf(location);
-    const nextIndex = (currentIndex + 1) % LOCATIONS.length;
-    setLocation(LOCATIONS[nextIndex]);
+    const currentIndex = availableLocations.indexOf(location);
+    const nextIndex = (currentIndex + 1) % availableLocations.length;
+    setLocation(availableLocations[nextIndex]);
   };
 
   const cycleType = () => {
@@ -97,7 +108,7 @@ const Projects = () => {
         </header>
 
         <div className="content-card">
-          {/* Filters (UI ONLY) */}
+          {/* Filters */}
           <div className="filters-bar">
             <div className="search-wrapper">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -109,14 +120,32 @@ const Projects = () => {
               />
             </div>
             <div className="filter-actions">
-              <button className="filter-btn" onClick={cycleLocation}>
-                Location: {location}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              <button className="filter-btn" onClick={cycleType}>
-                Type: {type}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
+              <div className="select-wrapper">
+                <span className="select-label">Location:</span>
+                <select
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="filter-select"
+                >
+                  {availableLocations.map(loc => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="select-wrapper">
+                <span className="select-label">Type:</span>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="filter-select"
+                >
+                  {TYPES.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
               <button className="clear-btn" onClick={clearFilters}>Clear filters</button>
             </div>
           </div>
@@ -129,6 +158,7 @@ const Projects = () => {
                   <th>Project Name</th>
                   <th>Location</th>
                   <th>Total Units</th>
+                  <th>Status</th>
                   <th style={{ textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
@@ -136,12 +166,12 @@ const Projects = () => {
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan="4" style={{ textAlign: "center", padding: "40px" }}>Loading projects...</td>
+                    <td colSpan="5" style={{ textAlign: "center", padding: "40px" }}>Loading projects...</td>
                   </tr>
                 )}
                 {!loading && projects.length === 0 && (
                   <tr>
-                    <td colSpan="4" style={{ textAlign: "center", padding: "40px" }}>No projects found.</td>
+                    <td colSpan="5" style={{ textAlign: "center", padding: "40px" }}>No projects found.</td>
                   </tr>
                 )}
                 {!loading && projects.map((project) => (
@@ -152,9 +182,9 @@ const Projects = () => {
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </div>
                         <div>
-                          <div className="project-name">
+                          <Link to={`/admin/projects/${project.id}`} className="project-name" style={{ textDecoration: 'none', color: 'inherit', fontWeight: '600' }}>
                             {project.project_name}
-                          </div>
+                          </Link>
                           <div className="project-id">
                             ID: P-{project.id}
                           </div>
@@ -179,7 +209,20 @@ const Projects = () => {
                     </td>
 
                     <td>
+                      <span className={`status-badge ${project.status || 'active'}`}>
+                        {project.status || 'Active'}
+                      </span>
+                    </td>
+
+                    <td>
                       <div className="actions-cell">
+                        <Link
+                          to={`/admin/projects/${project.id}`}
+                          className="action-btn"
+                          title="View Details"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </Link>
                         <Link
                           to={`/admin/edit-project/${project.id}`}
                           className="action-btn"

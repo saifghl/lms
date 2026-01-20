@@ -1,32 +1,45 @@
 const pool = require("../config/db");
 
 /* ================= GET UNITS ================= */
+/* ================= GET UNITS ================= */
 const getUnits = async (req, res) => {
     try {
-        const { projectId } = req.query;
+        const { projectId, search, status } = req.query;
         let query = `
             SELECT 
                 u.id,
                 u.unit_number,
                 p.project_name AS building,
-                u.super_area AS area,
-                u.status
+                u.super_area,
+                u.status,
+                u.project_id,
+                (SELECT owner_id FROM owner_units WHERE unit_id = u.id LIMIT 1) as owner_id
             FROM units u
             JOIN projects p ON p.id = u.project_id
             WHERE 1=1
         `;
         const params = [];
 
-        if (projectId) {
+        if (projectId && projectId !== 'All') {
             query += " AND u.project_id = ?";
             params.push(projectId);
+        }
+
+        if (status && status !== 'All') {
+            query += " AND u.status = ?";
+            params.push(status);
+        }
+
+        if (search) {
+            query += " AND (u.unit_number LIKE ? OR p.project_name LIKE ?)";
+            params.push(`%${search}%`, `%${search}%`);
         }
 
         query += " ORDER BY u.id DESC";
 
         const [rows] = await pool.query(query, params);
 
-        res.json(rows);
+        res.json({ data: rows });
     } catch (err) {
         console.error("Fetch units error:", err);
         res.status(500).json({ message: "Failed to fetch units" });
