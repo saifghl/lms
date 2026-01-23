@@ -349,6 +349,12 @@ exports.deleteOwner = async (req, res) => {
             );
         }
 
+        // 2.5 Unlink owner from leases (prevent FK error)
+        await conn.query(
+            "UPDATE leases SET owner_id = NULL WHERE owner_id = ?",
+            [ownerId]
+        );
+
         // 3️⃣ Delete owner_units mapping
         await conn.query(
             "DELETE FROM owner_units WHERE owner_id = ?",

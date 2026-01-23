@@ -32,6 +32,51 @@ const getLeaseDashboardStats = async (req, res) => {
     }
 };
 
+// Lease Manager Specific Dashboard Stats (as per Image 1)
+const getLeaseManagerStats = async (req, res) => {
+    try {
+        const [pending] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE status='draft' OR status='pending_review'`);
+
+        // Leases Expiring Breakdown
+        const [exp30] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND status='active'`);
+        const [exp60] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end <= DATE_ADD(CURDATE(), INTERVAL 60 DAY) AND lease_end > DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND status='active'`);
+        const [exp90] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end <= DATE_ADD(CURDATE(), INTERVAL 90 DAY) AND lease_end > DATE_ADD(CURDATE(), INTERVAL 60 DAY) AND status='active'`);
+
+        const [renewals] = await pool.query(`SELECT COUNT(*) as total FROM leases WHERE lease_end BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY) AND status='active'`);
+
+        const [escalations] = await pool.query(`
+            SELECT COUNT(DISTINCT l.id) as total 
+            FROM leases l 
+            JOIN lease_escalations le ON l.id = le.lease_id 
+            WHERE le.effective_from <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) 
+            AND le.effective_from >= CURDATE()
+        `);
+
+        // Mock recent activity for now, or fetch from activity_logs if joined
+        const recentActivity = [
+            { id: 1, type: 'Approved', lease: 'L-2024-0811', tenant: 'TechFlow Systems', time: '24 Minutes Ago' },
+            { id: 2, type: 'Rejected', lease: 'L-2024-0809', reason: 'Missing financial documentation', time: '2 Hours Ago' },
+            { id: 3, type: 'Approved', lease: 'L-2024-0798', tenant: 'Heritage Antiques', time: '4 Hours Ago' }
+        ];
+
+        res.json({
+            pending_entries: pending[0].total,
+            leases_expiring: {
+                days_30: exp30[0].total,
+                days_60: exp60[0].total,
+                days_90: exp90[0].total
+            },
+            renewals_due: renewals[0].total,
+            escalations_due: escalations[0].total,
+            recent_activity: recentActivity
+        });
+
+    } catch (err) {
+        console.error("Lease Manager Stats Error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 // Need Attention List
 const getNeedAttentionLeases = async (req, res) => {
     try {
@@ -85,7 +130,33 @@ const approveLease = async (req, res) => {
     try {
         const { id } = req.params;
         await pool.query(`UPDATE leases SET status='approved' WHERE id=?`, [id]);
+
+        // Log activity (Mock logic or real table insertion)
+        // await pool.query('INSERT INTO activity_logs ...')
+
         res.json({ message: "Lease approved" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// Reject Lease
+const rejectLease = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason, comments } = req.body;
+
+        if (!reason) {
+            return res.status(400).json({ message: "Rejection reason is required" });
+        }
+
+        await pool.query(`UPDATE leases SET status='rejected' WHERE id=?`, [id]);
+
+        // Ideally save the reason/comments to a 'lease_rejections' table or similar
+        // For now we just update status to rejected.
+
+        res.json({ message: "Lease rejected" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
@@ -133,18 +204,25 @@ const getLeaseReportStats = async (req, res) => {
 // Notifications
 const getLeaseNotifications = async (req, res) => {
     try {
-        // Check if notifications table exists first, if not return empty
         const [rows] = await pool.query(`
-            SELECT id, title, message, created_at
+            SELECT id, title, message, is_read, created_at, type
             FROM notifications
-            ORDER BY created_at DESC LIMIT 10
+            ORDER BY created_at DESC 
+            LIMIT 20
         `);
+        // Fallback for type logic if 'type' column is null or doesn't exist yet handled by DB default
         res.json(rows);
     } catch (err) {
-        console.error("Notifications error (table might be missing):", err.message);
+        console.error("Notifications error:", err.message);
+        // If table doesn't exist, return empty array
         res.json([]);
     }
 };
+
+// Send Manual Reminder (Mock)
+// ... (I need to keep sendLeaseReminder. Wait, the tool replaces CONTIGUOUS blocks. sendLeaseReminder is between 205 and 675? No.
+// Let's check line numbers again.)
+
 
 // Lease Tracker Stats
 const getLeaseTrackerStats = async (req, res) => {
@@ -588,8 +666,43 @@ const updateLease = async (req, res) => {
     }
 };
 
+// Send Manual Reminder (Mock)
+const sendLeaseReminder = async (req, res) => {
+    try {
+        const { recipient_group, template_id, channel, message, lease_id } = req.body;
+        console.log(`Sending ${channel} reminder to ${recipient_group}: ${message}`);
+        res.json({ message: "Reminder sent successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// Mark All Notifications Read
+const markAllNotificationsRead = async (req, res) => {
+    try {
+        await pool.query("UPDATE notifications SET is_read = TRUE");
+        res.json({ message: "All notifications marked as read" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// Delete All Notifications
+const deleteAllNotifications = async (req, res) => {
+    try {
+        await pool.query("DELETE FROM notifications");
+        res.json({ message: "All notifications deleted" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 module.exports = {
     getLeaseDashboardStats,
+    getLeaseManagerStats,
     getNeedAttentionLeases,
     getExpiringLeases, // Kept for compatibility if used elsewhere
     getPendingLeases,
@@ -600,5 +713,9 @@ module.exports = {
     getAllLeases,
     getLeaseById,
     updateLease,
-    approveLease
+    approveLease,
+    rejectLease,
+    sendLeaseReminder,
+    markAllNotificationsRead,
+    deleteAllNotifications
 };

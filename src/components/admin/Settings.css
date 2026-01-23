@@ -254,3 +254,20 @@
 .btn-save:hover {
     background-color: #1d4ed8;
 }
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .profile-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

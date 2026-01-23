@@ -248,5 +248,38 @@ module.exports = {
   updateProject,
   deleteProject,
   getUnitsByProject,
-  upload
+  upload,
+  getDashboardStats: async (req, res) => {
+    try {
+      // 1. Pending Projects (projects in draft/pending)
+      const [pendingProjects] = await pool.execute(
+        "SELECT COUNT(*) as count FROM projects WHERE status IN ('draft', 'pending_approval')"
+      );
+
+      // 2. Pending Approvals (leases in draft/pending)
+      const [pendingApprovals] = await pool.execute(
+        "SELECT COUNT(*) as count FROM leases WHERE status IN ('draft', 'pending_approval')"
+      );
+
+      // 3. Approved Today (leases approved today)
+      const [approvedToday] = await pool.execute(
+        "SELECT COUNT(*) as count FROM leases WHERE status = 'approved' AND DATE(updated_at) = CURDATE()"
+      );
+
+      // 4. Rejected Today (leases rejected today)
+      const [rejectedToday] = await pool.execute(
+        "SELECT COUNT(*) as count FROM leases WHERE status = 'rejected' AND DATE(updated_at) = CURDATE()"
+      );
+
+      res.json({
+        pendingProjects: pendingProjects[0].count,
+        pendingApprovals: pendingApprovals[0].count,
+        approvedToday: approvedToday[0].count,
+        rejectedToday: rejectedToday[0].count
+      });
+    } catch (error) {
+      console.error("Dashboard stats error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
 };

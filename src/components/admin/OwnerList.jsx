@@ -13,6 +13,7 @@ const OwnerList = () => {
   const [search, setSearch] = useState('');
   const [location, setLocation] = useState('All');
   const [locations, setLocations] = useState(['All']);
+  const [successMsg, setSuccessMsg] = useState(''); // New state for toast
 
   useEffect(() => {
     fetchLocations();
@@ -57,10 +58,17 @@ const OwnerList = () => {
     if (window.confirm('Are you sure you want to delete this owner?')) {
       try {
         await ownerAPI.deleteOwner(id);
+        const deletedOwner = owners.find(o => o.id === id);
         setOwners(owners.filter(owner => owner.id !== id));
+
+        // Show success message
+        setSuccessMsg(`Owner ${deletedOwner ? deletedOwner.name : ''} deleted successfully.`);
+        // Clear after 3 seconds
+        setTimeout(() => setSuccessMsg(''), 3000);
+
       } catch (error) {
         console.error("Failed to delete owner", error);
-        alert("Failed to delete owner");
+        alert("Failed to delete owner. They might be linked to active leases.");
       }
     }
   };
@@ -129,6 +137,24 @@ const OwnerList = () => {
             </div>
           </div>
 
+          {/* Success Toast */}
+          {successMsg && (
+            <div style={{
+              padding: '12px 20px',
+              margin: '0 16px 16px',
+              backgroundColor: '#dcfce7',
+              color: '#166534',
+              border: '1px solid #bbf7d0',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              {successMsg}
+            </div>
+          )}
+
           <div className="owner-table-container">
             <table className="data-table">
               <thead>
@@ -195,9 +221,7 @@ const OwnerList = () => {
                         <Link to={`/admin/owner/edit/${owner.id}`} className="action-btn edit" title="Edit">
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </Link>
-                        <button className="action-btn delete" onClick={() => handleDelete(owner.id)} title="Delete">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
+
                       </div>
                     </td>
                   </tr>

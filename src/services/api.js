@@ -57,6 +57,7 @@ export const updateProject = (id, data) =>
   });
 export const deleteProject = (id) =>
   API.delete(`/projects/${id}`);
+export const getProjectDashboardStats = () => API.get("/projects/dashboard-stats");
 
 // ---------------- OWNERS ----------------
 export const ownerAPI = {
@@ -197,6 +198,15 @@ export const leaseAPI = {
   getExpiringLeases: () => API.get("/leases/expiring"), // kept for compatibility
   approveLease: (id) =>
     API.put(`/leases/approve/${id}`),
+  rejectLease: (id, data) =>
+    API.put(`/leases/reject/${id}`, data),
+  sendLeaseReminder: (data) =>
+    API.post("/leases/reminders/send", data),
+  markAllNotificationsRead: () =>
+    API.put("/leases/notifications/read-all"),
+  deleteAllNotifications: () =>
+    API.delete("/leases/notifications"),
+  getLeaseManagerStats: () => API.get("/leases/manager-stats"), // Fixed endpoint to match controller
 };
 
 // Backward compatibility

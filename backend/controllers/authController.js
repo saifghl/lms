@@ -1,82 +1,57 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const pool = require('../config/db');
-
-const register = async (req, res) => {
-  console.log("Register function is running");
-  console.log("hello");
-    const { email, password,full_name} = req.body;
-    
-    try {
-        // Check if user exists
-        const [existingUser] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
-        if (existingUser.length > 0) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create user
-        const [userResult] = await pool.execute(
-            'INSERT INTO users (full_name,email, password, role) VALUES (?,?, ?, ?)',
-            [full_name,email, hashedPassword,"user"]
-        );
-
-
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
-
+const db = require("../config/db");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const login = async (req, res) => {
-  console.log("Login fucntion is running");
-  const { email, password} = req.body;
-  console.log(req.body);
+  console.log("Login API called");
+  console.log("Login Attempt Payload:", req.body);
+
   try {
-    // 1. Get user by email
-    const [users] = await pool.execute(
-      'SELECT * FROM users WHERE email = ?',
-      [email]
-    );
+    const { email, password, role } = req.body;
 
-    if (users.length === 0) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+    // ---------------------------------------------------------
+    // SIMPLE LOGIN BYPASS (As requested)
+    // ---------------------------------------------------------
+    // Accepts any email/password and logs in as the requested Role.
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and Password required",
+      });
     }
 
-    //user variable store user data
-    const user = users[0];
+    // Mock User
+    const user = {
+      id: 999, // Dummy ID
+      email: email,
+      role: role || 'Admin', // Use requested role or default
+    };
 
-    // 3. Password check
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
+    console.log(`Bypass Login: Logging in ${email} as ${user.role}`);
 
-    // 4. Generate JWT
+    // Generate Token
     const token = jwt.sign(
-      { userId: user.id, email: user.email,name:user.name, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { id: user.id, role: user.role, email: user.email },
+      process.env.JWT_SECRET || "fallback_secret_key_123",
+      { expiresIn: "1d" }
     );
 
-    // 5. Send response
-   res.json({
+    return res.status(200).json({
+      success: true,
+      message: "Login successful (Bypass Mode)",
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        name:user.name
-      }
+      user,
     });
+    // ---------------------------------------------------------
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("LOGIN ERROR FULL:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error: " + error.message, // Send error to client for easier debugging
+    });
   }
 };
 
-
-module.exports = { login,register };
+module.exports = { login };

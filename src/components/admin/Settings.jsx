@@ -11,6 +11,7 @@ const Settings = () => {
     const [formData, setFormData] = useState({});
 
     const [loading, setLoading] = useState(true);
+    const [message, setMessage] = useState({ text: '', type: '' });
 
     // password states
     const [currentPassword, setCurrentPassword] = useState("");
@@ -63,11 +64,12 @@ const Settings = () => {
     const handleSave = () => {
         settingsAPI.updateSettings(formData)
             .then(() => {
-                alert("Profile updated successfully");
+                setMessage({ text: 'Profile updated successfully', type: 'success' });
                 // Update display state only on success
                 setUser(formData);
+                setTimeout(() => setMessage({ text: '', type: '' }), 3000);
             })
-            .catch(() => alert("Update failed"));
+            .catch(() => setMessage({ text: 'Update failed', type: 'error' }));
     };
 
     /* ============================
@@ -78,7 +80,7 @@ const Settings = () => {
         if (!file) return;
 
         if (!file.type.startsWith("image/")) {
-            alert("Only image files allowed");
+            setMessage({ text: 'Only image files allowed', type: 'error' });
             return;
         }
 
@@ -87,12 +89,12 @@ const Settings = () => {
 
         settingsAPI.uploadPhoto(userId, data)
             .then(res => {
-                // Update both states with new image
                 const newImage = res.data.image;
                 setUser(prev => ({ ...prev, profile_image: newImage }));
                 setFormData(prev => ({ ...prev, profile_image: newImage }));
+                setMessage({ text: 'Photo updated successfully', type: 'success' });
             })
-            .catch(() => alert("Photo upload failed"));
+            .catch(() => setMessage({ text: 'Photo upload failed', type: 'error' }));
     };
 
     /* ============================
@@ -103,8 +105,9 @@ const Settings = () => {
             .then(() => {
                 setUser(prev => ({ ...prev, profile_image: null }));
                 setFormData(prev => ({ ...prev, profile_image: null }));
+                setMessage({ text: 'Photo removed successfully', type: 'success' });
             })
-            .catch(() => alert("Failed to remove photo"));
+            .catch(() => setMessage({ text: 'Failed to remove photo', type: 'error' }));
     };
 
     /* ============================
@@ -112,7 +115,7 @@ const Settings = () => {
     ============================ */
     const handlePasswordUpdate = () => {
         if (!currentPassword || !newPassword) {
-            alert("Fill both password fields");
+            setMessage({ text: 'Fill both password fields', type: 'error' });
             return;
         }
 
@@ -121,15 +124,15 @@ const Settings = () => {
             newPassword
         })
             .then(() => {
-                alert("Password updated successfully");
+                setMessage({ text: 'Password updated successfully', type: 'success' });
                 setCurrentPassword("");
                 setNewPassword("");
             })
             .catch((err) => {
                 if (err.response && err.response.status === 401) {
-                    alert("Incorrect current password");
+                    setMessage({ text: 'Incorrect current password', type: 'error' });
                 } else {
-                    alert("Password update failed");
+                    setMessage({ text: 'Password update failed', type: 'error' });
                 }
             });
     };
@@ -153,6 +156,20 @@ const Settings = () => {
                         Manage your personal details, security preferences, and account settings.
                     </div>
                 </header>
+
+                {message.text && (
+                    <div style={{
+                        marginBottom: '16px',
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        background: message.type === 'success' ? '#f0fdf4' : '#fef2f2',
+                        border: `1px solid ${message.type === 'success' ? '#166534' : '#991b1b'}`,
+                        color: message.type === 'success' ? '#166534' : '#991b1b',
+                        fontWeight: '500'
+                    }}>
+                        {message.text}
+                    </div>
+                )}
 
                 {/* ================= PROFILE CARD (Display Only) ================= */}
                 <div className="profile-card">

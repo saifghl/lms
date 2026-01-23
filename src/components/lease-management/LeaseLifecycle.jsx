@@ -9,13 +9,15 @@ import {
 const LeaseLifecycle = () => {
   const [leases, setLeases] = useState([]);
 
+  const [message, setMessage] = useState({ text: '', type: '' });
+
   const loadLeases = () => {
     getPendingLeases()
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
         setLeases(data);
       })
-      .catch(() => alert("Failed to load pending leases"));
+      .catch(() => setMessage({ text: "Failed to load pending leases", type: 'error' }));
   };
 
   useEffect(() => {
@@ -25,9 +27,11 @@ const LeaseLifecycle = () => {
   const handleApprove = async (id) => {
     try {
       await approveLease(id);
+      setMessage({ text: 'Lease approved successfully!', type: 'success' });
       loadLeases();
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     } catch (error) {
-      alert("Failed to approve lease");
+      setMessage({ text: "Failed to approve lease", type: 'error' });
     }
   };
 
@@ -37,6 +41,20 @@ const LeaseLifecycle = () => {
 
       <div className="lease-dashboard-content">
         <h2>Pending Lease Approvals</h2>
+
+        {message.text && (
+          <div style={{
+            marginBottom: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            background: message.type === 'success' ? '#f0fdf4' : '#fef2f2',
+            border: `1px solid ${message.type === 'success' ? '#166534' : '#991b1b'}`,
+            color: message.type === 'success' ? '#166534' : '#991b1b',
+            fontWeight: '500'
+          }}>
+            {message.text}
+          </div>
+        )}
 
         {leases.map((lease) => (
           <div className="approval-card" key={lease.id}>

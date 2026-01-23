@@ -18,10 +18,10 @@ import Units from "./components/admin/Units";
 import AddUnit from "./components/admin/AddUnit";
 import EditUnit from "./components/admin/EditUnit";
 import UnitDetails from "./components/admin/UnitDetails";
+import AdminNotifications from "./components/admin/AdminNotifications"; // Imported
 import LeaseDashboard from "./components/lease-management/LeaseDashboard";
 import LeaseReports from "./components/lease-management/LeaseReports";
 import ReviewCenter from "./components/lease-management/ReviewCenter";
-import LeaseNotifications from "./components/lease-management/LeaseNotifications";
 import LeaseTracker from "./components/lease-management/LeaseTracker";
 import RepDashboard from "./components/management-rep/RepDashboard";
 import Reports from "./components/management-rep/Reports";
@@ -35,7 +35,12 @@ import LeaseDetails from "./components/admin/LeaseDetails";
 import LeaseValidation from "./components/lease-management/LeaseValidation";
 import LeaseLifecycle from "./components/lease-management/LeaseLifecycle";
 import LeaseReminders from "./components/lease-management/LeaseReminders";
-import KycPage from "./components/admin/KycPage";
+import LeaseList from "./components/lease-management/LeaseList";
+import LeaseDetailsManager from "./components/lease-management/LeaseDetailsManager";
+import LeaseTrackingDetails from "./components/lease-management/LeaseTrackingDetails";
+import LeaseReportDetails from "./components/lease-management/LeaseReportDetails";
+import LeaseNotifications from "./components/lease-management/LeaseNotifications";
+
 import DocRepo from "./components/management-rep/doc-repo";
 import Login from "./components/Login/Login";
 import Logout from "./components/Logout/Logout";
@@ -45,6 +50,23 @@ import './App.css';
 import CreateUser from './components/admin/CreateUser';
 import EditTenant from './components/admin/EditTenant';
 import EditOwner from './components/admin/EditOwner';
+import DataEntryDashboard from "./components/data-entry/DataEntryDashboard";
+import PendingProjects from "./components/data-entry/PendingProjects";
+import PendingApprovals from "./components/data-entry/PendingApprovals";
+import PastEntries from "./components/data-entry/PastEntries";
+import DataEntrySelection from "./components/data-entry/DataEntrySelection";
+import ProjectDataEntry from "./components/data-entry/ProjectDataEntry";
+import UnitDataEntry from "./components/data-entry/UnitDataEntry";
+import OwnerDataEntry from "./components/data-entry/OwnerDataEntry";
+import SubmissionDetails from "./components/data-entry/SubmissionDetails";
+import TenantDataEntry from "./components/data-entry/TenantDataEntry";
+import LeaseDataEntry from "./components/data-entry/LeaseDataEntry";
+import DocumentUploadCenter from "./components/data-entry/DocumentUploadCenter";
+import SubmissionTracking from "./components/data-entry/SubmissionTracking";
+import NotificationCenter from "./components/data-entry/NotificationCenter";
+import ApprovalRequestDetail from "./components/data-entry/ApprovalRequestDetail";
+import ApprovedSubmissions from "./components/data-entry/ApprovedSubmissions";
+import RejectedSubmissions from "./components/data-entry/RejectedSubmissions";
 
 function App() {
   return (
@@ -96,20 +118,36 @@ function App() {
         <Route path="/admin/owner/edit/:id" element={<EditOwner />} />
         <Route path="/admin/owner/:id" element={<OwnerDetails />} />
 
+        <Route path="/admin/notifications" element={<AdminNotifications />} /> {/* New Route */}
         <Route path="/admin/activity-logs" element={<ActivityLogs />} />
-        <Route path="/admin/kyc" element={<KycPage />} />
+
 
         {/* Management Rep Routes */}
         <Route path="/doc-repo" element={<DocRepo />} />
+
         {/* Lease Management Suite */}
         <Route path="/lease/dashboard" element={<LeaseDashboard />} />
+        <Route path="/lease-manager/dashboard" element={<LeaseDashboard />} />
+
+        {/* Tracking */}
+        <Route path="/lease/tracking" element={<LeaseTracker />} />
+        <Route path="/lease/tracking/:id" element={<LeaseTrackingDetails />} />
+
+        {/* Reports */}
         <Route path="/lease/reports" element={<LeaseReports />} />
-        {/* <Route path="/admin/notifications" element={<LeaseNotifications />} />  -- Kept locally or removed if unused */}
+        <Route path="/lease/reports/:reportType" element={<LeaseReportDetails />} />
+        <Route path="/lease/notifications" element={<LeaseNotifications />} />
+
+        {/* Reminders */}
+        <Route path="/lease/reminders" element={<LeaseReminders />} />
+
+        {/* Reviews/Approvals */}
+        <Route path="/lease/reviews" element={<LeaseList />} />
+        <Route path="/lease/review/:id" element={<LeaseDetailsManager />} />
 
         {/* Legacy/Other Routes */}
         <Route path="/lease/validation" element={<LeaseValidation />} />
         <Route path="/lease/lifecycle" element={<LeaseLifecycle />} />
-        <Route path="/lease/reminders" element={<LeaseReminders />} />
         <Route path="/management/dashboard" element={<RepDashboard />} />
         <Route path="/management/reports" element={<Reports />} />
         <Route path="/management/search" element={<SearchFilters />} />
@@ -117,6 +155,30 @@ function App() {
         <Route path="/management/review-center" element={<ReviewCenter />} />
         <Route path="/management/lease-tracker" element={<LeaseTracker />} />
         <Route path="/management/settings" element={<RepSettings />} />
+
+        {/* Data Entry Routes */}
+        <Route path="/data-entry/dashboard" element={<DataEntryDashboard />} />
+        <Route path="/data-entry/add-data" element={<DataEntrySelection />} />
+        <Route path="/data-entry/pending-projects" element={<PendingProjects />} />
+        <Route path="/data-entry/pending-approvals" element={<PendingApprovals />} />
+        <Route path="/data-entry/past-entries" element={<PastEntries />} />
+
+        {/* Specific Data Entry Forms */}
+        <Route path="/data-entry/add-project-data" element={<ProjectDataEntry />} />
+        <Route path="/data-entry/project/:id" element={<ProjectDataEntry />} />
+        <Route path="/data-entry/add-unit-data" element={<UnitDataEntry />} />
+        <Route path="/data-entry/add-owner-data" element={<OwnerDataEntry />} />
+
+        {/* Detail View */}
+        <Route path="/data-entry/submission/:id" element={<SubmissionDetails />} />
+        <Route path="/data-entry/add-tenant-data" element={<TenantDataEntry />} />
+        <Route path="/data-entry/add-lease-data" element={<LeaseDataEntry />} />
+        <Route path="/data-entry/bulk-upload" element={<DocumentUploadCenter />} />
+        <Route path="/data-entry/submission-tracking" element={<SubmissionTracking />} />
+        <Route path="/data-entry/notifications" element={<NotificationCenter />} />
+        <Route path="/data-entry/approval-request/:id" element={<ApprovalRequestDetail />} />
+        <Route path="/data-entry/approved-today" element={<ApprovedSubmissions />} />
+        <Route path="/data-entry/rejected-submissions" element={<RejectedSubmissions />} />
 
       </Routes >
     </BrowserRouter >

@@ -18,43 +18,34 @@ const Login = () => {
     });
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    // MOCK LOGIN LOGIC with Explicit Role Selection
-    const selectedRole = formData.role;
-    let redirectPath = '/admin/dashboard';
-    let userRole = 'admin';
+    try {
+      const { data } = await import('../../services/api').then(module => module.login(formData));
 
-    // Role-based logic
-    switch (selectedRole) {
-      case 'Admin':
-        redirectPath = '/admin/dashboard';
-        userRole = 'admin';
-        break;
-      case 'Lease manager':
-        redirectPath = '/lease/dashboard';
-        userRole = 'lease_manager';
-        break;
-      case 'Management Rep':
-        redirectPath = '/management/dashboard';
-        userRole = 'management_rep';
-        break;
-      default:
-        redirectPath = '/admin/dashboard';
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      } else {
+        localStorage.removeItem('token'); // Ensure no stale token
+      }
+
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Role-based redirect
+      const role = data.user.role || 'Admin';
+      let redirectPath = '/admin/dashboard';
+
+      if (role === 'Lease Manager' || role === 'lease_manager') redirectPath = '/lease-manager/dashboard';
+      else if (role === 'Management Rep' || role === 'management_rep') redirectPath = '/management/dashboard';
+      else if (role === 'Data Entry' || role === 'data_entry') redirectPath = '/data-entry/dashboard';
+
+      console.log(`Login Successful: Role=${role}, Redirect=${redirectPath}`);
+      navigate(redirectPath);
+    } catch (error) {
+      console.error("Login Failed", error);
+      alert("Login Failed: " + (error.response?.data?.message || "Check credentials"));
     }
-
-    // Set Mock Token and User in LocalStorage
-    localStorage.setItem('token', 'mock-jwt-token-' + Date.now());
-    localStorage.setItem('user', JSON.stringify({
-      id: 999,
-      name: 'Mock User',
-      email: formData.email,
-      role: userRole
-    }));
-
-    console.log(`Mock Login Successful: Role=${selectedRole}, Redirect=${redirectPath}`);
-    navigate(redirectPath);
   };
 
   return (
@@ -108,7 +99,6 @@ const Login = () => {
                   placeholder="Enter Your Email or Mobile No."
                   value={formData.email}
                   onChange={handleChange}
-                  required
                 />
               </div>            </div>
 
@@ -127,7 +117,6 @@ const Login = () => {
                   placeholder="Enter Your Password"
                   value={formData.password}
                   onChange={handleChange}
-                  required
                 />
                 <button
                   type="button"
@@ -177,8 +166,9 @@ const Login = () => {
                   }}
                 >
                   <option value="Admin">Admin</option>
+                  <option value="Data Entry">Data Entry</option>
                   <option value="Lease Manager">Lease Manager</option>
-                  <option value="Management Rep">Management Rep</option>
+                  <option value="Management Rep">Management Representative</option>
                 </select>
                 <span style={{
                   position: 'absolute',

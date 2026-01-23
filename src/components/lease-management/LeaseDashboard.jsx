@@ -1,166 +1,189 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import RepSidebar from '../management-rep/RepSidebar';
+import { useNavigate } from 'react-router-dom';
+import LeaseManagerLayout from './LeaseManagerLayout';
 import { leaseAPI } from '../../services/api';
-import './leaseManagement.css';
+import './leaseManagerNew.css';
 
 const LeaseDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
-    pending_approvals: 0,
-    lease_expiries: 0,
-    rental_escalation: 0,
+    pending_entries: 0,
+    leases_expiring: { days_30: 0, days_60: 0, days_90: 0 },
     renewals_due: 0,
-    active_leases: 0,
-    growth: "0% vs last month"
+    escalations_due: 0,
+    recent_activity: []
   });
-  const [attentionItems, setAttentionItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchStats = async () => {
       try {
-        const [statsRes, attentionRes] = await Promise.all([
-          leaseAPI.getLeaseDashboardStats(),
-          leaseAPI.getNeedAttentionLeases()
-        ]);
-        setStats(statsRes.data);
-        setAttentionItems(attentionRes.data);
+        const { data } = await leaseAPI.getLeaseManagerStats();
+        setStats(data);
       } catch (error) {
-        console.error("Failed to load dashboard data", error);
+        console.error("Error fetching stats:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchStats();
   }, []);
 
   return (
-    <div className="dashboard-container">
-      <RepSidebar />
-      <main className="main-content lease-dashboard">
-        <header className="page-header">
-          <div className="header-left">
-            <h1>Dashboard</h1>
-            <p>Welcome back</p>
-          </div>
-          <button className="primary-btn" onClick={() => navigate('/admin/add-lease')}>
-            <span className="plus-icon">+</span> Create new lease
-          </button>
+    <LeaseManagerLayout>
+      <div className="lease-dashboard-content">
+        <header className="dashboard-header-simple">
+          <h1>Lease Management Overview</h1>
+          <p>Welcome back, Here is a summary of your lease lifecycle activities.</p>
         </header>
 
-        {/* Stats Cards */}
-        <div className="stats-row">
-          <div className="stat-card">
-            <div className="stat-header">Pending Approvals</div>
-            <div className="stat-body">
-              <span className="stat-value">{stats.pending_approvals}</span>
-              <span className="stat-trend positive">+2 today</span>
+        {/* Top Cards Row */}
+        <div className="dashboard-cards-grid">
+          {/* Card 1: Pending Entries */}
+          <div className="dashboard-card card-yellow cursor-pointer" onClick={() => navigate('/lease/reviews')}>
+            <div className="card-top">
+              <span className="card-title">Pending Entries</span>
+              <span className="card-icon">📂</span>
             </div>
-            <div className="progress-bar"><div className="fill warning" style={{ width: '40%' }}></div></div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-header">Lease Expiries</div>
-            <div className="stat-body">
-              <span className="stat-value">{stats.lease_expiries}</span>
-              <span className="stat-badge urgent">urgent</span>
+            <div className="card-main">
+              <span className="card-value">{stats.pending_entries}</span>
+              <span className="card-sub text-warning">Awaiting Review</span>
             </div>
-            <div className="stat-footer">Expires within 30 days</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-header">Rental escalation</div>
-            <div className="stat-body">
-              <span className="stat-value">{stats.rental_escalation}</span>
-              <span className="stat-badge success">Approved</span>
+
+          {/* Card 2: Leases Expiring */}
+          <div className="dashboard-card card-red">
+            <div className="card-top">
+              <span className="card-title">Leases Expiring</span>
+              <span className="card-icon">📅</span>
             </div>
-            <div className="stat-footer">effective next cycle</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-header">Renewals Due</div>
-            <div className="stat-body">
-              <span className="stat-value">{stats.renewals_due}</span>
+            <div className="card-main-row">
+              <div className="sub-stat">
+                <span className="val">{stats.leases_expiring?.days_30 || 0}</span>
+                <span className="lbl">30 Days</span>
+              </div>
+              <div className="sub-stat">
+                <span className="val">{stats.leases_expiring?.days_60 || 0}</span>
+                <span className="lbl">60 Days</span>
+              </div>
+              <div className="sub-stat">
+                <span className="val">{stats.leases_expiring?.days_90 || 0}</span>
+                <span className="lbl">90 Days</span>
+              </div>
             </div>
-            <div className="stat-footer">for next month</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-header">Total Active</div>
-            <div className="stat-body">
-              <span className="stat-value">{stats.active_leases}</span>
-              <span className="stat-trend positive">{stats.growth} <img src="/trend-up.svg" alt="" /></span>
+
+          {/* Card 3: Renewals Due */}
+          <div className="dashboard-card card-blue">
+            <div className="card-top">
+              <span className="card-title">Renewals Due</span>
+              <span className="card-icon">↻</span>
+            </div>
+            <div className="card-main">
+              <span className="card-value">{stats.renewals_due}</span>
+              <span className="card-sub">Current Quarter</span>
+            </div>
+          </div>
+
+          {/* Card 4: Escalations Due */}
+          <div className="dashboard-card card-green">
+            <div className="card-top">
+              <span className="card-title">Escalations Due</span>
+              <span className="card-icon">📈</span>
+            </div>
+            <div className="card-main">
+              <span className="card-value">{stats.escalations_due < 10 ? `0${stats.escalations_due}` : stats.escalations_due}</span>
+              <span className="card-sub">Next 30 Days</span>
             </div>
           </div>
         </div>
 
-        {/* Need Attention Section */}
-        <section className="attention-section">
-          <h3>Need Attention</h3>
-          <div className="table-responsive">
-            <table className="styled-table">
-              <thead>
-                <tr>
-                  <th>Tenant</th>
-                  <th>Date</th>
-                  <th>Type</th>
-                  <th>ID</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attentionItems.map((item, index) => (
-                  <tr key={index}>
-                    <td>
-                      <div className="tenant-cell">
-                        <div className="avatar">{item.tenant_name ? item.tenant_name[0] : 'T'}</div>
-                        <div>
-                          <div className="name">{item.tenant_name}</div>
-                          <div className="sub-id">ID: #P-{1000 + item.id}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{new Date(item.date || new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                    <td>{item.type}</td>
-                    <td>#{1000 + item.id}</td>
-                    <td>
-                      <span className={`status-badge ${item.status}`}>
-                        {item.status === 'draft' ? 'Pending' : item.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="icon-btn"><i className="edit-icon">✎</i></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <button className="show-more-btn">SHOW MORE ITEM</button>
+        {/* Recent Activity Section */}
+        <section className="recent-activity-section">
+          <div className="section-header">
+            <h3>Recent Activity</h3>
+            <button className="link-btn">View Full Audit Log</button>
+          </div>
+          <div className="activity-list">
+            {stats.recent_activity && stats.recent_activity.map((activity, idx) => (
+              <div className="activity-item" key={idx}>
+                <div className={`status-icon ${activity.type === 'Approved' ? 'success' : 'failure'}`}>
+                  {activity.type === 'Approved' ? '✓' : '✗'}
+                </div>
+                <div className="activity-details">
+                  <div className="act-title">
+                    <strong>Lease {activity.type}:</strong> {activity.lease}
+                  </div>
+                  <div className="act-desc">
+                    {activity.reason ? `Reason: ${activity.reason}` : `Tenant: ${activity.tenant}`}
+                  </div>
+                </div>
+                <div className="activity-meta">
+                  <div className="user-name">Marcus Reed</div>
+                  <div className="time-ago">{activity.time}</div>
+                </div>
+              </div>
+            ))}
+            {(!stats.recent_activity || stats.recent_activity.length === 0) && (
+              <div className="no-data">No recent activity</div>
+            )}
           </div>
         </section>
 
-        {/* Quick Actions */}
-        <section className="quick-actions">
-          <h3>Quick Actions</h3>
-          <div className="actions-grid">
-            <button className="action-card" onClick={() => navigate('/admin/add-lease')}>
-              <div className="icon warning">+</div>
-              <div className="label">NEW LEASE</div>
-            </button>
-            <button className="action-card">
-              <div className="icon success">✔</div>
-              <div className="label">APPROVE</div>
-            </button>
-            <button className="action-card">
-              <div className="icon purple">📄</div>
-              <div className="label">NEW LEASE</div>
-            </button>
-            <button className="action-card">
-              <div className="icon danger">✉</div>
-              <div className="label">EMAIL TENANT</div>
-            </button>
+        {/* Bottom Widgets */}
+        <div className="bottom-widgets-grid">
+          <div className="widget-card">
+            <div className="widget-header">
+              <span className="icon">📊</span> Active Portfolio Health
+            </div>
+            <div className="widget-body">
+              <div className="progress-label">
+                <span>Occupancy Rate</span>
+                <strong>94.2%</strong>
+              </div>
+              <div className="progress-bg">
+                <div className="progress-fill" style={{ width: '94.2%' }}></div>
+              </div>
+            </div>
           </div>
-        </section>
-      </main>
-    </div>
+
+          <div className="widget-card">
+            <div className="widget-header">
+              <span className="icon">☁</span> System Performance
+            </div>
+            <div className="widget-body flex-row">
+              <div className="perf-item">
+                <div className="label">Avg. Review Time</div>
+                <div className="val">4.2 Hours</div>
+              </div>
+              <div className="perf-item right">
+                <div className="label-sm">Target SLA: 24 Hours</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="widget-card">
+            <div className="widget-header">
+              <span className="icon">❓</span> Support Desk
+            </div>
+            <div className="widget-body">
+              <p className="support-text">Need help with complex lease structures? Contact the internal specialist team.</p>
+              <button className="text-btn">Open Ticket</button>
+            </div>
+          </div>
+        </div>
+
+        <footer className="dashboard-footer">
+          <span>© 2024 LeasePortal Professional</span>
+          <div className="footer-links">
+            <span>Security Protocol</span>
+            <span>Compliance Logs</span>
+          </div>
+          <span className="status-indicator">● System Status: Operational</span>
+        </footer>
+
+      </div>
+    </LeaseManagerLayout>
   );
 };
 

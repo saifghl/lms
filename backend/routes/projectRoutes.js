@@ -4,7 +4,11 @@ const projectController = require('../controllers/projectController');
 
 // All routes use the upload middleware for potential image uploads
 router.post('/', projectController.upload.single('image'), projectController.addProject);
-router.get('/locations', projectController.getProjectLocations); // Get Unique Locations
+// Locations first
+router.get('/locations', projectController.getProjectLocations);
+// Dashboard Stats (Must be before :id to prevent conflict)
+router.get('/dashboard-stats', projectController.getDashboardStats);
+
 router.get('/', projectController.getProjects);
 router.get('/:id', projectController.getProjectById);
 router.get('/:id/units', projectController.getUnitsByProject); // New Route for Tenant Unit Selection

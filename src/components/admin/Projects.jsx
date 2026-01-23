@@ -8,6 +8,7 @@ import "./projects.css";
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState({ text: '', type: '' });
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("All");
   const [type, setType] = useState("All");
@@ -84,10 +85,14 @@ const Projects = () => {
     if (window.confirm("Are you sure you want to delete this project?")) {
       try {
         await deleteProjectAPI(id);
-        setProjects(projects.filter(project => project.id !== id));
+        const filtered = projects.filter(project => project.id !== id);
+        setProjects(filtered);
+        setMessage({ text: 'Project deleted successfully', type: 'success' });
+        // Clear message after 3 seconds
+        setTimeout(() => setMessage({ text: '', type: '' }), 3000);
       } catch (error) {
         console.error("Error deleting project:", error);
-        alert("Failed to delete project");
+        setMessage({ text: "Failed to delete project", type: 'error' });
       }
     }
   };
@@ -110,6 +115,20 @@ const Projects = () => {
             Add Project
           </Link>
         </header>
+
+        {message.text && (
+          <div style={{
+            marginBottom: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            background: message.type === 'success' ? '#f0fdf4' : '#fef2f2',
+            border: `1px solid ${message.type === 'success' ? '#166534' : '#991b1b'}`,
+            color: message.type === 'success' ? '#166534' : '#991b1b',
+            fontWeight: '500'
+          }}>
+            {message.text}
+          </div>
+        )}
 
         <div className="content-card">
           {/* Filters */}

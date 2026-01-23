@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { managementAPI } from '../../services/api';
+import { getDashboardStats } from '../../services/api';
 import './dashboard.css';
 
 const Dashboard = () => {
@@ -12,7 +12,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await managementAPI.getDashboardStats();
+                const response = await getDashboardStats();
                 setStats(response.data);
             } catch (error) {
                 console.error("Error fetching dashboard stats:", error);
@@ -39,7 +39,7 @@ const Dashboard = () => {
                     </div>
 
                     <div className="header-actions">
-                        <button className="icon-btn">
+                        <button className="icon-btn" onClick={() => navigate('/admin/notifications')} title="Notifications">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                         </button>
 
@@ -49,18 +49,19 @@ const Dashboard = () => {
                     </div>
                 </header>
 
-                {/* ROW 1: 4 Main Entities */}
+                {/* ROW 1: 5 Main Entities (Wrapping Grid) */}
                 <section className="stats-grid-top">
                     {loading ? (
                         <div className="loading-state">Loading...</div>
                     ) : (
                         [
-                            { title: "Total Projects", value: s.totalProjects?.value || 0, change: s.totalProjects?.change, cls: "positive", stroke: "#2ED573" },
-                            { title: "Total Units", value: s.totalUnits?.value || 0, change: s.totalUnits?.change, cls: "negative", stroke: "#FF4757" },
-                            { title: "Total Owners", value: s.totalOwners?.value || 0, change: s.totalOwners?.change, cls: "neutral", stroke: "#2E66FF" },
-                            { title: "Total Tenants", value: s.totalTenants?.value || 0, change: s.totalTenants?.change, cls: "warning", stroke: "#FFA502" }
+                            { title: "Total Projects", value: s.totalProjects?.value || 0, change: s.totalProjects?.change, cls: "positive", stroke: "#2ED573", link: "/admin/projects" },
+                            { title: "Total Units", value: s.totalUnits?.value || 0, change: s.totalUnits?.change, cls: "negative", stroke: "#FF4757", link: "/admin/units" },
+                            { title: "Total Owners", value: s.totalOwners?.value || 0, change: s.totalOwners?.change, cls: "neutral", stroke: "#2E66FF", link: "/admin/owners" },
+                            { title: "Total Tenants", value: s.totalTenants?.value || 0, change: s.totalTenants?.change, cls: "warning", stroke: "#FFA502", link: "/admin/tenants" },
+                            { title: "Total Leases", value: s.totalLeases?.value || 0, change: s.totalLeases?.change, cls: "info", stroke: "#5352ED", link: "/admin/leases" }
                         ].map((item, idx) => (
-                            <div className="stat-card" key={idx}>
+                            <div className="stat-card clickable" key={idx} onClick={() => navigate(item.link)} style={{ cursor: 'pointer' }}>
                                 <h4>{item.title}</h4>
                                 <div className="stat-value">{item.value}</div>
                                 <div className={`stat-change ${item.cls}`}>
@@ -82,29 +83,9 @@ const Dashboard = () => {
                     )}
                 </section>
 
-                {/* ROW 2: Leases & Revenue */}
-                <section className="stats-grid-middle">
-                    {/* Total Leases */}
-                    <div className="stat-card">
-                        <h4>Total Leases</h4>
-                        <div className="stat-value">{s.totalLeases?.value || 0}</div>
-                        <div className={`stat-change info`}>
-                            {s.totalLeases?.change}
-                        </div>
-                        <div className="mini-sparkline">
-                            <svg width="100%" height="35" viewBox="0 0 100 35" preserveAspectRatio="none">
-                                <path
-                                    d="M0,25 C12,15 30,30 50,20 S88,15 100,22"
-                                    fill="none"
-                                    stroke="#5352ED"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                        </div>
-                    </div>
-
-                    {/* Total Revenue */}
+                {/* ROW 2: Revenue & Area */}
+                <section className="stats-grid-secondary">
+                    {/* Revenue Card */}
                     <div className="stat-card revenue-card">
                         <div>
                             <h4>Total Revenue</h4>
@@ -119,10 +100,7 @@ const Dashboard = () => {
                             </svg>
                         </div>
                     </div>
-                </section>
 
-                {/* ROW 3: Area Stats (Stacked) */}
-                <section className="stats-area-stacked">
                     {/* Area Occupied */}
                     <div className="area-card">
                         <div className="area-info">

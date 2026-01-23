@@ -13,6 +13,7 @@ const RepSettings = () => {
     role: "Representative"
   });
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
   useEffect(() => {
     fetchSettings();
@@ -40,11 +41,11 @@ const RepSettings = () => {
     try {
       setLoading(true);
       await settingsAPI.updateSettings(profile);
-      alert("Settings updated successfully");
+      setMessage({ text: 'Settings updated successfully', type: 'success' });
     } catch (err) {
       console.error("Failed to update settings", err);
       // alert("Failed to update settings");
-      alert("Settings updated (Simulation)");
+      setMessage({ text: 'Settings updated (Simulation)', type: 'success' }); // Keeping simulation logic but styled
     } finally {
       setLoading(false);
     }
@@ -63,6 +64,20 @@ const RepSettings = () => {
             <p>Manage your profile and security preferences.</p>
           </div>
         </header>
+
+        {message.text && (
+          <div style={{
+            marginBottom: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            background: message.type === 'success' ? '#f0fdf4' : '#fef2f2',
+            border: `1px solid ${message.type === 'success' ? '#166534' : '#991b1b'}`,
+            color: message.type === 'success' ? '#166534' : '#991b1b',
+            fontWeight: '500'
+          }}>
+            {message.text}
+          </div>
+        )}
 
         <div className="content-card settings-card-layout">
           <div className="settings-section">
