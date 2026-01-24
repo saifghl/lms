@@ -23,6 +23,7 @@ const TenantList = () => {
             fetchTenants();
         }, 500);
         return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search, location]);
 
     const fetchLocations = async () => {

@@ -20,11 +20,11 @@ const OwnerDataEntry = () => {
         zip: '10001'
     });
 
-    const handleInputChange = (e) => {
-        // Simple handler, assuming flat structure for demo
-        // For nested address, we might need more logic or flatten the state
-        // Here we just map known fields
-    };
+    // const handleInputChange = (e) => {
+    //     // Simple handler, assuming flat structure for demo
+    //     // For nested address, we might need more logic or flatten the state
+    //     // Here we just map known fields
+    // };
 
     const handleSubmit = async () => {
         setMessage({ text: '', type: '' });

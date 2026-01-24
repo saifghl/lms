@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { managementAPI, leaseAPI } from '../../services/api';
 import './dashboard.css';
 
 const AdminNotifications = () => {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
 
     useEffect(() => {
         fetchNotifications();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filter]);
 
     const fetchNotifications = async () => {

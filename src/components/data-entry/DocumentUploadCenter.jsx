@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DataEntrySidebar from './DataEntrySidebar';
-import { getProjects, unitAPI } from '../../services/api';
+// import { getProjects, unitAPI } from '../../services/api';
 import './DataEntryDashboard.css';
 
 const DocumentUploadCenter = () => {
@@ -10,6 +10,7 @@ const DocumentUploadCenter = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [selectedContext, setSelectedContext] = useState(null);
+    // eslint-disable-next-line no-unused-vars
     const [files, setFiles] = useState([
         { name: 'Lease_Agreement_U402.pdf', size: '2.4 MB', status: 'Ready', type: 'pdf' },
         { name: 'Unit_402_Kitchen_View.jpg', size: '850 KB', status: 'Uploading', progress: 65, type: 'img' },

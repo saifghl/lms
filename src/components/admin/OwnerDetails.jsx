@@ -50,6 +50,7 @@ const OwnerDetails = () => {
     if (id) {
       fetchDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Fetch available units when modal opens

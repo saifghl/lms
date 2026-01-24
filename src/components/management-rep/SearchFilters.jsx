@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import RepSidebar from "./RepSidebar";
 import { managementAPI } from "../../services/api";
 import "./SearchFilters.css";
@@ -20,6 +20,7 @@ const SearchFilters = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleSearch = async () => {
     setLoading(true);
     try {
@@ -28,6 +29,7 @@ const SearchFilters = () => {
         Object.entries(formData).filter(([_, v]) => v !== "")
       );
 
+      // eslint-disable-next-line no-unused-vars
       const res = await managementAPI.get("search", { params }); // Using generic get for now if custom method not added yet to api object
       // Actually managementAPI doesn't have a 'search' method explicitly defined in the file I read, 
       // but I can add it or use a raw API call.

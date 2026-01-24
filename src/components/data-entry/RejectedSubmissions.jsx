@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DataEntrySidebar from './DataEntrySidebar';
-import { getProjects } from '../../services/api';
+import { getProjects } from '../../services/api'; // eslint-disable-line no-unused-vars
 import './DataEntryDashboard.css';
 
 const RejectedSubmissions = () => {
@@ -13,7 +13,7 @@ const RejectedSubmissions = () => {
         const fetchData = async () => {
             try {
                 // Fetch projects (simulated for now as per design)
-                // const res = await getProjects(); 
+                // const res = await getProjects();  
 
                 // Mock data to match the image requirements
                 const mockData = [

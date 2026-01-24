@@ -13,6 +13,7 @@ const OwnerList = () => {
   const [search, setSearch] = useState('');
   const [location, setLocation] = useState('All');
   const [locations, setLocations] = useState(['All']);
+  // eslint-disable-next-line no-unused-vars
   const [successMsg, setSuccessMsg] = useState(''); // New state for toast
 
   useEffect(() => {
@@ -24,6 +25,7 @@ const OwnerList = () => {
       fetchOwners();
     }, 500);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, location]);
 
   const fetchLocations = async () => {
@@ -54,24 +56,26 @@ const OwnerList = () => {
     }
   };
 
+  /*
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this owner?')) {
-      try {
-        await ownerAPI.deleteOwner(id);
-        const deletedOwner = owners.find(o => o.id === id);
-        setOwners(owners.filter(owner => owner.id !== id));
+      if (window.confirm('Are you sure you want to delete this owner?')) {
+          try {
+              await ownerAPI.deleteOwner(id);
+              const deletedOwner = owners.find(o => o.id === id);
+              setOwners(owners.filter(owner => owner.id !== id));
 
-        // Show success message
-        setSuccessMsg(`Owner ${deletedOwner ? deletedOwner.name : ''} deleted successfully.`);
-        // Clear after 3 seconds
-        setTimeout(() => setSuccessMsg(''), 3000);
+              // Show success message
+              setSuccessMsg(`Owner ${deletedOwner ? deletedOwner.name : ''} deleted successfully.`);
+              // Clear after 3 seconds
+              setTimeout(() => setSuccessMsg(''), 3000);
 
-      } catch (error) {
-        console.error("Failed to delete owner", error);
-        alert("Failed to delete owner. They might be linked to active leases.");
+          } catch (error) {
+              console.error("Failed to delete owner", error);
+              alert("Failed to delete owner. They might be linked to active leases.");
+          }
       }
-    }
   };
+  */
 
   return (
     <div className="dashboard-container">

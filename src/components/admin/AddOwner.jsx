@@ -46,7 +46,7 @@ const AddOwner = () => {
     for (let i = 0; i < options.length; i++) {
       if (options[i].selected) {
         selectedValues.push(options[i].value);
-        const unit = units.find(u => u.id == options[i].value); // loose comparison for string/number
+        const unit = units.find(u => String(u.id) === String(options[i].value)); // strict comparison
         if (unit) selectedObjs.push(unit);
       }
     }

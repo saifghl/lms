@@ -1,11 +1,11 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import DataEntrySidebar from './DataEntrySidebar';
 import './DataEntryDashboard.css';
 
 const ApprovalRequestDetail = () => {
     const navigate = useNavigate();
-    const { id } = useParams(); // Use this to fetch real data in production
+    // const { id } = useParams(); // Use this to fetch real data in production
 
     return (
         <div className="dashboard-container">

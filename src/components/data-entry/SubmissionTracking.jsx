@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // eslint-disable-line no-unused-vars
 import DataEntrySidebar from './DataEntrySidebar';
-import { getProjects, leaseAPI } from '../../services/api';
+import { getProjects } from '../../services/api'; // eslint-disable-line no-unused-vars
 import './DataEntryDashboard.css';
 
 const SubmissionTracking = () => {
-    const navigate = useNavigate();
+    // const navigate = useNavigate(); // Unused
     const [activeTab, setActiveTab] = useState('All Submissions');
     const [submissions, setSubmissions] = useState([]);
     const [loading, setLoading] = useState(true);

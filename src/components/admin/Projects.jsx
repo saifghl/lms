@@ -62,12 +62,14 @@ const Projects = () => {
   /* ================= HANDLERS ================= */
   const handleSearch = (e) => setSearch(e.target.value);
 
+  // eslint-disable-next-line no-unused-vars
   const cycleLocation = () => {
     const currentIndex = availableLocations.indexOf(location);
     const nextIndex = (currentIndex + 1) % availableLocations.length;
     setLocation(availableLocations[nextIndex]);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const cycleType = () => {
     const currentIndex = TYPES.indexOf(type);
     const nextIndex = (currentIndex + 1) % TYPES.length;

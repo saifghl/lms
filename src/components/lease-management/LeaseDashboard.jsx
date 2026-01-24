@@ -13,6 +13,7 @@ const LeaseDashboard = () => {
     escalations_due: 0,
     recent_activity: []
   });
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

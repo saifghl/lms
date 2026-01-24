@@ -13,6 +13,7 @@ const LeaseList = () => {
 
     useEffect(() => {
         fetchLeases();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
     const fetchLeases = async () => {

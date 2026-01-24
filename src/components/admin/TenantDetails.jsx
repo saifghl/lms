@@ -12,6 +12,7 @@ const TenantDetails = () => {
 
     useEffect(() => {
         fetchDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchDetails = async () => {

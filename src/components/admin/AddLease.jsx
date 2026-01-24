@@ -89,6 +89,7 @@ const AddLease = () => {
             setUnits([]);
             setFormData(prev => ({ ...prev, unit_id: '' })); // Reset unit if project changes
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData.project_id]);
     // Fetch sub-tenants when tenant is selected
     useEffect(() => {

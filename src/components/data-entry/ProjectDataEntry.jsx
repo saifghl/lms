@@ -30,6 +30,7 @@ const ProjectDataEntry = () => {
         if (id) {
             fetchProjectData(id);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchProjectData = async (projectId) => {

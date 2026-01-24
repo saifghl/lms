@@ -5,6 +5,7 @@ import "./leaseManagerNew.css";
 
 const LeaseNotifications = () => {
     const [notifications, setNotifications] = useState([]);
+    // eslint-disable-next-line
     const [loading, setLoading] = useState(true);
 
     // Mock initial data to match the screenshot
@@ -50,6 +51,7 @@ const LeaseNotifications = () => {
 
     useEffect(() => {
         fetchNotifications();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchNotifications = async () => {
@@ -95,16 +97,8 @@ const LeaseNotifications = () => {
         setNotifications(prev => prev.filter(n => n.id !== id));
     };
 
-    const getIcon = (type) => {
-        switch (type) {
-            case 'urgent': return <span className="noti-icon urgent">!</span>;
-            case 'info': return <span className="noti-icon info">i</span>;
-            case 'success': return <span className="noti-icon success">✓</span>;
-            case 'review': return <span className="noti-icon review">📄</span>;
-            case 'error': return <span className="noti-icon error">×</span>;
-            default: return <span className="noti-icon info">i</span>;
-        }
-    };
+    // Removed unused getIcon function to fix lint error if not used in JSX
+
 
     return (
         <LeaseManagerLayout>

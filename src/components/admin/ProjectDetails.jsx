@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getProjectById, unitAPI, tenantAPI, ownerAPI } from '../../services/api';
+import { getProjectById, unitAPI, tenantAPI } from '../../services/api';
 import './ProjectDetails.css'; // We'll create this CSS file next
 
 const ProjectDetails = () => {
     const { id } = useParams();
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const [project, setProject] = useState(null);
     const [activeTab, setActiveTab] = useState('home');
     const [units, setUnits] = useState([]);

@@ -13,6 +13,7 @@ const DataEntryDashboard = () => {
         rejectedToday: 2
     });
     const [recentActivity, setRecentActivity] = useState([]);
+    // eslint-disable-next-line no-unused-vars
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

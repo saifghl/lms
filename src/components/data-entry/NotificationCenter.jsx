@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import DataEntrySidebar from './DataEntrySidebar';
-import { managementAPI } from '../../services/api'; // Using managementAPI for notifications
+// import { managementAPI } from '../../services/api'; // Using managementAPI for notifications
 import './DataEntryDashboard.css';
 
 const NotificationCenter = () => {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('All');
     const [notifications, setNotifications] = useState([]);
+    // eslint-disable-next-line no-unused-vars
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

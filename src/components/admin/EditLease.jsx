@@ -169,7 +169,7 @@ const EditLease = () => {
                                 <select name="unit" value={formData.unit} onChange={handleChange}>
                                     <option value="" disabled>Select Unit</option>
                                     {units
-                                        .filter(u => !formData.project || u.project_id == formData.project) // Filter by project
+                                        .filter(u => !formData.project || String(u.project_id) === String(formData.project)) // Filter by project
                                         .map(u => (
                                             <option key={u.id} value={u.id}>{u.unit_number}</option>
                                         ))}
