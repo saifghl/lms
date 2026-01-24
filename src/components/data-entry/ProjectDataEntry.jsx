@@ -10,6 +10,7 @@ const ProjectDataEntry = () => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
     const [formData, setFormData] = useState({
+        projectName: '',
         description: '',
         totalFloors: '',
         amenities: {
@@ -37,11 +38,39 @@ const ProjectDataEntry = () => {
             const response = await getProjectById(projectId);
             const data = response.data.data;
             if (data) {
+                let desc = data.description || '';
+                let restoredAmenities = { ...formData.amenities };
+
+                // Parse amenities from description if present
+                // We assume the format "\n\nAmenities: A, B, C"
+                if (desc.includes('\n\nAmenities: ')) {
+                    const parts = desc.split('\n\nAmenities: ');
+                    desc = parts[0]; // Keep only the narrative part
+
+                    const amenitiesStr = parts[1];
+                    if (amenitiesStr) {
+                        const activeAmenities = amenitiesStr.split(', ');
+
+                        // Reset all first to be safe
+                        Object.keys(restoredAmenities).forEach(key => restoredAmenities[key] = false);
+
+                        // Reverse match labels to keys
+                        activeAmenities.forEach(label => {
+                            const matchKey = Object.keys(restoredAmenities).find(k => {
+                                const expectedLabel = k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                return expectedLabel === label.trim();
+                            });
+                            if (matchKey) restoredAmenities[matchKey] = true;
+                        });
+                    }
+                }
+
                 setFormData(prev => ({
                     ...prev,
-                    description: data.description || '',
+                    projectName: data.project_name || '',
+                    description: desc,
                     totalFloors: data.total_floors || '',
-                    // Mapping amenities would go here if backend supported JSON amenities
+                    amenities: restoredAmenities
                 }));
             }
         } catch (error) {
@@ -63,13 +92,24 @@ const ProjectDataEntry = () => {
             setMessage({ text: '', type: '' });
             setLoading(true);
 
+            // Construct Amenities String
+            const amenitiesList = Object.keys(formData.amenities)
+                .filter(k => formData.amenities[k])
+                .map(k => k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())) // Labelify
+                .join(', ');
+
             // Payload
             const payload = {
-                project_name: formData.projectName, // Only needed for new
-                description: `${formData.description || ''}\n\nAmenities: ${Object.keys(formData.amenities).filter(k => formData.amenities[k]).join(', ')}`,
+                project_name: formData.projectName,
+                description: formData.description || '', // Start with base description
                 total_floors: formData.totalFloors,
                 status: 'pending_approval'
             };
+
+            // Append amenities cleanly
+            if (amenitiesList) {
+                payload.description += `\n\nAmenities: ${amenitiesList}`;
+            }
 
             if (id) {
                 await updateProject(id, payload);
