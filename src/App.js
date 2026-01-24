@@ -68,10 +68,13 @@ import ApprovalRequestDetail from "./components/data-entry/ApprovalRequestDetail
 import ApprovedSubmissions from "./components/data-entry/ApprovedSubmissions";
 import RejectedSubmissions from "./components/data-entry/RejectedSubmissions";
 
+import TestKycModal from "./components/admin/TestKycModal";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/test-kyc-modal" element={<TestKycModal />} />
         {/* Default route redirects to Login or Dashboard */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
