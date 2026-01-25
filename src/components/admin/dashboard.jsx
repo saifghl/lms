@@ -55,11 +55,11 @@ const Dashboard = () => {
                         <div className="loading-state">Loading...</div>
                     ) : (
                         [
-                            { title: "Total Projects", value: s.totalProjects?.value || 0, change: s.totalProjects?.change, cls: "positive", stroke: "#2ED573", link: "/admin/projects" },
-                            { title: "Total Units", value: s.totalUnits?.value || 0, change: s.totalUnits?.change, cls: "negative", stroke: "#FF4757", link: "/admin/units" },
-                            { title: "Total Owners", value: s.totalOwners?.value || 0, change: s.totalOwners?.change, cls: "neutral", stroke: "#2E66FF", link: "/admin/owners" },
-                            { title: "Total Tenants", value: s.totalTenants?.value || 0, change: s.totalTenants?.change, cls: "warning", stroke: "#FFA502", link: "/admin/tenants" },
-                            { title: "Total Leases", value: s.totalLeases?.value || 0, change: s.totalLeases?.change, cls: "info", stroke: "#5352ED", link: "/admin/leases" }
+                            { title: "Total Projects", value: s.totalProjects?.value || 0, change: s.totalProjects?.change, cls: s.totalProjects?.type || "neutral", stroke: "#2ED573", link: "/admin/projects" },
+                            { title: "Total Units", value: s.totalUnits?.value || 0, change: s.totalUnits?.change, cls: s.totalUnits?.type || "neutral", stroke: "#FF4757", link: "/admin/units" },
+                            { title: "Total Masters", value: s.totalMasters?.value || 0, change: s.totalMasters?.change, cls: s.totalMasters?.type || "neutral", stroke: "#2E66FF", link: "/admin/parties" },
+                            { title: "Active Ownerships", value: s.totalOwnerships?.value || 0, change: s.totalOwnerships?.change, cls: "neutral", stroke: "#FFA502", link: "/admin/ownership-mapping" },
+                            { title: "Total Leases", value: s.totalLeases?.value || 0, change: s.totalLeases?.change, cls: s.totalLeases?.type || "neutral", stroke: "#5352ED", link: "/admin/leases" }
                         ].map((item, idx) => (
                             <div className="stat-card clickable" key={idx} onClick={() => navigate(item.link)} style={{ cursor: 'pointer' }}>
                                 <h4>{item.title}</h4>
@@ -105,7 +105,7 @@ const Dashboard = () => {
                     <div className="area-card">
                         <div className="area-info">
                             <h4>Area Occupied</h4>
-                            <span className="sub-text">Average Rent Achieved: ₹{stats?.areaStats?.occupied?.avgRentPerSqft?.toFixed(2) || '0'} per sq ft</span>
+                            <span className="sub-text">Average Rent Achieved: ₹{Number(stats?.areaStats?.occupied?.avgRentPerSqft || 0).toFixed(2)} per sq ft</span>
                         </div>
                         <div className="area-metrics">
                             <span className="big-num">{stats?.areaStats?.occupied?.area?.toLocaleString() || '0'} sq ft</span>
@@ -117,7 +117,7 @@ const Dashboard = () => {
                     <div className="area-card">
                         <div className="area-info">
                             <h4>Area Vacant</h4>
-                            <span className="sub-text">Average Expected Rent: ₹{stats?.areaStats?.vacant?.avgRentPerSqft?.toFixed(2) || '0'} per sq ft</span>
+                            <span className="sub-text">Average Expected Rent: ₹{Number(stats?.areaStats?.vacant?.avgRentPerSqft || 0).toFixed(2)} per sq ft</span>
                         </div>
                         <div className="area-metrics">
                             <span className="big-num">{stats?.areaStats?.vacant?.area?.toLocaleString() || '0'} sq ft</span>
@@ -202,12 +202,12 @@ const Dashboard = () => {
                             {stats?.upcomingRenewals?.length > 0 ? stats.upcomingRenewals.map((item, idx) => (
                                 <div className="list-item" key={idx}>
                                     <div className="date-badge">
-                                        <span className="month">{new Date(item.date).toLocaleString('default', { month: 'short' })}</span>
-                                        <span className="day">{new Date(item.date).getDate()}</span>
+                                        <span className="month">{new Date(item.lease_end_date).toLocaleString('default', { month: 'short' })}</span>
+                                        <span className="day">{new Date(item.lease_end_date).getDate()}</span>
                                     </div>
                                     <div className="item-details">
-                                        <div className="primary-text">{item.unit} • {new Date(item.date).toLocaleDateString()}</div>
-                                        <div className="secondary-text">{item.tenant}</div>
+                                        <div className="primary-text">{item.unit_number} • {new Date(item.lease_end_date).toLocaleDateString()}</div>
+                                        <div className="secondary-text">{item.tenant_name}</div>
                                     </div>
                                     <span className={`status-pill ${item.badgeType}`}>
                                         {item.badge}
@@ -227,12 +227,12 @@ const Dashboard = () => {
                             {stats?.upcomingExpiries?.length > 0 ? stats.upcomingExpiries.map((item, idx) => (
                                 <div className="list-item" key={idx}>
                                     <div className="date-badge">
-                                        <span className="month">{new Date(item.date).toLocaleString('default', { month: 'short' })}</span>
-                                        <span className="day">{new Date(item.date).getDate()}</span>
+                                        <span className="month">{new Date(item.lease_end_date).toLocaleString('default', { month: 'short' })}</span>
+                                        <span className="day">{new Date(item.lease_end_date).getDate()}</span>
                                     </div>
                                     <div className="item-details">
-                                        <div className="primary-text">{item.unit} • {new Date(item.date).toLocaleDateString()}</div>
-                                        <div className="secondary-text">{item.tenant}</div>
+                                        <div className="primary-text">{item.unit_number} • {new Date(item.lease_end_date).toLocaleDateString()}</div>
+                                        <div className="secondary-text">{item.tenant_name}</div>
                                     </div>
                                     <span className={`status-pill ${item.badgeType}`}>
                                         {item.badge}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getProjectById, unitAPI, tenantAPI } from '../../services/api';
+import { getProjectById, unitAPI, tenantAPI, FILE_BASE_URL } from '../../services/api';
 import './ProjectDetails.css'; // We'll create this CSS file next
 
 const ProjectDetails = () => {
@@ -12,6 +12,7 @@ const ProjectDetails = () => {
     const [units, setUnits] = useState([]);
     const [tenants, setTenants] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [imageError, setImageError] = useState(false);
 
     /* ================= FETCH DATA ================= */
     useEffect(() => {
@@ -65,13 +66,26 @@ const ProjectDetails = () => {
     }
 
     /* ================= RENDER SUB-COMPONENTS ================= */
-
     const renderHomeTab = () => (
         <div className="tab-content-home">
             <div className="details-grid">
                 {/* General Info */}
                 <div className="detail-card">
                     <h3>General Information</h3>
+                    <div className="project-image-container">
+                        {project.project_image && !imageError ? (
+                            <img
+                                src={`${FILE_BASE_URL}/uploads/${project.project_image}`}
+                                alt={project.project_name}
+                                className="project-main-image"
+                                onError={() => setImageError(true)}
+                            />
+                        ) : (
+                            <div className="project-placeholder-image">
+                                {project.project_name ? project.project_name : "No Image Available"}
+                            </div>
+                        )}
+                    </div>
                     <div className="info-group">
                         <label>Project Name</label>
                         <div className="info-value">{project.project_name}</div>

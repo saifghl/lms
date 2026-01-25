@@ -261,14 +261,15 @@ module.exports = {
         "SELECT COUNT(*) as count FROM leases WHERE status IN ('draft', 'pending_approval')"
       );
 
-      // 3. Approved Today (leases approved today)
+      // 3. Approved Today (leases approved/active today)
+      // Note: Using created_at because updated_at column does not exist in schema
       const [approvedToday] = await pool.execute(
-        "SELECT COUNT(*) as count FROM leases WHERE status = 'approved' AND DATE(updated_at) = CURDATE()"
+        "SELECT COUNT(*) as count FROM leases WHERE status IN ('approved', 'active') AND DATE(created_at) = CURDATE()"
       );
 
       // 4. Rejected Today (leases rejected today)
       const [rejectedToday] = await pool.execute(
-        "SELECT COUNT(*) as count FROM leases WHERE status = 'rejected' AND DATE(updated_at) = CURDATE()"
+        "SELECT COUNT(*) as count FROM leases WHERE status = 'rejected' AND DATE(created_at) = CURDATE()"
       );
 
       res.json({

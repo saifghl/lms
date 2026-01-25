@@ -43,9 +43,78 @@ const AddUnit = () => {
         fetchProjects();
     }, []);
 
+    // State for the unit input suffix (e.g., "101")
+    const [unitSuffix, setUnitSuffix] = useState('');
+    const [rentPerSqft, setRentPerSqft] = useState('');
+
+    // State for validation errors
+    const [errors, setErrors] = useState({});
+
+    useEffect(() => {
+        const area = parseFloat(formData.super_area) || 0;
+        const rate = parseFloat(rentPerSqft) || 0;
+        const total = area * rate;
+
+        setFormData(prev => ({
+            ...prev,
+            projected_rent: total > 0 ? total.toString() : ''
+        }));
+    }, [formData.super_area, rentPerSqft]);
+
+    // Validation Effect
+    useEffect(() => {
+        const superArea = parseFloat(formData.super_area) || 0;
+        const coveredArea = parseFloat(formData.covered_area) || 0;
+        const carpetArea = parseFloat(formData.carpet_area) || 0;
+
+        const newErrors = {};
+
+        if (formData.covered_area && superArea > 0 && coveredArea >= superArea) {
+            newErrors.covered_area = "Must be less than Super Area";
+        }
+
+        if (formData.carpet_area && coveredArea > 0 && carpetArea >= coveredArea) {
+            newErrors.carpet_area = "Must be less than Covered Area";
+        } else if (formData.carpet_area && superArea > 0 && carpetArea >= superArea) {
+            // Fallback if covered area is missing but super area exists
+            newErrors.carpet_area = "Must be less than Super Area";
+        }
+
+        setErrors(newErrors);
+    }, [formData.super_area, formData.covered_area, formData.carpet_area]);
+
+    // Generic handler for most fields
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Specific handler for Floor Selection
+    const handleFloorChange = (e) => {
+        const newFloor = e.target.value;
+        const currentSuffix = unitSuffix;
+
+        // Update floor and combine logic
+        setFormData(prev => ({
+            ...prev,
+            floor_number: newFloor,
+            unit_number: newFloor && currentSuffix ? `${newFloor}-${currentSuffix}` : ''
+        }));
+    };
+
+    // Specific handler for Unit Suffix Input
+    const handleUnitSuffixChange = (e) => {
+        const newSuffix = e.target.value;
+        setUnitSuffix(newSuffix);
+
+        // Combine logic using current floor state
+        setFormData(prev => {
+            const currentFloor = prev.floor_number;
+            return {
+                ...prev,
+                unit_number: currentFloor && newSuffix ? `${currentFloor}-${newSuffix}` : ''
+            };
+        });
     };
 
     const handleImageChange = (e) => {
@@ -63,6 +132,12 @@ const AddUnit = () => {
 
         if (!formData.project_id) {
             setSubmitMessage("Please select a project.");
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (Object.keys(errors).length > 0) {
+            setSubmitMessage("Please fix validation errors before submitting.");
             setIsSubmitting(false);
             return;
         }
@@ -123,25 +198,33 @@ const AddUnit = () => {
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Unit Number</label>
+                                        <label>Floor Number</label>
+                                        <div className="select-wrapper">
+                                            <select
+                                                name="floor_number"
+                                                value={formData.floor_number}
+                                                onChange={handleFloorChange}
+                                                required
+                                            >
+                                                <option value="">Select Floor</option>
+                                                {['GF', 'FF', 'SF', 'TF', '4F', '5F', '6F', '7F', '8F', '9F', '10F'].map(f => (
+                                                    <option key={f} value={f}>{f}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Unit Number (Suffix)</label>
                                         <input
                                             type="text"
-                                            name="unit_number"
-                                            value={formData.unit_number}
-                                            onChange={handleChange}
+                                            value={unitSuffix}
+                                            onChange={handleUnitSuffixChange}
                                             placeholder="e.g., 101"
                                             required
                                         />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Floor Number</label>
-                                        <input
-                                            type="text"
-                                            name="floor_number"
-                                            value={formData.floor_number}
-                                            onChange={handleChange}
-                                            placeholder="e.g., 5"
-                                        />
+                                        <small style={{ display: 'block', marginTop: '5px', color: 'gray' }}>
+                                            Final Unit No: <strong>{formData.unit_number || '...'}</strong>
+                                        </small>
                                     </div>
                                 </div>
                             </section>
@@ -152,15 +235,34 @@ const AddUnit = () => {
                                 <div className="form-row three-cols">
                                     <div className="form-group">
                                         <label>Super Area (sq ft)</label>
-                                        <input type="text" name="super_area" value={formData.super_area} onChange={handleChange} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Carpet Area (sq ft)</label>
-                                        <input type="text" name="carpet_area" value={formData.carpet_area} onChange={handleChange} />
+                                        <input
+                                            type="number"
+                                            name="super_area"
+                                            value={formData.super_area}
+                                            onChange={handleChange}
+                                        />
                                     </div>
                                     <div className="form-group">
                                         <label>Covered Area (sq ft)</label>
-                                        <input type="text" name="covered_area" value={formData.covered_area} onChange={handleChange} />
+                                        <input
+                                            type="number"
+                                            name="covered_area"
+                                            value={formData.covered_area}
+                                            onChange={handleChange}
+                                            style={{ borderColor: errors.covered_area ? 'red' : undefined }}
+                                        />
+                                        {errors.covered_area && <span style={{ color: 'red', fontSize: '12px' }}>{errors.covered_area}</span>}
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Carpet Area (sq ft)</label>
+                                        <input
+                                            type="number"
+                                            name="carpet_area"
+                                            value={formData.carpet_area}
+                                            onChange={handleChange}
+                                            style={{ borderColor: errors.carpet_area ? 'red' : undefined }}
+                                        />
+                                        {errors.carpet_area && <span style={{ color: 'red', fontSize: '12px' }}>{errors.carpet_area}</span>}
                                     </div>
                                 </div>
 
@@ -195,10 +297,30 @@ const AddUnit = () => {
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Projected Rent (₹/month)</label>
+                                        <label>Rent Per Sq. Ft</label>
                                         <div className="input-with-suffix">
-                                            <input type="text" name="projected_rent" value={formData.projected_rent} onChange={handleChange} />
-                                            <span className="suffix">INR</span>
+                                            <input
+                                                type="number"
+                                                value={rentPerSqft}
+                                                onChange={(e) => setRentPerSqft(e.target.value)}
+                                                placeholder="e.g. 50"
+                                            />
+                                            <span className="suffix">₹/sqft</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Projected Rent (Total)</label>
+                                        <div className="input-with-suffix">
+                                            <input
+                                                type="text"
+                                                name="projected_rent"
+                                                value={formData.projected_rent}
+                                                readOnly
+                                                placeholder="Calculated automatically"
+                                                style={{ backgroundColor: '#f9fafb' }}
+                                            />
+                                            <span className="suffix">INR/mo</span>
                                         </div>
                                     </div>
                                 </div>

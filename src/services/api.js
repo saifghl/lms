@@ -12,7 +12,7 @@ const getBaseUrl = () => {
   return url.endsWith('/') ? url.slice(0, -1) : url;
 };
 
-export const FILE_BASE_URL = getBaseUrl();
+export const FILE_BASE_URL = getBaseUrl().replace('/api', '');
 
 const API = axios.create({
   baseURL: getBaseUrl(),
@@ -207,6 +207,23 @@ export const leaseAPI = {
   deleteAllNotifications: () =>
     API.delete("/leases/notifications"),
   getLeaseManagerStats: () => API.get("/leases/manager-stats"), // Fixed endpoint to match controller
+};
+
+// ---------------- PARTIES (NEW) ----------------
+export const partyAPI = {
+  getAllParties: (params) => API.get("/parties", { params }),
+  getPartyById: (id) => API.get(`/parties/${id}`),
+  createParty: (data) => API.post("/parties", data),
+  updateParty: (id, data) => API.put(`/parties/${id}`, data),
+  deleteParty: (id) => API.delete(`/parties/${id}`),
+};
+
+// ---------------- OWNERSHIP (NEW) ----------------
+export const ownershipAPI = {
+  assignOwner: (data) => API.post("/ownerships/assign", data),
+  removeOwner: (data) => API.post("/ownerships/remove", data),
+  getOwnersByUnit: (unitId) => API.get(`/ownerships/unit/${unitId}`),
+  getUnitsByParty: (partyId) => API.get(`/ownerships/party/${partyId}`),
 };
 
 // Backward compatibility

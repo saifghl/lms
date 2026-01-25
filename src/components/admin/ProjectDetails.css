@@ -8,7 +8,8 @@
 .main-content {
     flex: 1;
     padding: 24px 32px;
-    margin-left: 250px; /* Sidebar width */
+    margin-left: 250px;
+    /* Sidebar width */
     width: calc(100% - 250px);
 }
 
@@ -58,7 +59,8 @@
     text-transform: capitalize;
 }
 
-.status-badge.active, .status-badge.Active {
+.status-badge.active,
+.status-badge.Active {
     background-color: #dcfce7;
     color: #166534;
 }
@@ -75,7 +77,8 @@
     gap: 12px;
 }
 
-.primary-btn, .secondary-btn {
+.primary-btn,
+.secondary-btn {
     padding: 10px 20px;
     border-radius: 8px;
     font-weight: 500;
@@ -117,7 +120,7 @@
     background: white;
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border: 1px solid #e2e8f0;
 }
 
@@ -159,7 +162,7 @@
 .tabs-container {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border: 1px solid #e2e8f0;
     overflow: hidden;
 }
@@ -202,7 +205,8 @@
 }
 
 .tab-body {
-    padding: 0; /* Let children handle padding or be full-width */
+    padding: 0;
+    /* Let children handle padding or be full-width */
 }
 
 /* Home Tab */
@@ -217,7 +221,8 @@
 }
 
 .detail-card {
-    background: white; /* Nested card style if needed, generally implicit */
+    background: white;
+    /* Nested card style if needed, generally implicit */
 }
 
 .detail-card h3 {
@@ -250,6 +255,32 @@
 .info-value.description {
     line-height: 1.6;
     color: #334155;
+}
+
+.project-main-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Added Placeholder Style */
+.project-placeholder-image {
+    width: 100%;
+    height: 250px;
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-weight: 500;
+    text-align: center;
+    padding: 20px;
 }
 
 .row {
@@ -301,7 +332,8 @@
     border-collapse: collapse;
 }
 
-.data-table th, .data-table td {
+.data-table th,
+.data-table td {
     padding: 14px 24px;
     text-align: left;
     border-bottom: 1px solid #f1f5f9;
@@ -342,17 +374,17 @@
         width: 100%;
         padding: 16px;
     }
-    
+
     .details-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .page-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
     }
-    
+
     .header-actions {
         width: 100%;
         justify-content: space-between;

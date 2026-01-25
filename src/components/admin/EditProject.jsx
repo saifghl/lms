@@ -26,7 +26,17 @@ const EditProject = () => {
     const fetchProject = async () => {
       try {
         const res = await getProjectById(id);
-        setFormData(res.data);
+        const data = res.data.data || res.data;
+        setFormData({
+          project_name: data.project_name || "",
+          location: data.location || "",
+          address: data.address || "",
+          project_type: data.project_type || "Residential",
+          total_floors: data.total_floors || "",
+          total_project_area: data.total_project_area || "",
+          description: data.description || "",
+          status: data.status || "active"
+        });
       } catch (error) {
         console.error("Error fetching project:", error);
       }
@@ -102,9 +112,9 @@ const EditProject = () => {
                   <div className="form-group vertical">
                     <label>Project Type</label>
                     <select name="project_type" value={formData.project_type} onChange={handleChange}>
-                      <option value="Residential">Residential</option>
+                      <option value="Retail">Retail</option>
                       <option value="Commercial">Commercial</option>
-                      <option value="Mixed">Mixed Use</option>
+                      <option value="Mixed Use">Mixed Use</option>
                     </select>
                   </div>
                 </div>

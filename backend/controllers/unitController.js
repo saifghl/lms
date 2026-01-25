@@ -117,6 +117,18 @@ const createUnit = async (req, res) => {
             }
         }
 
+        /* --------- UPDATE PROJECT TOTAL AREA --------- */
+        await conn.query(
+            `UPDATE projects 
+             SET total_project_area = (
+                SELECT COALESCE(SUM(super_area), 0) 
+                FROM units 
+                WHERE project_id = ?
+             ) 
+             WHERE id = ?`,
+            [project_id, project_id]
+        );
+
         await conn.commit();
 
         res.status(201).json({
@@ -179,6 +191,23 @@ const updateUnit = async (req, res) => {
             return res.status(404).json({ message: "Unit not found" });
         }
 
+        /* --------- UPDATE PROJECT TOTAL AREA --------- */
+        // Get project_id for this unit
+        const [unitRows] = await pool.query("SELECT project_id FROM units WHERE id = ?", [id]);
+        if (unitRows.length > 0) {
+            const projectId = unitRows[0].project_id;
+            await pool.query(
+                `UPDATE projects 
+                 SET total_project_area = (
+                    SELECT COALESCE(SUM(super_area), 0) 
+                    FROM units 
+                    WHERE project_id = ?
+                 ) 
+                 WHERE id = ?`,
+                [projectId, projectId]
+            );
+        }
+
         res.json({ message: "Unit updated successfully" });
     } catch (err) {
         console.error("Update unit error:", err);
@@ -230,7 +259,27 @@ const getUnitById = async (req, res) => {
 const deleteUnit = async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Get project_id before deletion
+        const [unitRows] = await pool.query("SELECT project_id FROM units WHERE id = ?", [id]);
+
         await pool.query("DELETE FROM units WHERE id = ?", [id]);
+
+        if (unitRows.length > 0) {
+            const projectId = unitRows[0].project_id;
+            // Update project total area
+            await pool.query(
+                `UPDATE projects 
+                 SET total_project_area = (
+                    SELECT COALESCE(SUM(super_area), 0) 
+                    FROM units 
+                    WHERE project_id = ?
+                 ) 
+                 WHERE id = ?`,
+                [projectId, projectId]
+            );
+        }
+
         res.json({ message: "Unit Deleted Successfully" });
     } catch (error) {
         console.error("Delete unit error:", error);

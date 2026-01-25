@@ -19,6 +19,8 @@ const unitRoutes = require("./routes/unitRoutes");
 const userRoutes = require("./routes/userRoutes"); // New Route
 
 const roleRoutes = require("./routes/roleRoutes");
+const partyRoutes = require("./routes/partyRoutes");
+const ownershipRoutes = require("./routes/ownershipRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -69,6 +71,8 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/activity", activityLogRoutes);
 app.use("/api/roles", roleRoutes); // Mounted Route
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/parties", partyRoutes);
+app.use("/api/ownerships", ownershipRoutes);
 
 /* =========================
    HEALTH CHECK (RENDER)

@@ -7,10 +7,10 @@ import './DataEntryDashboard.css';
 const DataEntryDashboard = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState({
-        pendingProjects: 12,
-        pendingApprovals: 8,
-        approvedToday: 15,
-        rejectedToday: 2
+        pendingProjects: 0,
+        pendingApprovals: 0,
+        approvedToday: 0,
+        rejectedToday: 0
     });
     const [recentActivity, setRecentActivity] = useState([]);
     // eslint-disable-next-line no-unused-vars

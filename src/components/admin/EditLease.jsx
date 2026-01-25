@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { leaseAPI, getProjects, unitAPI, tenantAPI, ownerAPI } from '../../services/api';
+import { leaseAPI, getProjects, unitAPI, partyAPI } from '../../services/api';
 import './EditLease.css';
 import './dashboard.css';
 
@@ -16,8 +16,10 @@ const EditLease = () => {
     const [formData, setFormData] = useState({
         project: '',
         unit: '',
-        tenant: '',
-        owner: '',
+        tenant: '', // Keep for UI, but will store party_tenant_id
+        owner: '',  // Keep for UI, but will store party_owner_id
+        party_owner_id: '',
+        party_tenant_id: '',
         startDate: '',
         endDate: '',
         rentCommencementDate: '',
@@ -43,23 +45,20 @@ const EditLease = () => {
     // Dropdown Data
     const [projects, setProjects] = useState([]);
     const [units, setUnits] = useState([]);
-    const [tenants, setTenants] = useState([]);
-    const [owners, setOwners] = useState([]);
+    const [parties, setParties] = useState([]);
 
     useEffect(() => {
         const loadInitialData = async () => {
             try {
                 // Load Dropdown Data
-                const [projRes, unitRes, tenantRes, ownerRes] = await Promise.all([
+                const [projRes, unitRes, partyRes] = await Promise.all([
                     getProjects(),
                     unitAPI.getUnits(),
-                    tenantAPI.getTenants(),
-                    ownerAPI.getOwners()
+                    partyAPI.getAllParties()
                 ]);
                 setProjects(projRes.data?.data || []);
                 setUnits(unitRes.data?.data || []);
-                setTenants(tenantRes.data || []);
-                setOwners(ownerRes.data || []);
+                setParties(partyRes.data || []);
 
             } catch (err) {
                 console.error("Error loading dropdown data:", err);
@@ -82,8 +81,10 @@ const EditLease = () => {
                     // Let's assume data comes with standard fields.
                     project: data.project_id || '',
                     unit: data.unit_id || '',
-                    tenant: data.tenant_id || '',
-                    owner: data.owner_id || '',
+                    party_owner_id: data.party_owner_id || '',
+                    party_tenant_id: data.party_tenant_id || '',
+                    owner: data.party_owner_id || '',
+                    tenant: data.party_tenant_id || '',
                     startDate: data.lease_start ? data.lease_start.substring(0, 10) : '',
                     endDate: data.lease_end ? data.lease_end.substring(0, 10) : '',
                     rentCommencementDate: data.rent_commencement_date ? data.rent_commencement_date.substring(0, 10) : '',
@@ -179,19 +180,23 @@ const EditLease = () => {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Tenant</label>
-                                <select name="tenant" value={formData.tenant} onChange={handleChange}>
+                                <select name="party_tenant_id" value={formData.party_tenant_id} onChange={handleChange}>
                                     <option value="" disabled>Select Tenant</option>
-                                    {tenants.map(t => (
-                                        <option key={t.id} value={t.id}>{t.full_name}</option>
+                                    {parties.map(p => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.company_name || `${p.first_name} ${p.last_name}`}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label>Owner (Landlord)</label>
-                                <select name="owner" value={formData.owner} onChange={handleChange}>
+                                <select name="party_owner_id" value={formData.party_owner_id} onChange={handleChange}>
                                     <option value="" disabled>Select Owner</option>
-                                    {owners.map(o => (
-                                        <option key={o.id} value={o.id}>{o.full_name}</option>
+                                    {parties.map(p => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.company_name || `${p.first_name} ${p.last_name}`}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -402,8 +407,8 @@ const EditLease = () => {
                                     const payload = {
                                         project_id: formData.project,
                                         unit_id: formData.unit,
-                                        tenant_id: formData.tenant,
-                                        owner_id: formData.owner,
+                                        party_tenant_id: formData.party_tenant_id,
+                                        party_owner_id: formData.party_owner_id,
                                         lease_start: formData.startDate,
                                         lease_end: formData.endDate,
                                         rent_commencement_date: formData.rentCommencementDate,

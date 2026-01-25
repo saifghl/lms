@@ -1,31 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import Step1BasicDetails from './lease-creation/Step1BasicDetails';
+import Step2RentConfig from './lease-creation/Step2RentConfig';
+import Step3Finalize from './lease-creation/Step3Finalize';
+import { leaseAPI, getProjects, unitAPI, partyAPI, ownershipAPI } from '../../services/api';
 import './AddLease.css';
-import './dashboard.css'; // Ensure dashboard styles are available
-import { leaseAPI, getProjects, unitAPI, tenantAPI, ownerAPI } from '../../services/api';
+import './dashboard.css';
 
 const AddLease = () => {
     const navigate = useNavigate();
-    const [rentModel, setRentModel] = useState('Fixed'); // 'Fixed' | 'RevenueShare'
+    const [currentStep, setCurrentStep] = useState(1);
+    const [rentModel, setRentModel] = useState('Fixed'); // 'Fixed' | 'RevenueShare' | 'Hybrid'
     const [isSubLease, setIsSubLease] = useState(false);
-    const [escalationSteps, setEscalationSteps] = useState([
-        { effectiveDate: '', increaseType: 'Percentage', value: '' }
-    ]);
 
-    // Data for dropdowns
+    // Data States
     const [projects, setProjects] = useState([]);
     const [units, setUnits] = useState([]);
-    const [tenants, setTenants] = useState([]);
-    const [owners, setOwners] = useState([]);
-    const [subTenants, setSubTenants] = useState([]);
+    const [parties, setParties] = useState([]);
+    const [activeOwner, setActiveOwner] = useState(null);
 
-    // Form state
+    // Form State
     const [formData, setFormData] = useState({
         project_id: '',
         unit_id: '',
-        owner_id: '',
-        tenant_id: '',
+        party_owner_id: '',
+        party_tenant_id: '',
         sub_tenant_id: '',
         sub_lease_area_sqft: '',
         lease_start: '',
@@ -35,6 +35,7 @@ const AddLease = () => {
         lockin_period_months: 12,
         notice_period_months: 3,
         monthly_rent: '',
+        minimum_guarantee: '', // For Hybrid
         cam_charges: '',
         billing_frequency: 'Monthly',
         payment_due_day: '1st of Month',
@@ -46,19 +47,22 @@ const AddLease = () => {
         revenue_share_applicable_on: 'Net Sales'
     });
 
-    // Fetch data on mount
+    const [escalationSteps, setEscalationSteps] = useState([
+        { effectiveDate: '', increaseType: 'Percentage (%)', value: '' }
+    ]);
+
+    const [submitMessage, setSubmitMessage] = useState('');
+
+    // Fetch Initial Data
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [projectsRes, tenantsRes, ownersRes] = await Promise.all([
+                const [projectsRes, partiesRes] = await Promise.all([
                     getProjects(),
-                    tenantAPI.getTenants(),
-                    ownerAPI.getOwners()
+                    partyAPI.getAllParties()
                 ]);
-
                 setProjects(projectsRes.data?.data || []);
-                setTenants(tenantsRes.data || []);
-                setOwners(ownersRes.data || []);
+                setParties(partiesRes.data || []);
             } catch (err) {
                 console.error('Failed to fetch data:', err);
                 alert('Error loading form data');
@@ -67,111 +71,82 @@ const AddLease = () => {
         fetchData();
     }, []);
 
-    // Fetch units when project is selected
+    // Handle Unit Logic
+    const handleUnitChange = async (val) => {
+        const unitId = parseInt(val);
+        setFormData(prev => ({ ...prev, unit_id: val }));
+
+        try {
+            const res = await ownershipAPI.getOwnersByUnit(unitId);
+            const owners = res.data || [];
+            const active = owners.find(o => o.ownership_status === 'Active');
+
+            if (active) {
+                setActiveOwner(active);
+                setFormData(prev => ({ ...prev, unit_id: val, party_owner_id: active.party_id }));
+            } else {
+                setActiveOwner(null);
+                setFormData(prev => ({ ...prev, unit_id: val, party_owner_id: '' }));
+            }
+        } catch (e) {
+            console.error("Failed to fetch unit owner", e);
+        }
+    };
+
+    // Load units when project changes
     useEffect(() => {
         if (formData.project_id) {
             const fetchUnits = async () => {
                 try {
                     const res = await unitAPI.getUnitsByProject(formData.project_id);
-                    const allUnits = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-                    setUnits(allUnits);
-
-                    // Auto-select if only 1 unit exists
-                    if (allUnits.length === 1) {
-                        handleUnitChange(allUnits[0].id);
-                    }
-                } catch (err) {
-                    console.error('Failed to fetch units:', err);
-                }
+                    setUnits(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+                } catch (e) { console.error(e); }
             };
             fetchUnits();
         } else {
             setUnits([]);
-            setFormData(prev => ({ ...prev, unit_id: '' })); // Reset unit if project changes
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData.project_id]);
-    // Fetch sub-tenants when tenant is selected
-    useEffect(() => {
-        if (formData.tenant_id && isSubLease) {
-            const fetchSubTenants = async () => {
-                try {
-                    const res = await tenantAPI.getTenantById(formData.tenant_id);
-                    setSubTenants(res.data?.subtenants || []);
-                } catch (err) {
-                    console.error('Failed to fetch sub-tenants:', err);
-                }
-            };
-            fetchSubTenants();
-        } else {
-            setSubTenants([]);
-        }
-    }, [formData.tenant_id, isSubLease]);
 
-    const handleLeaseTypeChange = (e) => {
-        const isSub = e.target.value === 'sub_lease';
-        setIsSubLease(isSub);
-        if (isSub) {
-            setRentModel('Fixed'); // Sublease is always fixed rent per requirement
-        }
-        setFormData(prev => ({
-            ...prev,
-            owner_id: isSub ? '' : prev.owner_id,
-            sub_tenant_id: isSub ? '' : ''
-        }));
-    };
 
-    const handleUnitChange = (val) => {
-        const unitId = parseInt(val);
-        setFormData(prev => ({ ...prev, unit_id: val }));
-
-        // Auto-select owner if unit has one
-        const selectedUnit = units.find(u => u.id === unitId);
-
-        if (selectedUnit && selectedUnit.owner_id && !isSubLease) {
-            // Check if owner exists in owners list
-            const ownerExists = owners.find(o => o.id === selectedUnit.owner_id);
-            if (ownerExists) {
-                setFormData(prev => ({ ...prev, unit_id: val, owner_id: selectedUnit.owner_id }));
-            } else {
-                // In case owner list missing this owner (unlikely unless inactive)
-                console.warn("Owner for unit not found in owners list:", selectedUnit.owner_id);
-            }
-        }
-    };
-
-    const handleInputChange = (field, value) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    const [submitMessage, setSubmitMessage] = useState('');
-
-    const handleSubmit = async () => {
-        setSubmitMessage('');
-        try {
-            // Validate required fields
-            if (!formData.project_id || !formData.unit_id || !formData.tenant_id ||
-                !formData.lease_start || !formData.lease_end || !formData.rent_commencement_date) {
-                alert('Please fill in all required fields');
+    // Validation & Navigation
+    const nextStep = () => {
+        if (currentStep === 1) {
+            if (!formData.project_id || !formData.unit_id || (!isSubLease && !formData.party_tenant_id)) {
+                alert("Please fill all required fields.");
                 return;
             }
-
-            if (!isSubLease && !formData.owner_id) {
-                alert('Owner is required for Direct lease');
+            if (!isSubLease && !formData.party_owner_id) {
+                alert("Selected Unit has no active Owner. Cannot proceed.");
                 return;
             }
-
             if (isSubLease && (!formData.sub_tenant_id || !formData.sub_lease_area_sqft)) {
-                alert('Sub-tenant and Sub-lease area are required for Sub lease');
+                alert("Sub-tenant and Area are required.");
                 return;
             }
+            if (parseInt(formData.party_owner_id) === parseInt(formData.party_tenant_id)) {
+                alert("Owner and Tenant cannot be the same.");
+                return;
+            }
+        }
+        setCurrentStep(prev => prev + 1);
+    };
 
-            // Calculate tenure
-            const startDate = new Date(formData.lease_start);
-            const endDate = new Date(formData.lease_end);
-            const tenureMonths = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
+    const prevStep = () => setCurrentStep(prev => prev - 1);
 
-            // Prepare escalations
+    // Helpers for Escalations
+    const addEscalationStep = () => {
+        setEscalationSteps([...escalationSteps, { effectiveDate: '', increaseType: 'Percentage (%)', value: '' }]);
+    };
+
+    const removeEscalationStep = (index) => {
+        setEscalationSteps(escalationSteps.filter((_, i) => i !== index));
+    };
+
+    // Final Submit
+    const handleSubmit = async () => {
+        try {
+            // Transform Data
             const escalations = escalationSteps
                 .filter(step => step.effectiveDate && step.value)
                 .map(step => ({
@@ -180,11 +155,16 @@ const AddLease = () => {
                     value: parseFloat(step.value)
                 }));
 
+            // Calculate tenure
+            const startDate = new Date(formData.lease_start);
+            const endDate = new Date(formData.lease_end);
+            const tenureMonths = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
+
             const payload = {
                 project_id: parseInt(formData.project_id),
                 unit_id: parseInt(formData.unit_id),
-                owner_id: isSubLease ? null : parseInt(formData.owner_id),
-                tenant_id: parseInt(formData.tenant_id),
+                party_owner_id: isSubLease ? null : parseInt(formData.party_owner_id),
+                party_tenant_id: parseInt(formData.party_tenant_id),
                 sub_tenant_id: isSubLease ? parseInt(formData.sub_tenant_id) : null,
                 lease_type: isSubLease ? 'Subtenant lease' : 'Direct lease',
                 rent_model: rentModel,
@@ -204,28 +184,28 @@ const AddLease = () => {
                 security_deposit: parseFloat(formData.security_deposit) || 0,
                 utility_deposit: parseFloat(formData.utility_deposit) || 0,
                 deposit_type: formData.deposit_type,
-                revenue_share_percentage: rentModel === 'RevenueShare' ? (parseFloat(formData.revenue_share_percentage) || 0) : null,
-                revenue_share_applicable_on: rentModel === 'RevenueShare' ? formData.revenue_share_applicable_on : null,
+                // Hybrid Logic: Pass both logic if needed, or adjust backend to accept minimum_guarantee
+                vehicle_parking_slots: 0, // Default placeholders
+
+                // Revenue Share Logic
+                revenue_share_percentage: (rentModel === 'RevenueShare' || rentModel === 'Hybrid') ? (parseFloat(formData.revenue_share_percentage) || 0) : null,
+                revenue_share_applicable_on: (rentModel === 'RevenueShare' || rentModel === 'Hybrid') ? formData.revenue_share_applicable_on : null,
+
                 escalations: escalations
             };
 
+            // NOTE: Hybrid model might need backend schema update for 'minimum_guarantee' or separate field. 
+            // For now mapping MGR to monthly_rent as confirmed in standard practice if not separate.
+
+            console.log("Submitting Lease Payload:", payload);
             await leaseAPI.createLease(payload);
-            setSubmitMessage('Lease created successfully');
+            setSubmitMessage('Lease created successfully!');
             setTimeout(() => navigate('/admin/leases'), 2000);
-        } catch (err) {
-            console.error(err);
-            const msg = err.response?.data?.message || err.message;
-            alert(msg || 'Failed to create lease');
+
+        } catch (error) {
+            console.error(error);
+            alert("Failed to create lease: " + (error.response?.data?.message || error.message));
         }
-    };
-
-    const addEscalationStep = () => {
-        setEscalationSteps([...escalationSteps, { effectiveDate: '', increaseType: 'Percentage (%)', value: '' }]);
-    };
-
-    const removeEscalationStep = (index) => {
-        const newSteps = escalationSteps.filter((_, i) => i !== index);
-        setEscalationSteps(newSteps);
     };
 
     return (
@@ -233,449 +213,80 @@ const AddLease = () => {
             <Sidebar />
             <main className="main-content">
                 <header className="page-header">
-                    <div className="header-left">
-                        <div className="breadcrumb">
-                            <Link to="/admin/dashboard" className="text-muted">HOME</Link> &gt;
-                            <Link to="/admin/leases" className="text-muted"> LEASES</Link> &gt;
-                            <span className="active"> ADD NEW</span>
-                        </div>
-                        <h1>Add New Lease</h1>
-                        <p>Create a new lease agreement, map unit to tenant, and set financial terms.</p>
+                    <div className="breadcrumb">
+                        <Link to="/admin/dashboard">HOME</Link> &gt; <Link to="/admin/leases">LEASES</Link> &gt; <span className="active">ADD NEW</span>
                     </div>
+                    <h1>Add New Lease</h1>
+                    <p>Step {currentStep} of 3: {currentStep === 1 ? 'Basic Details' : currentStep === 2 ? 'Rent Configuration' : 'Finalization'}</p>
                 </header>
 
-                <div className="form-layout">
-                    {/* Section: Lease Type Selection */}
-                    <div className="form-section">
-                        <h3>Lease Configuration</h3>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Lease Type</label>
-                                <div className="radio-group" style={{ display: 'flex', gap: '20px', marginTop: '8px' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                        <input
-                                            type="radio"
-                                            name="leaseType"
-                                            value="direct"
-                                            checked={!isSubLease}
-                                            onChange={handleLeaseTypeChange}
-                                        />
-                                        Direct Lease
-                                    </label>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                        <input
-                                            type="radio"
-                                            name="leaseType"
-                                            value="sub_lease"
-                                            checked={isSubLease}
-                                            onChange={handleLeaseTypeChange}
-                                        />
-                                        Sub Lease
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="form-group" style={{ opacity: isSubLease ? 0.5 : 1, pointerEvents: isSubLease ? 'none' : 'auto' }}>
-                                <label>Rent Model</label>
-                                <div className="radio-group" style={{ display: 'flex', gap: '20px', marginTop: '8px' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                        <input
-                                            type="radio"
-                                            name="rentModel"
-                                            value="fixed"
-                                            checked={rentModel === 'fixed'}
-                                            onChange={(e) => setRentModel(e.target.value)}
-                                        />
-                                        Fixed Rent
-                                    </label>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                        <input
-                                            type="radio"
-                                            name="rentModel"
-                                            value="revenue_share"
-                                            checked={rentModel === 'revenue_share'}
-                                            onChange={(e) => setRentModel(e.target.value)}
-                                        />
-                                        Revenue Share
-                                    </label>
-                                </div>
-                                {isSubLease && <small style={{ color: '#e53e3e' }}>Sublease supports Fixed Rent only.</small>}
-                            </div>
-                        </div>
+                <div className="form-layout wizard-container">
+                    {/* Stepper UI */}
+                    <div className="stepper">
+                        <div className={`step ${currentStep >= 1 ? 'completed' : ''}`}>1. Basics</div>
+                        <div className="line"></div>
+                        <div className={`step ${currentStep >= 2 ? 'completed' : ''}`}>2. Rent</div>
+                        <div className="line"></div>
+                        <div className={`step ${currentStep >= 3 ? 'completed' : ''}`}>3. Terms</div>
                     </div>
 
-                    {/* Section 1: Property & Parties */}
-                    <div className="form-section">
-                        <h3>Property & Parties</h3>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Project *</label>
-                                <select
-                                    value={formData.project_id}
-                                    onChange={(e) => handleInputChange('project_id', e.target.value)}
-                                >
-                                    <option value="">Select Project</option>
-                                    {projects.map(project => (
-                                        <option key={project.id} value={project.id}>
-                                            {project.project_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Unit *</label>
-                                <select
-                                    value={formData.unit_id}
-                                    onChange={(e) => handleUnitChange(e.target.value)}
-                                    disabled={!formData.project_id}
-                                >
-                                    <option value="">Select Unit</option>
-                                    {units.map(unit => (
-                                        <option key={unit.id} value={unit.id}>
-                                            {unit.unit_number} - {unit.super_area} sqft {unit.status !== 'vacant' ? `(${unit.status})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>{isSubLease ? 'Sub Tenant *' : 'Tenant *'}</label>
-                                {isSubLease ? (
-                                    <select
-                                        value={formData.sub_tenant_id}
-                                        onChange={(e) => handleInputChange('sub_tenant_id', e.target.value)}
-                                        disabled={!formData.tenant_id}
-                                    >
-                                        <option value="">Select Sub Tenant</option>
-                                        {subTenants.map(st => (
-                                            <option key={st.id} value={st.id}>
-                                                {st.company_name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    <select
-                                        value={formData.tenant_id}
-                                        onChange={(e) => handleInputChange('tenant_id', e.target.value)}
-                                    >
-                                        <option value="">Select Tenant</option>
-                                        {tenants.map(tenant => (
-                                            <option key={tenant.id} value={tenant.id}>
-                                                {tenant.company_name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                )}
-                            </div>
-                            <div className="form-group">
-                                <label>{isSubLease ? 'Tenant (Lessor) *' : 'Owner (Landlord) *'}</label>
-                                {isSubLease ? (
-                                    <select
-                                        value={formData.tenant_id}
-                                        onChange={(e) => handleInputChange('tenant_id', e.target.value)}
-                                    >
-                                        <option value="">Select Tenant</option>
-                                        {tenants.map(tenant => (
-                                            <option key={tenant.id} value={tenant.id}>
-                                                {tenant.company_name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    <select
-                                        value={formData.owner_id}
-                                        onChange={(e) => handleInputChange('owner_id', e.target.value)}
-                                    >
-                                        <option value="">Select Owner</option>
-                                        {owners.map(owner => (
-                                            <option key={owner.id} value={owner.id}>
-                                                {owner.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                )}
-                            </div>
-                        </div>
-                        {isSubLease && (
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Sub Lease Area (sq ft) *</label>
-                                    <input
-                                        type="number"
-                                        placeholder="e.g. 500"
-                                        value={formData.sub_lease_area_sqft}
-                                        onChange={(e) => handleInputChange('sub_lease_area_sqft', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    {/* Steps Rendering */}
+                    {currentStep === 1 && (
+                        <Step1BasicDetails
+                            formData={formData}
+                            setFormData={setFormData}
+                            projects={projects}
+                            units={units}
+                            parties={parties}
+                            handleUnitChange={handleUnitChange}
+                            activeOwner={activeOwner}
+                            rentModel={rentModel}
+                            setRentModel={setRentModel}
+                            isSubLease={isSubLease}
+                            setIsSubLease={setIsSubLease}
+                        />
+                    )}
 
-                    {/* Section 2: Lease Period & Lockin */}
-                    <div className="form-section">
-                        <h3>Lease Period & Lockin</h3>
-                        <div className="form-row date-row">
-                            <div className="form-group">
-                                <label>Lease Start Date *</label>
-                                <input
-                                    type="date"
-                                    value={formData.lease_start}
-                                    onChange={(e) => handleInputChange('lease_start', e.target.value)}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Lease End Date *</label>
-                                <input
-                                    type="date"
-                                    value={formData.lease_end}
-                                    onChange={(e) => handleInputChange('lease_end', e.target.value)}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Rent Commencement Date *</label>
-                                <input
-                                    type="date"
-                                    value={formData.rent_commencement_date}
-                                    onChange={(e) => handleInputChange('rent_commencement_date', e.target.value)}
-                                />
-                                <small style={{ color: '#718096', fontSize: '0.8rem' }}>Fit-out period ends</small>
-                            </div>
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Fit-out Period End</label>
-                                <input
-                                    type="date"
-                                    value={formData.fitout_period_end}
-                                    onChange={(e) => handleInputChange('fitout_period_end', e.target.value)}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Lockin Period (Months)</label>
-                                <input
-                                    type="number"
-                                    placeholder="e.g. 12"
-                                    value={formData.lockin_period_months}
-                                    onChange={(e) => handleInputChange('lockin_period_months', e.target.value)}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Notice Period (Months)</label>
-                                <input
-                                    type="number"
-                                    placeholder="e.g. 3"
-                                    value={formData.notice_period_months}
-                                    onChange={(e) => handleInputChange('notice_period_months', e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    {currentStep === 2 && (
+                        <Step2RentConfig
+                            rentModel={rentModel}
+                            formData={formData}
+                            setFormData={setFormData}
+                            escalationSteps={escalationSteps}
+                            setEscalationSteps={setEscalationSteps}
+                            addEscalationStep={addEscalationStep}
+                            removeEscalationStep={removeEscalationStep}
+                        />
+                    )}
 
-                    {/* Section 3: Rent & Financials */}
-                    <div className="form-section">
-                        <h3>Rent & Financials</h3>
+                    {currentStep === 3 && (
+                        <Step3Finalize
+                            formData={formData}
+                            setFormData={setFormData}
+                        />
+                    )}
 
-                        {/* Dynamic Fields based on Rent Model */}
-                        <div className="form-row">
-                            {rentModel === 'Fixed' ? (
-                                <div className="form-group">
-                                    <label>Fixed Rent Amount (Monthly)</label>
-                                    <div className="currency-input">
-                                        <span className="currency-symbol">₹</span>
-                                        <input
-                                            type="number"
-                                            placeholder="0.00"
-                                            value={formData.monthly_rent}
-                                            onChange={(e) => handleInputChange('monthly_rent', e.target.value)}
-                                        />
-                                        <span className="currency-code">INR</span>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="form-group">
-                                    <label>Minimum Guarantee (MGR)</label>
-                                    <div className="currency-input">
-                                        <span className="currency-symbol">₹</span>
-                                        <input
-                                            type="number"
-                                            placeholder="0.00"
-                                            value={formData.monthly_rent}
-                                            onChange={(e) => handleInputChange('monthly_rent', e.target.value)}
-                                        />
-                                        <span className="currency-code">INR</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="form-group">
-                                <label>Using Currency</label>
-                                <input type="text" value="INR" readOnly className="bg-input" />
-                            </div>
-                        </div>
-
-                        {rentModel === 'RevenueShare' && (
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Revenue Share Percentage (%)</label>
-                                    <input
-                                        type="number"
-                                        placeholder="e.g. 10"
-                                        value={formData.revenue_share_percentage}
-                                        onChange={(e) => handleInputChange('revenue_share_percentage', e.target.value)}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Applicable On</label>
-                                    <select
-                                        value={formData.revenue_share_applicable_on}
-                                        onChange={(e) => handleInputChange('revenue_share_applicable_on', e.target.value)}
-                                    >
-                                        <option>Net Sales</option>
-                                        <option>Gross Sales</option>
-                                    </select>
-                                </div>
-                            </div>
+                    {/* Navigation Actions */}
+                    <div className="form-actions" style={{ marginTop: '30px', justifyContent: 'space-between' }}>
+                        {currentStep > 1 ? (
+                            <button className="secondary-btn" onClick={prevStep}>Back</button>
+                        ) : (
+                            <button className="secondary-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>
                         )}
 
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Payment Due Day</label>
-                                <select
-                                    value={formData.payment_due_day}
-                                    onChange={(e) => handleInputChange('payment_due_day', e.target.value)}
-                                >
-                                    <option>1st of Month</option>
-                                    <option>5th of Month</option>
-                                    <option>10th of Month</option>
-                                    <option>End of Month</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Billing Frequency</label>
-                                <select
-                                    value={formData.billing_frequency}
-                                    onChange={(e) => handleInputChange('billing_frequency', e.target.value)}
-                                >
-                                    <option>Monthly</option>
-                                    <option>Quarterly</option>
-                                    <option>Annually</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>CAM Charges (Monthly)</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input
-                                        type="number"
-                                        placeholder="0.00"
-                                        value={formData.cam_charges}
-                                        onChange={(e) => handleInputChange('cam_charges', e.target.value)}
-                                    />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h4 style={{ fontSize: '0.95rem', margin: '16px 0 12px 0', color: '#4a5568', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Security Deposits</h4>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Security Deposit</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input
-                                        type="number"
-                                        placeholder="0.00"
-                                        value={formData.security_deposit}
-                                        onChange={(e) => handleInputChange('security_deposit', e.target.value)}
-                                    />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Utility Deposit</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input
-                                        type="number"
-                                        placeholder="0.00"
-                                        value={formData.utility_deposit}
-                                        onChange={(e) => handleInputChange('utility_deposit', e.target.value)}
-                                    />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Deposit Type</label>
-                                <select
-                                    value={formData.deposit_type}
-                                    onChange={(e) => handleInputChange('deposit_type', e.target.value)}
-                                >
-                                    <option>Cash</option>
-                                    <option>Check</option>
-                                    <option>Bank Transfer</option>
-                                    <option>UPI</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Section 4: Rent Escalations */}
-                    <div className="form-section">
-                        <h3>Rent Escalations</h3>
-                        <p style={{ fontSize: '0.9rem', color: '#718096', marginBottom: '16px' }}>Define specific dates for rent increases instead of a fixed cycle.</p>
-
-                        {escalationSteps.map((step, index) => (
-                            <div className="escalation-row" key={index}>
-                                <div className="form-group">
-                                    <label>Effective From Date</label>
-                                    <input type="date" value={step.effectiveDate} onChange={(e) => {
-                                        const newSteps = [...escalationSteps];
-                                        newSteps[index].effectiveDate = e.target.value;
-                                        setEscalationSteps(newSteps);
-                                    }} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Increase Type</label>
-                                    <select value={step.increaseType} onChange={(e) => {
-                                        const newSteps = [...escalationSteps];
-                                        newSteps[index].increaseType = e.target.value;
-                                        setEscalationSteps(newSteps);
-                                    }}>
-                                        <option>Percentage</option>
-                                        <option>Fixed Amount</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Value</label>
-                                    <input type="number" value={step.value} onChange={(e) => {
-                                        const newSteps = [...escalationSteps];
-                                        newSteps[index].value = e.target.value;
-                                        setEscalationSteps(newSteps);
-                                    }} />
-                                </div>
-                                <button className="remove-step-btn" onClick={() => removeEscalationStep(index)}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                </button>
-                            </div>
-                        ))}
-
-                        <button className="add-step-btn" onClick={addEscalationStep}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            Add Escalation Step
-                        </button>
+                        {currentStep < 3 ? (
+                            <button className="primary-btn" onClick={nextStep}>Next Step</button>
+                        ) : (
+                            <button className="primary-btn submit-btn" onClick={handleSubmit}>Create Lease</button>
+                        )}
                     </div>
 
                     {submitMessage && (
-                        <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+                        <div style={{ marginTop: '20px', padding: '15px', background: '#dcfce7', color: '#166534', borderRadius: '6px', textAlign: 'center' }}>
                             {submitMessage}
                         </div>
                     )}
 
-                    <div className="form-actions">
-                        <button className="cancel-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>
-                        <button className="create-btn" onClick={handleSubmit}>Create Lease</button>
-                    </div>
                 </div>
             </main>
         </div>

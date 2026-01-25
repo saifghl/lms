@@ -160,7 +160,7 @@ const Units = () => {
                             </div>
                             <div className="dropdown-filter">
                                 <select value={selectedUnitType} onChange={handleUnitTypeChange}>
-                                    <option value="All">All Statuses</option>
+                                    <option value="All">All Status</option>
                                     <option value="vacant">Vacant</option>
                                     <option value="occupied">Occupied</option>
                                     <option value="maintenance">Maintenance</option>
@@ -169,12 +169,7 @@ const Units = () => {
                             </div>
                         </div>
                         <div className="view-actions">
-                            <button className="icon-btn active">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                            </button>
-                            <button className="icon-btn">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                            </button>
+                            {/* Icons removed as per request */}
                             <button className="text-btn" onClick={handleClearFilters}>Clear filters</button>
                         </div>
                     </div>

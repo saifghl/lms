@@ -159,9 +159,9 @@ const AddProject = () => {
                     required
                   >
                     <option value="">Select Type</option>
-                    <option value="Residential">Residential</option>
+                    <option value="Retail">Retail</option>
                     <option value="Commercial">Commercial</option>
-                    <option value="Mixed">Mixed Use</option>
+                    <option value="Mixed Use">Mixed Use</option>
                   </select>
                 </div>
 

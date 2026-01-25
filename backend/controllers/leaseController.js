@@ -84,7 +84,7 @@ const getNeedAttentionLeases = async (req, res) => {
         const [rows] = await pool.query(`
             SELECT 
                 l.id, 
-                t.company_name as tenant_name, 
+                COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) as tenant_name, 
                 l.status, 
                 l.lease_end as date,
                 CASE 
@@ -93,7 +93,7 @@ const getNeedAttentionLeases = async (req, res) => {
                     ELSE 'Escalation'
                 END as type
             FROM leases l
-            JOIN tenants t ON l.tenant_id = t.id
+            JOIN parties t ON l.party_tenant_id = t.id
             WHERE l.status IN ('draft', 'dispute') 
             OR (l.status = 'active' AND l.lease_end <= DATE_ADD(CURDATE(), INTERVAL 30 DAY))
             ORDER BY l.created_at DESC
@@ -111,9 +111,9 @@ const getNeedAttentionLeases = async (req, res) => {
 const getPendingLeases = async (req, res) => {
     try {
         const [rows] = await pool.query(`
-            SELECT l.id, t.company_name, l.monthly_rent, l.lease_start, l.lease_end
+            SELECT l.id, COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) as company_name, l.monthly_rent, l.lease_start, l.lease_end
             FROM leases l
-            JOIN tenants t ON t.id = l.tenant_id
+            JOIN parties t ON t.id = l.party_tenant_id
             WHERE l.status='draft'
             ORDER BY l.created_at DESC
         `);
@@ -168,9 +168,9 @@ const rejectLease = async (req, res) => {
 const getExpiringLeases = async (req, res) => {
     try {
         const [rows] = await pool.query(`
-            SELECT l.id, t.company_name, l.monthly_rent, l.lease_end
+            SELECT l.id, COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) as company_name, l.monthly_rent, l.lease_end
             FROM leases l
-            JOIN tenants t ON t.id = l.tenant_id
+            JOIN parties t ON t.id = l.party_tenant_id
             WHERE l.lease_end <= DATE_ADD(CURDATE(), INTERVAL 90 DAY)
         `);
         res.json(rows);
@@ -260,8 +260,8 @@ const createLease = async (req, res) => {
         const {
             project_id,
             unit_id,
-            owner_id,
-            tenant_id,
+            party_owner_id,
+            party_tenant_id,
             sub_tenant_id,
             lease_type,
             rent_model,
@@ -287,15 +287,15 @@ const createLease = async (req, res) => {
         } = req.body;
 
         // Validate required fields
-        if (!project_id || !unit_id || !tenant_id || !lease_start || !lease_end || !rent_commencement_date) {
+        if (!project_id || !unit_id || !party_tenant_id || !lease_start || !lease_end || !rent_commencement_date) {
             await connection.rollback();
-            return res.status(400).json({ message: 'Required fields missing: project_id, unit_id, tenant_id, lease_start, lease_end, rent_commencement_date' });
+            return res.status(400).json({ message: 'Required fields missing: project_id, unit_id, party_tenant_id, lease_start, lease_end, rent_commencement_date' });
         }
 
-        // For Direct lease, owner_id is required
-        if (lease_type === 'Direct lease' && !owner_id) {
+        // For Direct lease, party_owner_id is required
+        if (lease_type === 'Direct lease' && !party_owner_id) {
             await connection.rollback();
-            return res.status(400).json({ message: 'owner_id is required for Direct lease' });
+            return res.status(400).json({ message: 'party_owner_id is required for Direct lease' });
         }
 
         // For Sub lease, sub_tenant_id and sub_lease_area_sqft are required
@@ -323,7 +323,7 @@ const createLease = async (req, res) => {
         // Insert lease
         const [leaseResult] = await connection.query(
             `INSERT INTO leases (
-                project_id, unit_id, owner_id, tenant_id, sub_tenant_id,
+                project_id, unit_id, party_owner_id, party_tenant_id, sub_tenant_id,
                 lease_type, rent_model, sub_lease_area_sqft,
                 lease_start, lease_end, rent_commencement_date, fitout_period_end,
                 tenure_months, lockin_period_months, notice_period_months,
@@ -334,8 +334,8 @@ const createLease = async (req, res) => {
             [
                 project_id,
                 unit_id,
-                owner_id || null,
-                tenant_id,
+                party_owner_id || null,
+                party_tenant_id,
                 sub_tenant_id || null,
                 lease_type || 'Direct lease',
                 rent_model || 'Fixed',
@@ -357,7 +357,7 @@ const createLease = async (req, res) => {
                 deposit_type || 'Cash',
                 revenue_share_percentage || null,
                 revenue_share_applicable_on || null,
-                'draft'
+                'active'
             ]
         );
 
@@ -422,14 +422,14 @@ const getAllLeases = async (req, res) => {
                 l.status,
                 p.project_name,
                 u.unit_number,
-                t.company_name AS tenant_name,
-                o.name AS owner_name,
+                COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) AS tenant_name,
+                COALESCE(o.company_name, CONCAT(o.first_name, ' ', o.last_name)) AS owner_name,
                 st.company_name AS sub_tenant_name
             FROM leases l
             LEFT JOIN projects p ON l.project_id = p.id
             LEFT JOIN units u ON l.unit_id = u.id
-            LEFT JOIN tenants t ON l.tenant_id = t.id
-            LEFT JOIN owners o ON l.owner_id = o.id
+            LEFT JOIN parties t ON l.party_tenant_id = t.id
+            LEFT JOIN parties o ON l.party_owner_id = o.id
             LEFT JOIN sub_tenants st ON l.sub_tenant_id = st.id
             WHERE 1=1
         `;
@@ -457,8 +457,8 @@ const getAllLeases = async (req, res) => {
         }
 
         if (search) {
-            query += ` AND (t.company_name LIKE ? OR u.unit_number LIKE ? OR p.project_name LIKE ? OR CAST(l.id AS CHAR) LIKE ?)`;
-            params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+            query += ` AND (t.company_name LIKE ? OR t.first_name LIKE ? OR t.last_name LIKE ? OR u.unit_number LIKE ? OR p.project_name LIKE ? OR CAST(l.id AS CHAR) LIKE ?)`;
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
         }
 
         if (req.query.upcoming_escalations) {
@@ -489,14 +489,14 @@ const getLeaseById = async (req, res) => {
             `SELECT l.*, 
                     p.project_name, p.location as project_location,
                     u.unit_number, u.floor_number, u.super_area, u.carpet_area, u.unit_condition,
-                    t.company_name AS tenant_name, t.contact_person_name, t.contact_person_email, t.contact_person_phone, t.industry,
-                    o.name AS owner_name,
+                    COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) AS tenant_name, t.first_name as tenant_first_name, t.last_name as tenant_last_name, t.email as contact_person_email, t.phone as contact_person_phone,
+                    COALESCE(o.company_name, CONCAT(o.first_name, ' ', o.last_name)) AS owner_name,
                     st.company_name AS sub_tenant_name
              FROM leases l
              LEFT JOIN projects p ON l.project_id = p.id
              LEFT JOIN units u ON l.unit_id = u.id
-             LEFT JOIN tenants t ON l.tenant_id = t.id
-             LEFT JOIN owners o ON l.owner_id = o.id
+             LEFT JOIN parties t ON l.party_tenant_id = t.id
+             LEFT JOIN parties o ON l.party_owner_id = o.id
              LEFT JOIN sub_tenants st ON l.sub_tenant_id = st.id
              WHERE l.id = ?`,
             [leaseId]
@@ -590,8 +590,8 @@ const updateLease = async (req, res) => {
 
         if (project_id !== undefined) updateFields.push('project_id = ?'), updateValues.push(project_id);
         if (unit_id !== undefined) updateFields.push('unit_id = ?'), updateValues.push(unit_id);
-        if (owner_id !== undefined) updateFields.push('owner_id = ?'), updateValues.push(owner_id);
-        if (tenant_id !== undefined) updateFields.push('tenant_id = ?'), updateValues.push(tenant_id);
+        if (owner_id !== undefined) updateFields.push('party_owner_id = ?'), updateValues.push(owner_id);
+        if (tenant_id !== undefined) updateFields.push('party_tenant_id = ?'), updateValues.push(tenant_id);
         if (sub_tenant_id !== undefined) updateFields.push('sub_tenant_id = ?'), updateValues.push(sub_tenant_id);
         if (lease_type !== undefined) updateFields.push('lease_type = ?'), updateValues.push(lease_type);
         if (rent_model !== undefined) updateFields.push('rent_model = ?'), updateValues.push(rent_model);

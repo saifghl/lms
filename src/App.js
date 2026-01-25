@@ -11,6 +11,10 @@ import TenantDetails from "./components/admin/TenantDetails";
 import OwnerList from "./components/admin/OwnerList";
 import AddOwner from "./components/admin/AddOwner";
 import OwnerDetails from "./components/admin/OwnerDetails";
+import PartyMaster from "./components/admin/PartyMaster"; // New Party Master Component
+import AddParty from "./components/admin/AddParty";
+import EditParty from "./components/admin/EditParty";
+import OwnershipMapping from "./components/admin/OwnershipMapping";
 import ActivityLogs from "./components/admin/ActivityLogs";
 import AddProject from "./components/admin/AddProject";
 import EditProject from "./components/admin/EditProject";
@@ -57,7 +61,9 @@ import PastEntries from "./components/data-entry/PastEntries";
 import DataEntrySelection from "./components/data-entry/DataEntrySelection";
 import ProjectDataEntry from "./components/data-entry/ProjectDataEntry";
 import UnitDataEntry from "./components/data-entry/UnitDataEntry";
-import OwnerDataEntry from "./components/data-entry/OwnerDataEntry";
+import MasterDataEntry from "./components/data-entry/MasterDataEntry";
+import AddMasterDataEntry from "./components/data-entry/AddMasterDataEntry";
+import OwnershipDataEntry from "./components/data-entry/OwnershipDataEntry";
 import SubmissionDetails from "./components/data-entry/SubmissionDetails";
 import TenantDataEntry from "./components/data-entry/TenantDataEntry";
 import LeaseDataEntry from "./components/data-entry/LeaseDataEntry";
@@ -113,7 +119,17 @@ function App() {
         <Route path="/admin/tenant/edit/:id" element={<EditTenant />} />
         <Route path="/admin/tenant/:id" element={<TenantDetails />} />
 
-        {/* Owner Routes */}
+        {/* Master Route - Deprecated
+        <Route path="/admin/master" element={<Master />} /> 
+        */}
+
+        {/* Party Master Routes (Replaces Owner/Tenant) */}
+        <Route path="/admin/parties" element={<PartyMaster />} />
+        <Route path="/admin/parties/add" element={<AddParty />} />
+        <Route path="/admin/parties/edit/:id" element={<EditParty />} />
+        <Route path="/admin/ownership-mapping" element={<OwnershipMapping />} />
+
+        {/* Legacy Owner Routes (Can be deprecated later) */}
         <Route path="/admin/owner" element={<OwnerList />} />
         <Route path="/admin/owners" element={<OwnerList />} />
         <Route path="/admin/owner/add" element={<AddOwner />} />
@@ -170,7 +186,9 @@ function App() {
         <Route path="/data-entry/add-project-data" element={<ProjectDataEntry />} />
         <Route path="/data-entry/project/:id" element={<ProjectDataEntry />} />
         <Route path="/data-entry/add-unit-data" element={<UnitDataEntry />} />
-        <Route path="/data-entry/add-owner-data" element={<OwnerDataEntry />} />
+        <Route path="/data-entry/add-master-data" element={<MasterDataEntry />} />
+        <Route path="/data-entry/add-master-data/add" element={<AddMasterDataEntry />} />
+        <Route path="/data-entry/add-ownership-data" element={<OwnershipDataEntry />} />
 
         {/* Detail View */}
         <Route path="/data-entry/submission/:id" element={<SubmissionDetails />} />

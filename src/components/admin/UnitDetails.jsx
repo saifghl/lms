@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { unitAPI } from '../../services/api';
+import { unitAPI, ownershipAPI } from '../../services/api';
 import './UnitDetails.css';
 
 const UnitDetails = () => {
@@ -10,15 +10,19 @@ const UnitDetails = () => {
     const [loading, setLoading] = useState(true);
     // const [error, setError] = useState(null);
 
-    // TODO: Ideally, getUnitById should return tenant and owner info if subscribed.
-    // For now, we will display what we have.
+    const [activeOwner, setActiveOwner] = useState(null);
 
     useEffect(() => {
         const fetchUnit = async () => {
             try {
                 const res = await unitAPI.getUnitById(id);
-                console.log("Unit Data:", res.data.data || res.data);
                 setUnit(res.data.data || res.data);
+
+                // Fetch Owner
+                const ownerRes = await ownershipAPI.getOwnersByUnit(id);
+                const owners = ownerRes.data || [];
+                const active = owners.find(o => o.ownership_status === 'Active');
+                setActiveOwner(active);
             } catch (err) {
                 console.error("Error fetching unit:", err);
             } finally {
@@ -104,17 +108,31 @@ const UnitDetails = () => {
                                 <div className="card-header">
                                     <div className="user-info">
                                         <div className="avatar">
-                                            <img src="https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff" alt="John" />
+                                            {activeOwner ? (
+                                                <div style={{ width: '100%', height: '100%', background: '#0D8ABC', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                                    {(activeOwner.company_name || activeOwner.first_name).charAt(0)}
+                                                </div>
+                                            ) : (
+                                                <div style={{ width: '100%', height: '100%', background: '#e2e8f0' }}></div>
+                                            )}
                                         </div>
                                         <div>
-                                            <h3>John Doe</h3>
-                                            <span className="since">100% Ownership</span>
+                                            <h3>
+                                                {activeOwner
+                                                    ? (activeOwner.company_name || `${activeOwner.first_name} ${activeOwner.last_name}`)
+                                                    : 'No Active Owner'}
+                                            </h3>
+                                            <span className="since">{activeOwner ? `Since ${new Date(activeOwner.start_date).toLocaleDateString()}` : 'Unassigned'}</span>
                                         </div>
                                     </div>
-                                    <span className="badge leased">Leased</span>
+                                    {activeOwner && <span className="badge leased">Active</span>}
                                 </div>
                                 <div className="card-footer">
-                                    <span></span>
+                                    {activeOwner ? (
+                                        <Link to={`/admin/parties/edit/${activeOwner.party_id}`} className="details-link">View Party →</Link>
+                                    ) : (
+                                        <Link to="/admin/ownership-mapping" className="details-link">Assign Owner →</Link>
+                                    )}
                                 </div>
                             </div>
 
