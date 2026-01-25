@@ -11,7 +11,7 @@ const OwnershipMapping = () => {
     const [selectedUnit, setSelectedUnit] = useState('');
     const [unitOwners, setUnitOwners] = useState([]); // List of history
     const [currentOwner, setCurrentOwner] = useState(null);
-    const [loading, setLoading] = useState(false);
+    // const [loading, setLoading] = useState(false); // Removed unused state
 
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
@@ -56,7 +56,7 @@ const OwnershipMapping = () => {
     };
 
     const fetchOwnerships = async (unitId) => {
-        setLoading(true);
+        // setLoading(true); // Removed unused loading
         try {
             const res = await ownershipAPI.getOwnersByUnit(unitId);
             const owners = res.data || [];
@@ -66,7 +66,7 @@ const OwnershipMapping = () => {
         } catch (error) {
             console.error("Failed to fetch ownerships", error);
         } finally {
-            setLoading(false);
+            // setLoading(false); // Removed unused loading
         }
     };
 
@@ -205,12 +205,7 @@ const AssignOwnerModal = ({ isOpen, onClose, unitId, onAssign }) => {
         searchParties();
     }, [search]);
 
-    const searchParties = async () => {
-        try {
-            const res = await partyAPI.getAllParties({ search }); // API needs search param support
-            setParties(res.data || []);
-        } catch (e) { console.error(e); }
-    };
+
 
     const handleAssign = async () => {
         if (!selectedParty) return;
