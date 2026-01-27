@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import RepSidebar from "./RepSidebar";
-import { managementAPI, getProjects, ownerAPI, tenantAPI } from "../../services/api";
+import { managementAPI, getProjects, partyAPI } from "../../services/api";
 import "./Reports.css";
 
 const Reports = () => {
@@ -23,14 +23,15 @@ const Reports = () => {
     // Fetch dropdown options on mount
     const fetchOptions = async () => {
       try {
-        const [pRes, oRes, tRes] = await Promise.all([
+        const [pRes, partyRes] = await Promise.all([
           getProjects(),
-          ownerAPI.getOwners(),
-          tenantAPI.getTenants()
+          partyAPI.getAllParties()
         ]);
         setProjectsList(pRes.data.data || pRes.data || []);
-        setOwnersList(oRes.data.data || oRes.data || []);
-        setTenantsList(tRes.data.data || tRes.data || []);
+
+        const allParties = partyRes.data || [];
+        setOwnersList(allParties); // Assuming user wants all masters in dropdown
+        setTenantsList(allParties);
       } catch (err) {
         console.error("Error fetching filter options:", err);
       }
@@ -143,7 +144,9 @@ const Reports = () => {
                 >
                   <option value="">All Owners</option>
                   {ownersList.map(o => (
-                    <option key={o.id} value={o.id}>{o.name}</option>
+                    <option key={o.id} value={o.id}>
+                      {o.company_name || `${o.first_name} ${o.last_name}`}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -156,7 +159,7 @@ const Reports = () => {
                   onChange={(e) => setSelectedTenant(e.target.value)}
                   style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', minWidth: '150px' }}
                 >
-                  <option value="">All Tenants</option>
+                  <option value="">All Masters</option>
                   {tenantsList.map(t => (
                     <option key={t.id} value={t.id}>{t.company_name}</option>
                   ))}

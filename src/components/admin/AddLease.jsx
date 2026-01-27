@@ -48,7 +48,7 @@ const AddLease = () => {
     });
 
     const [escalationSteps, setEscalationSteps] = useState([
-        { effectiveDate: '', increaseType: 'Percentage (%)', value: '' }
+        { effectiveDate: '', effectiveToDate: '', increaseType: 'Percentage (%)', value: '' }
     ]);
 
     const [submitMessage, setSubmitMessage] = useState('');
@@ -136,7 +136,7 @@ const AddLease = () => {
 
     // Helpers for Escalations
     const addEscalationStep = () => {
-        setEscalationSteps([...escalationSteps, { effectiveDate: '', increaseType: 'Percentage (%)', value: '' }]);
+        setEscalationSteps([...escalationSteps, { effectiveDate: '', effectiveToDate: '', increaseType: 'Percentage (%)', value: '' }]);
     };
 
     const removeEscalationStep = (index) => {
@@ -151,6 +151,7 @@ const AddLease = () => {
                 .filter(step => step.effectiveDate && step.value)
                 .map(step => ({
                     effective_from: step.effectiveDate,
+                    effective_to: step.effectiveToDate || null,
                     increase_type: step.increaseType === 'Percentage (%)' ? 'Percentage' : 'Fixed Amount',
                     value: parseFloat(step.value)
                 }));

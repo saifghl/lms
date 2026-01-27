@@ -18,8 +18,28 @@ const AdminNotifications = () => {
     const fetchNotifications = async () => {
         try {
             setLoading(true);
-            const res = await managementAPI.getNotifications({ type: filter === 'All' ? null : filter });
-            setNotifications(res.data.data || []);
+            const [notifRes, alertRes] = await Promise.all([
+                managementAPI.getNotifications({ type: filter === 'All' ? null : filter }),
+                leaseAPI.getNeedAttentionLeases()
+            ]);
+
+            const dbNotifications = notifRes.data.data || notifRes.data || [];
+
+            // Map alerts to notification structure
+            const alerts = (alertRes.data || []).map(alert => ({
+                id: `alert-${alert.id}`,
+                title: `${alert.type}: ${alert.tenant_name}`,
+                text: `Lease update required for ${alert.tenant_name}. Due on ${new Date(alert.date).toLocaleDateString()}. Status: ${alert.status}`,
+                type: 'urgent',
+                createdAt: new Date().toISOString(),
+                read: false,
+                isSystemAlert: true
+            }));
+
+            // Combine and sort
+            const all = [...alerts, ...dbNotifications].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            setNotifications(all);
+
         } catch (error) {
             console.error("Failed to fetch notifications", error);
         } finally {

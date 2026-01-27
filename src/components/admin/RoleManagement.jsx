@@ -174,19 +174,19 @@ const RoleManagement = () => {
         </div>
       )}
 
-      {/* SEARCH BAR */}
-      <div className="top-search-bar">
-        <div className="search-input-wrapper">
-          <input
-            type="text"
-            placeholder="Search by name, email or mobile..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-
       <main className="role-content">
+
+        {/* SEARCH BAR */}
+        <div className="top-search-bar">
+          <div className="search-input-wrapper">
+            <input
+              type="text"
+              placeholder="Search by name, email or mobile..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
 
         {/* HEADER */}
         <header className="role-header">

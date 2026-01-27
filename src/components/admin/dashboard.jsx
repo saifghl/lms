@@ -1,13 +1,56 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getDashboardStats } from '../../services/api';
+import { getDashboardStats, getProjects, tenantAPI, unitAPI } from '../../services/api';
 import './dashboard.css';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // Search State
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [showResults, setShowResults] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(async () => {
+            if (searchTerm.trim().length > 1) {
+                setIsSearching(true);
+                try {
+                    const [projRes, tenantRes, unitRes] = await Promise.all([
+                        getProjects({ search: searchTerm }),
+                        tenantAPI.getTenants({ search: searchTerm }),
+                        unitAPI.getUnits({ search: searchTerm })
+                    ]);
+
+                    const projects = (projRes.data.data || projRes.data || []).map(p => ({ ...p, type: 'Project', label: p.project_name, link: `/admin/projects/${p.id}` }));
+                    const tenants = (tenantRes.data || []).map(t => ({ ...t, type: 'Tenant', label: t.company_name, link: `/admin/tenant/${t.id}` }));
+                    const units = (unitRes.data.data || unitRes.data || []).map(u => ({ ...u, type: 'Unit', label: `${u.unit_number} (${u.building})`, link: `/admin/view-unit/${u.id}` }));
+
+                    setSearchResults([...projects, ...tenants, ...units]);
+                    setShowResults(true);
+                } catch (err) {
+                    console.error("Search failed", err);
+                } finally {
+                    setIsSearching(false);
+                }
+            } else {
+                setSearchResults([]);
+                setShowResults(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm]);
+
+    const handleSearchSelect = (link) => {
+        navigate(link);
+        setShowResults(false);
+        setSearchTerm("");
+    };
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -33,9 +76,37 @@ const Dashboard = () => {
             <main className="main-content">
                 {/* HEADER */}
                 <header className="dashboard-header">
-                    <div className="search-bar">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" placeholder="Search properties, tenants..." />
+                    <div className="search-bar-container">
+                        <div className="search-bar">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input
+                                type="text"
+                                placeholder="Search properties, tenants, units..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onFocus={() => searchTerm.length > 1 && setShowResults(true)}
+                                onBlur={() => setTimeout(() => setShowResults(false), 200)}
+                            />
+                        </div>
+                        {showResults && (
+                            <div className="search-results-dropdown">
+                                {isSearching ? (
+                                    <div className="no-results">Searching...</div>
+                                ) : searchResults.length > 0 ? (
+                                    searchResults.map((item, idx) => (
+                                        <div key={idx} className="search-result-item" onClick={() => handleSearchSelect(item.link)}>
+                                            <div className="search-result-info">
+                                                <span className="search-result-label">{item.label}</span>
+                                                <span className="search-result-type">{item.type}</span>
+                                            </div>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="no-results">No results found for "{searchTerm}"</div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="header-actions">

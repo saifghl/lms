@@ -51,6 +51,19 @@ const AddProject = () => {
     }));
   };
 
+  const [isOtherLocation, setIsOtherLocation] = useState(false);
+
+  const handleLocationChange = (e) => {
+    const val = e.target.value;
+    if (val === "Other") {
+      setIsOtherLocation(true);
+      setFormData(prev => ({ ...prev, location: "" }));
+    } else {
+      setIsOtherLocation(false);
+      setFormData(prev => ({ ...prev, location: val }));
+    }
+  };
+
   /* ================= HANDLE IMAGE ================= */
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
@@ -120,20 +133,39 @@ const AddProject = () => {
 
                 <div className="form-group">
                   <label>Location</label>
-                  <input
-                    type="text"
-                    name="location"
-                    list="location-options"
-                    value={formData.location}
-                    onChange={handleChange}
-                    placeholder="Search or enter location"
-                    required
-                  />
-                  <datalist id="location-options">
-                    {locations.map((loc, index) => (
-                      <option key={index} value={loc} />
-                    ))}
-                  </datalist>
+                  {!isOtherLocation ? (
+                    <select
+                      className="form-control" // Assuming basic styling or inherit input styles
+                      value={locations.includes(formData.location) ? formData.location : "Other"}
+                      onChange={handleLocationChange}
+                      required
+                    >
+                      <option value="" disabled>Select Location</option>
+                      {locations.map((loc, index) => (
+                        <option key={index} value={loc}>{loc}</option>
+                      ))}
+                      <option value="Other">Other...</option>
+                    </select>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        placeholder="Enter custom location"
+                        required
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsOtherLocation(false)}
+                        style={{ padding: '0 10px', whiteSpace: 'nowrap', border: '1px solid #ccc', background: '#f1f1f1', cursor: 'pointer', borderRadius: '4px' }}
+                      >
+                        Back to List
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -159,8 +191,9 @@ const AddProject = () => {
                     required
                   >
                     <option value="">Select Type</option>
-                    <option value="Retail">Retail</option>
+                    <option value="RETAIL/SHOP">RETAIL/SHOP</option>
                     <option value="Commercial">Commercial</option>
+                    <option value="Industrial">Industrial</option>
                     <option value="Mixed Use">Mixed Use</option>
                   </select>
                 </div>

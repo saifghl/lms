@@ -162,3 +162,29 @@
     background-color: #eff6ff;
     border-left: 3px solid #3b82f6;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .ownership-container {
+        margin-left: 0;
+        width: 100%;
+        padding: 16px;
+    }
+
+    .mapping-interface {
+        flex-direction: column;
+    }
+
+    .selection-panel {
+        width: 100%;
+    }
+
+    .details-panel {
+        width: 100%;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 16px;
+    }
+}

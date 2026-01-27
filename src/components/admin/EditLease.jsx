@@ -108,6 +108,7 @@ const EditLease = () => {
                 setEscalationSteps(
                     (data.escalations || []).map(esc => ({
                         effectiveDate: esc.effective_from ? esc.effective_from.substring(0, 10) : '',
+                        effectiveToDate: esc.effective_to ? esc.effective_to.substring(0, 10) : '',
                         increaseType: esc.increase_type === 'Fixed Amount' ? 'Fixed Amount (₹)' : 'Percentage (%)',
                         value: esc.value
                     }))
@@ -127,7 +128,7 @@ const EditLease = () => {
     };
 
     const addEscalationStep = () => {
-        setEscalationSteps([...escalationSteps, { effectiveDate: '', increaseType: 'Percentage (%)', value: '' }]);
+        setEscalationSteps([...escalationSteps, { effectiveDate: '', effectiveToDate: '', increaseType: 'Percentage (%)', value: '' }]);
     };
 
     const removeEscalationStep = (index) => {
@@ -358,6 +359,14 @@ const EditLease = () => {
                                     }} />
                                 </div>
                                 <div className="form-group">
+                                    <label>Effective To (Optional)</label>
+                                    <input type="date" value={step.effectiveToDate} onChange={(e) => {
+                                        const newSteps = [...escalationSteps];
+                                        newSteps[index].effectiveToDate = e.target.value;
+                                        setEscalationSteps(newSteps);
+                                    }} />
+                                </div>
+                                <div className="form-group">
                                     <label>Increase Type</label>
                                     <select value={step.increaseType} onChange={(e) => {
                                         const newSteps = [...escalationSteps];
@@ -430,6 +439,7 @@ const EditLease = () => {
                                             .filter(step => step.effectiveDate && step.value)
                                             .map(step => ({
                                                 effective_from: step.effectiveDate,
+                                                effective_to: step.effectiveToDate || null,
                                                 increase_type: step.increaseType.startsWith('Fixed')
                                                     ? 'Fixed Amount'
                                                     : 'Percentage',

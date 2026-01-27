@@ -180,11 +180,40 @@
     cursor: pointer;
 }
 
+/* Radio Group */
+.radio-group {
+    display: flex;
+    gap: 20px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.radio-option {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+    .add-lease-container {
+        padding: 16px;
+    }
+
+    .form-layout {
+        gap: 16px;
+    }
+
+    .form-section {
+        padding: 16px;
+    }
+
     .form-row {
         flex-direction: column;
-        gap: 16px;
+        gap: 20px;
     }
 
     .date-row {
@@ -194,5 +223,19 @@
 
     .escalation-row {
         grid-template-columns: 1fr;
+    }
+
+    .stepper {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+
+    .form-actions button {
+        width: 100%;
     }
 }

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { getProjectById, updateProject } from "../../services/api";
+import { getProjectById, updateProject, getProjectLocations } from "../../services/api";
+import { indianCities } from "../../utils/indianLocations";
 import "./EditProject.css";
 
 const EditProject = () => {
@@ -20,6 +21,23 @@ const EditProject = () => {
   });
 
   const [image, setImage] = useState(null);
+  const [locations, setLocations] = useState([]);
+
+  // Fetch Locations
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await getProjectLocations();
+        const fetched = response.data || [];
+        const unique = [...new Set([...indianCities, ...fetched])].sort();
+        setLocations(unique);
+      } catch (error) {
+        console.error("Failed to fetch locations:", error);
+        setLocations(indianCities);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   // Fetch Project
   useEffect(() => {
@@ -31,7 +49,7 @@ const EditProject = () => {
           project_name: data.project_name || "",
           location: data.location || "",
           address: data.address || "",
-          project_type: data.project_type || "Residential",
+          project_type: data.project_type || "RETAIL/SHOP",
           total_floors: data.total_floors || "",
           total_project_area: data.total_project_area || "",
           description: data.description || "",
@@ -47,6 +65,19 @@ const EditProject = () => {
   /* ================= HANDLERS ================= */
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const [isOtherLocation, setIsOtherLocation] = useState(false);
+
+  const handleLocationChange = (e) => {
+    const val = e.target.value;
+    if (val === "Other") {
+      setIsOtherLocation(true);
+      setFormData(prev => ({ ...prev, location: "" }));
+    } else {
+      setIsOtherLocation(false);
+      setFormData(prev => ({ ...prev, location: val }));
+    }
   };
 
   const handleImageChange = (e) => {
@@ -107,13 +138,45 @@ const EditProject = () => {
                 <div className="form-row">
                   <div className="form-group vertical">
                     <label>Location</label>
-                    <input type="text" name="location" value={formData.location} onChange={handleChange} />
+                    {!isOtherLocation ? (
+                      <select
+                        className="form-control" // Reuse existing styles if available or fallback
+                        style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', borderRadius: '4px' }}
+                        value={(locations.includes(formData.location) || formData.location === "") ? formData.location : "Other"}
+                        onChange={handleLocationChange}
+                      >
+                        <option value="" disabled>Select Location</option>
+                        {locations.map((loc, index) => (
+                          <option key={index} value={loc}>{loc}</option>
+                        ))}
+                        <option value="Other">Other...</option>
+                      </select>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                          type="text"
+                          name="location"
+                          value={formData.location}
+                          onChange={handleChange}
+                          placeholder="Enter custom location"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIsOtherLocation(false)}
+                          style={{ padding: '0 10px', whiteSpace: 'nowrap', border: '1px solid #ccc', background: '#f1f1f1', cursor: 'pointer', borderRadius: '4px' }}
+                        >
+                          Back
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="form-group vertical">
                     <label>Project Type</label>
                     <select name="project_type" value={formData.project_type} onChange={handleChange}>
-                      <option value="Retail">Retail</option>
+                      <option value="RETAIL/SHOP">RETAIL/SHOP</option>
                       <option value="Commercial">Commercial</option>
+                      <option value="Industrial">Industrial</option>
                       <option value="Mixed Use">Mixed Use</option>
                     </select>
                   </div>

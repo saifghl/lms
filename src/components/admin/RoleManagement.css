@@ -425,7 +425,7 @@
 @media (max-width: 1024px) {
     .role-content {
         margin-left: 0;
-        padding: 80px 20px 20px;
+        padding: 20px;
         width: 100%;
     }
 
@@ -433,7 +433,7 @@
         position: static;
         width: 100%;
         margin-bottom: 20px;
-        padding: 0 20px;
+        padding: 0;
     }
 
     .stats-grid {

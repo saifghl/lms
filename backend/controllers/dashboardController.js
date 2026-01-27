@@ -64,15 +64,17 @@ const getDashboardStats = async (req, res) => {
       const [totalAreaRes] = await connection.query("SELECT COALESCE(SUM(super_area), 0) as area FROM units");
       const totalArea = parseFloat(totalAreaRes[0]?.area || 0);
 
-      // Occupied Area (Units linked to Active Leases)
+      // Occupied Area (Units linked to Active Leases - Distinct Units only)
       const [occupiedAreaRes] = await connection.query(`
-        SELECT COALESCE(SUM(u.super_area), 0) as area, COALESCE(AVG(l.monthly_rent / NULLIF(u.super_area, 0)), 0) as avg_rent
-        FROM units u
-        JOIN leases l ON u.id = l.unit_id
-        WHERE l.status = 'active'
+        SELECT COALESCE(SUM(super_area), 0) as area
+        FROM units
+        WHERE id IN (SELECT unit_id FROM leases WHERE status = 'active')
       `);
       const occupiedArea = parseFloat(occupiedAreaRes[0]?.area || 0);
-      const avgRentAchieved = parseFloat(occupiedAreaRes[0]?.avg_rent || 0);
+
+      // Calculate Weighted Average Rent (Total Revenue / Total Occupied Area)
+      // If occupiedArea is 0, avoid division by zero
+      const avgRentAchieved = occupiedArea > 0 ? (totalRevenue / occupiedArea) : 0;
 
       const vacantArea = totalArea - occupiedArea;
       // Avg Expected Rent for Vacant (avg of projected_rent from units table)

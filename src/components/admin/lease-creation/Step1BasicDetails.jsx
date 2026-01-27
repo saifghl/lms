@@ -30,8 +30,8 @@ const Step1BasicDetails = ({
             <div className="form-row">
                 <div className="form-group">
                     <label>Lease Type</label>
-                    <div className="radio-group" style={{ display: 'flex', gap: '20px', marginTop: '8px' }}>
-                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="radio-group">
+                        <label className="radio-option">
                             <input
                                 type="radio"
                                 name="leaseType"
@@ -41,7 +41,7 @@ const Step1BasicDetails = ({
                             />
                             Direct Lease
                         </label>
-                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label className="radio-option">
                             <input
                                 type="radio"
                                 name="leaseType"
@@ -56,8 +56,8 @@ const Step1BasicDetails = ({
 
                 <div className="form-group" style={{ opacity: isSubLease ? 0.5 : 1, pointerEvents: isSubLease ? 'none' : 'auto' }}>
                     <label>Rent Model</label>
-                    <div className="radio-group" style={{ display: 'flex', gap: '20px', marginTop: '8px' }}>
-                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="radio-group">
+                        <label className="radio-option">
                             <input
                                 type="radio"
                                 name="rentModel"
@@ -67,7 +67,7 @@ const Step1BasicDetails = ({
                             />
                             Fixed Rent
                         </label>
-                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label className="radio-option">
                             <input
                                 type="radio"
                                 name="rentModel"
@@ -77,7 +77,7 @@ const Step1BasicDetails = ({
                             />
                             Revenue Share
                         </label>
-                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label className="radio-option">
                             <input
                                 type="radio"
                                 name="rentModel"
@@ -132,13 +132,13 @@ const Step1BasicDetails = ({
             <h4 style={{ margin: '20px 0 10px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Parties</h4>
             <div className="form-row">
                 <div className="form-group">
-                    <label>{isSubLease ? 'Sub Tenant *' : 'Tenant *'}</label>
+                    <label>{isSubLease ? 'Sub Tenant *' : 'Master *'}</label>
                     <select
                         value={formData.party_tenant_id}
                         onChange={(e) => setFormData({ ...formData, party_tenant_id: e.target.value })}
                         className="form-control"
                     >
-                        <option value="">Select Tenant</option>
+                        <option value="">Select Master</option>
                         {parties.map(party => (
                             <option key={party.id} value={party.id}>
                                 {party.company_name || `${party.first_name} ${party.last_name}`} ({party.type})

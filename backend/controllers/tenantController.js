@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { createNotification } = require('../utils/notificationHelper');
 
 exports.createTenant = async (req, res) => {
     const connection = await pool.getConnection();
@@ -130,6 +131,9 @@ exports.createTenant = async (req, res) => {
         }
 
         await connection.commit();
+
+        // Notify Admin
+        await createNotification(1, "New Tenant Registered", `Tenant ${company_name} has been successfully registered.`, "success");
 
         res.status(201).json({
             message: 'Tenant created successfully',

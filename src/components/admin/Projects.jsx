@@ -14,7 +14,7 @@ const Projects = () => {
   const [type, setType] = useState("All");
   const [availableLocations, setAvailableLocations] = useState(["All"]);
 
-  const TYPES = ["All", "Residential", "Commercial", "Industrial"];
+  const TYPES = ["All", "RETAIL/SHOP", "Commercial", "Industrial", "Mixed Use"];
 
   /* ================= FETCH LOCATIONS ================= */
   useEffect(() => {
@@ -94,7 +94,12 @@ const Projects = () => {
         setTimeout(() => setMessage({ text: '', type: '' }), 3000);
       } catch (error) {
         console.error("Error deleting project:", error);
-        setMessage({ text: "Failed to delete project", type: 'error' });
+        setMessage({
+          text: error.response?.data?.error || "Failed to delete project",
+          type: 'error'
+        });
+        // Clear message after 3 seconds
+        setTimeout(() => setMessage({ text: '', type: '' }), 3000);
       }
     }
   };
@@ -120,13 +125,10 @@ const Projects = () => {
 
         {message.text && (
           <div style={{
-            marginBottom: '16px',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            background: message.type === 'success' ? '#f0fdf4' : '#fef2f2',
-            border: `1px solid ${message.type === 'success' ? '#166534' : '#991b1b'}`,
-            color: message.type === 'success' ? '#166534' : '#991b1b',
-            fontWeight: '500'
+            marginBottom: '10px',
+            color: message.type === 'success' ? '#166534' : '#ef4444',
+            fontWeight: '500',
+            fontSize: '0.95rem'
           }}>
             {message.text}
           </div>

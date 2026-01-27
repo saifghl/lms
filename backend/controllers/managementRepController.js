@@ -16,36 +16,42 @@ const upload = multer({ storage: storage });
 exports.upload = upload;
 
 /* ================= EXPORT REPORTS CSV ================= */
+/* ================= EXPORT REPORTS CSV ================= */
 exports.exportReports = async (req, res) => {
   try {
     const connection = await pool.getConnection();
-    const { project_id, owner_id } = req.query;
+    const { project_id, owner_id, tenant_id } = req.query;
 
     try {
       let query = `
         SELECT 
           p.project_name,
           COALESCE(u.unit_number, 'N/A') as unit_number,
-          COALESCE(t.company_name, 'N/A') as tenant,
+          COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) as tenant,
           COALESCE(l.monthly_rent, 0) as rent,
           l.lease_start,
           l.lease_end,
           l.status
-        FROM projects p
-        LEFT JOIN units u ON p.id = u.project_id
-        LEFT JOIN leases l ON u.id = l.unit_id
-        LEFT JOIN tenants t ON l.tenant_id = t.id
+        FROM leases l
+        LEFT JOIN projects p ON l.project_id = p.id
+        LEFT JOIN units u ON l.unit_id = u.id
+        LEFT JOIN parties t ON l.party_tenant_id = t.id
+        LEFT JOIN parties o ON l.party_owner_id = o.id
         WHERE 1=1
       `;
 
       const params = [];
       if (project_id) {
-        query += " AND p.id = ?";
+        query += " AND l.project_id = ?";
         params.push(project_id);
       }
       if (owner_id) {
-        query += " AND u.owner_id = ?";
+        query += " AND l.party_owner_id = ?";
         params.push(owner_id);
+      }
+      if (tenant_id) {
+        query += " AND l.party_tenant_id = ?";
+        params.push(tenant_id);
       }
 
       query += " ORDER BY p.project_name, u.unit_number";
@@ -57,7 +63,7 @@ exports.exportReports = async (req, res) => {
       const csvRows = rows.map(row => [
         `"${row.project_name}"`,
         `"${row.unit_number}"`,
-        `"${row.tenant}"`,
+        `"${row.tenant || 'N/A'}"`,
         row.rent,
         row.lease_start ? new Date(row.lease_start).toLocaleDateString() : '',
         row.lease_end ? new Date(row.lease_end).toLocaleDateString() : '',
@@ -79,6 +85,82 @@ exports.exportReports = async (req, res) => {
   } catch (error) {
     console.error("Export CSV error:", error);
     res.status(500).send("Failed to generate CSV");
+  }
+};
+
+
+exports.getRepReports = async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const { project_id, owner_id, tenant_id, search, page = 1, limit = 10 } = req.query;
+
+    try {
+      // Query Leases primarily as they are the "Reports" of financial/operational nature usually
+      let query = `
+        SELECT 
+          l.id,
+          p.project_name,
+          p.project_image,
+          COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) as tenant_name,
+          l.lease_type,
+          l.lease_start as report_date,
+          l.status
+        FROM leases l
+        LEFT JOIN projects p ON l.project_id = p.id
+        LEFT JOIN parties t ON l.party_tenant_id = t.id
+        LEFT JOIN parties o ON l.party_owner_id = o.id
+        WHERE 1=1
+      `;
+
+      const params = [];
+
+      if (project_id) {
+        query += " AND l.project_id = ?";
+        params.push(project_id);
+      }
+
+      if (owner_id) {
+        query += " AND l.party_owner_id = ?";
+        params.push(owner_id);
+      }
+
+      if (tenant_id) {
+        query += " AND l.party_tenant_id = ?";
+        params.push(tenant_id);
+      }
+
+      if (search) {
+        query += " AND (p.project_name LIKE ? OR t.company_name LIKE ? OR t.first_name LIKE ? OR t.last_name LIKE ?)";
+        const term = `%${search}%`;
+        params.push(term, term, term, term);
+      }
+
+      query += " ORDER BY l.created_at DESC";
+
+      const [reports] = await connection.query(query, params);
+
+      res.json({
+        data: reports.map(report => ({
+          id: `L-${report.id}`, // Lease ID as Report ID
+          name: `${report.project_name} - ${report.tenant_name || 'No Tenant'}`,
+          image: report.project_image ? `/uploads/${report.project_image}` : 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=50&h=50&fit=crop',
+          date: report.report_date ? new Date(report.report_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, ' ') : 'N/A',
+          type: report.lease_type,
+          status: report.status
+        })),
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: reports.length,
+          totalPages: Math.ceil(reports.length / limit)
+        }
+      });
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error("Get reports error:", error);
+    res.json({ data: [], pagination: {} });
   }
 };
 
@@ -284,93 +366,7 @@ exports.getRepDashboardStats = async (req, res) => {
   }
 };
 
-/* ================= GET REPORTS ================= */
-exports.getRepReports = async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    const { project_id, owner_id, tenant_id, search, filter_type, page = 1, limit = 10 } = req.query;
 
-    try {
-      // Query to match the "Reports" image columns: Project Name, Date, Type, Status
-      // We will assume "Reports" are essentially Projects with Lease status snapshots for now,
-      // OR we can query Leases specifically. The image shows "Sunset Apartments", "11des2025", "Monthly lease", "Ready".
-      // This looks like Project or Lease data. Let's query Projects joined with their primary/latest lease info.
-
-      let query = `
-        SELECT 
-          p.id as project_id,
-          p.project_name,
-          p.project_image,
-          p.status as project_status,
-          COALESCE(l.lease_type, 'Monthly lease') as lease_type,
-          COALESCE(l.created_at, p.created_at) as report_date,
-          CASE 
-            WHEN p.status = 'active' THEN 'Ready'
-            WHEN p.status = 'maintenance' THEN 'Generating'
-            WHEN p.status = 'inactive' THEN 'Planning'
-            ELSE 'Failed'
-          END as status_label
-        FROM projects p
-        LEFT JOIN units u ON p.id = u.project_id
-        LEFT JOIN leases l ON u.id = l.unit_id AND l.status = 'active'
-        LEFT JOIN owners o ON u.owner_id = o.id
-        LEFT JOIN tenants t ON l.tenant_id = t.id
-        WHERE 1=1
-      `;
-
-      const params = [];
-
-      if (project_id) {
-        query += " AND p.id = ?";
-        params.push(project_id);
-      }
-
-      if (owner_id) {
-        query += " AND u.owner_id = ?";
-        params.push(owner_id);
-      }
-
-      if (tenant_id) {
-        query += " AND l.tenant_id = ?";
-        params.push(tenant_id);
-      }
-
-      if (search) {
-        query += " AND (p.project_name LIKE ? OR o.name LIKE ? OR t.company_name LIKE ?)";
-        const term = `%${search}%`;
-        params.push(term, term, term);
-      }
-
-      // Group by project to avoid duplicates if multiple units
-      query += " GROUP BY p.id";
-      query += " ORDER BY report_date DESC";
-
-      const [reports] = await connection.query(query, params);
-
-      res.json({
-        data: reports.map(report => ({
-          id: `P-${report.project_id}`,
-          name: report.project_name,
-          image: report.project_image ? `/uploads/${report.project_image}` : 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=50&h=50&fit=crop',
-          date: report.report_date ? new Date(report.report_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, ' ') : 'N/A',
-          type: report.lease_type,
-          status: report.status_label
-        })),
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: reports.length,
-          totalPages: Math.ceil(reports.length / limit)
-        }
-      });
-    } finally {
-      connection.release();
-    }
-  } catch (error) {
-    console.error("Get reports error:", error);
-    res.json({ data: [], pagination: {} });
-  }
-};
 
 /* ================= GET NOTIFICATIONS ================= */
 exports.getRepNotifications = async (req, res) => {

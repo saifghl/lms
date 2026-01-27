@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const { createNotification } = require('../utils/notificationHelper');
 
 // Dashboard Summary
 const getLeaseDashboardStats = async (req, res) => {
@@ -134,6 +135,7 @@ const approveLease = async (req, res) => {
         // Log activity (Mock logic or real table insertion)
         // await pool.query('INSERT INTO activity_logs ...')
 
+        await createNotification(1, "Lease Approved", `Lease #${id} has been approved.`, "success");
         res.json({ message: "Lease approved" });
     } catch (err) {
         console.error(err);
@@ -156,6 +158,7 @@ const rejectLease = async (req, res) => {
         // Ideally save the reason/comments to a 'lease_rejections' table or similar
         // For now we just update status to rejected.
 
+        await createNotification(1, "Lease Rejected", `Lease #${id} was rejected. Reason: ${reason}`, "error");
         res.json({ message: "Lease rejected" });
     } catch (err) {
         console.error(err);
@@ -368,12 +371,13 @@ const createLease = async (req, res) => {
             for (let i = 0; i < escalations.length; i++) {
                 const esc = escalations[i];
                 await connection.query(
-                    `INSERT INTO lease_escalations (lease_id, sequence_no, effective_from, increase_type, value)
-                     VALUES (?, ?, ?, ?, ?)`,
+                    `INSERT INTO lease_escalations (lease_id, sequence_no, effective_from, effective_to, increase_type, value)
+                     VALUES (?, ?, ?, ?, ?, ?)`,
                     [
                         leaseId,
                         i + 1,
                         esc.effective_from,
+                        esc.effective_to || null,
                         esc.increase_type || 'Percentage',
                         esc.value
                     ]
@@ -388,6 +392,8 @@ const createLease = async (req, res) => {
         );
 
         await connection.commit();
+        await createNotification(1, "New Lease Drafted", `A new lease for Unit was drafted.`, "info");
+
         res.status(201).json({
             message: 'Lease created successfully',
             lease_id: leaseId
@@ -457,8 +463,8 @@ const getAllLeases = async (req, res) => {
         }
 
         if (search) {
-            query += ` AND (t.company_name LIKE ? OR t.first_name LIKE ? OR t.last_name LIKE ? OR u.unit_number LIKE ? OR p.project_name LIKE ? OR CAST(l.id AS CHAR) LIKE ?)`;
-            params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+            query += ` AND (t.company_name LIKE ? OR t.first_name LIKE ? OR t.last_name LIKE ? OR u.unit_number LIKE ? OR p.project_name LIKE ? OR p.location LIKE ? OR p.address LIKE ? OR CAST(l.id AS CHAR) LIKE ?)`;
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
         }
 
         if (req.query.upcoming_escalations) {
@@ -637,12 +643,13 @@ const updateLease = async (req, res) => {
                 for (let i = 0; i < escalations.length; i++) {
                     const esc = escalations[i];
                     await connection.query(
-                        `INSERT INTO lease_escalations (lease_id, sequence_no, effective_from, increase_type, value)
-                         VALUES (?, ?, ?, ?, ?)`,
+                        `INSERT INTO lease_escalations (lease_id, sequence_no, effective_from, effective_to, increase_type, value)
+                         VALUES (?, ?, ?, ?, ?, ?)`,
                         [
                             leaseId,
                             i + 1,
                             esc.effective_from,
+                            esc.effective_to || null,
                             esc.increase_type || 'Percentage',
                             esc.value
                         ]

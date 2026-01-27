@@ -52,6 +52,14 @@ const Step2RentConfig = ({
                                     }} />
                                 </div>
                                 <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Effective To (Optional)</label>
+                                    <input type="date" className="form-control" value={step.effectiveToDate} onChange={(e) => {
+                                        const newSteps = [...escalationSteps];
+                                        newSteps[index].effectiveToDate = e.target.value;
+                                        setEscalationSteps(newSteps);
+                                    }} />
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}>
                                     <label>Type</label>
                                     <select className="form-control" value={step.increaseType} onChange={(e) => {
                                         const newSteps = [...escalationSteps];

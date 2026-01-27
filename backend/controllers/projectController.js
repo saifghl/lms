@@ -2,6 +2,7 @@ const pool = require("../config/db");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { createNotification } = require('../utils/notificationHelper');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -57,6 +58,9 @@ const addProject = async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       values
     );
+
+    // Notify
+    await createNotification(1, "New Project Added", `Project "${project_name}" has been created in ${location}.`, "success");
 
     res.status(201).json({ message: "Project Added Successfully", id: result.insertId });
   } catch (error) {
@@ -213,6 +217,9 @@ const deleteProject = async (req, res) => {
     res.json({ message: "Project Deleted Successfully" });
   } catch (error) {
     console.error("Delete project error:", error);
+    if (error.errno === 1451) {
+      return res.status(400).json({ error: "Cannot delete project. It has associated units or leases. Please delete them first." });
+    }
     res.status(500).json({ error: error.message });
   }
 };

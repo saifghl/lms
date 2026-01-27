@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import { tenantAPI, getProjects, unitAPI } from '../../services/api';
 import { indianCities, indianStates } from '../../utils/indianLocations';
 import { indianIndustries } from '../../utils/indianIndustries';
+import { isValidPhone } from '../../utils/validators';
 // Reusing OwnerList.css or similar generic styles for forms if available
 // Assuming we can use standard form styles or inline them for specific layout
 import './OwnerList.css';
@@ -94,6 +95,13 @@ const AddTenant = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation
+        if (!isValidPhone(formData.contact_person_phone)) {
+            alert("Contact Person Phone must be exactly 10 digits.");
+            return;
+        }
+
         setLoading(true);
         setSubmitMessage('');
         try {

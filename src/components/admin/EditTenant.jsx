@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { tenantAPI, getProjects, unitAPI } from '../../services/api';
 import { indianIndustries } from '../../utils/indianIndustries';
+import { isValidPhone } from '../../utils/validators';
 import './AddTenant.css';
 
 const EditTenant = () => {
@@ -164,6 +165,22 @@ const EditTenant = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation
+        if (!isValidPhone(formData.contact_person_phone)) {
+            alert("Contact Person Phone must be exactly 10 digits.");
+            return;
+        }
+
+        // Subtenant Validation
+        for (let i = 0; i < subTenants.length; i++) {
+            const st = subTenants[i];
+            if (st.contact_person_phone && !isValidPhone(st.contact_person_phone)) {
+                alert(`Subtenant #${i + 1} Phone must be exactly 10 digits.`);
+                return;
+            }
+        }
+
         setSaving(true);
         setError('');
         setSubmitMessage('');

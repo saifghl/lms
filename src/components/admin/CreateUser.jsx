@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './CreateUser.css';
 import { roleAPI, userAPI } from '../../services/api';
+import { isValidPhone } from '../../utils/validators';
 
 const CreateUser = () => {
 
@@ -40,6 +41,11 @@ const CreateUser = () => {
 
         if (!formData.fullName || !formData.email || !formData.role_id) {
             alert("Please fill all required fields");
+            return;
+        }
+
+        if (formData.phone && !isValidPhone(formData.phone)) {
+            alert("Phone Number must be exactly 10 digits.");
             return;
         }
 

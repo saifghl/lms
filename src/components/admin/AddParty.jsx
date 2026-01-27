@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { partyAPI } from '../../services/api';
+import { indianStates, indianCities } from '../../utils/indianLocations';
+import { isValidPhone } from '../../utils/validators';
 import './PartyForm.css';
 
 const AddParty = () => {
@@ -34,6 +36,17 @@ const AddParty = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation
+        if (!isValidPhone(formData.phone)) {
+            alert("Phone Number must be exactly 10 digits.");
+            return;
+        }
+        if (formData.alt_phone && !isValidPhone(formData.alt_phone)) {
+            alert("Alternate Phone Number must be exactly 10 digits.");
+            return;
+        }
+
         setLoading(true);
         try {
             await partyAPI.createParty(formData);
@@ -254,18 +267,30 @@ const AddParty = () => {
                                 <input
                                     className="form-input"
                                     name="city"
+                                    list="city-options"
                                     value={formData.city}
                                     onChange={handleChange}
+                                    placeholder="Select or Type City"
                                 />
+                                <datalist id="city-options">
+                                    {indianCities.map((city, index) => (
+                                        <option key={index} value={city} />
+                                    ))}
+                                </datalist>
                             </div>
                             <div className="form-group">
                                 <label>State</label>
-                                <input
-                                    className="form-input"
+                                <select
+                                    className="form-select"
                                     name="state"
                                     value={formData.state}
                                     onChange={handleChange}
-                                />
+                                >
+                                    <option value="">Select State</option>
+                                    {indianStates.map((state, index) => (
+                                        <option key={index} value={state}>{state}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="form-group">
                                 <label>Postal Code</label>

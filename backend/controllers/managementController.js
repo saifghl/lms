@@ -29,12 +29,62 @@ exports.getDashboardStats = async (req, res) => {
 /* ================= REPORTS ================= */
 exports.getReports = async (req, res) => {
     try {
-        // If there's a reports table, fetch. If not, return empty or mock if requested.
-        // User saw "Sunset Apartments" in screenshot. 
-        // Let's check if 'documents' or 'leases' can serve as reports. 
-        // For now, let's return [] to verify 'working properly' means 'real data' (which is none yet).
-        res.json([]);
+        const { project_id, owner_id, tenant_id, search } = req.query;
+
+        let query = `
+            SELECT 
+                l.id,
+                p.project_name,
+                COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) as tenant_name,
+                l.lease_start as date,
+                l.lease_type as type,
+                l.status
+            FROM leases l
+            LEFT JOIN projects p ON l.project_id = p.id
+            LEFT JOIN parties t ON l.party_tenant_id = t.id
+            LEFT JOIN parties o ON l.party_owner_id = o.id
+            WHERE 1=1
+        `;
+
+        const params = [];
+
+        if (project_id) {
+            query += " AND l.project_id = ?";
+            params.push(project_id);
+        }
+
+        if (owner_id) {
+            query += " AND l.party_owner_id = ?";
+            params.push(owner_id);
+        }
+
+        if (tenant_id) {
+            query += " AND l.party_tenant_id = ?";
+            params.push(tenant_id);
+        }
+
+        if (search) {
+            query += " AND (p.project_name LIKE ? OR t.company_name LIKE ? OR t.first_name LIKE ? OR t.last_name LIKE ?)";
+            const term = `%${search}%`;
+            params.push(term, term, term, term);
+        }
+
+        query += " ORDER BY l.created_at DESC";
+
+        const [rows] = await pool.query(query, params);
+
+        // Format for frontend
+        const formatted = rows.map(r => ({
+            id: r.id,
+            name: `${r.project_name} - ${r.tenant_name}`,
+            date: new Date(r.date).toLocaleDateString(),
+            type: r.type,
+            status: r.status
+        }));
+
+        res.json(formatted);
     } catch (err) {
+        console.error("Get Reports Error:", err);
         res.status(500).json({ message: "Failed to fetch reports" });
     }
 };

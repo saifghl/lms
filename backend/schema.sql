@@ -186,6 +186,7 @@ CREATE TABLE IF NOT EXISTS lease_escalations (
   lease_id INT NOT NULL,
   sequence_no INT,
   effective_from DATE,
+  effective_to DATE,
   increase_type ENUM('Percentage', 'Fixed Amount') DEFAULT 'Percentage',
   value DECIMAL(12, 2),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -22,8 +22,8 @@ const Leases = () => {
 
         // Handle URL params
         const filterParam = searchParams.get('filter');
-        if (filterParam === 'renewals') setEventFilter('30');
-        if (filterParam === 'expiries') setEventFilter('90');
+        if (filterParam === 'renewals') setEventFilter('90'); // Matches Dashboard (Upcoming Renewals - 90 days)
+        if (filterParam === 'expiries') setEventFilter('60'); // Matches Dashboard (Upcoming Expiries - 60 days)
         if (filterParam === 'escalations') setEventFilter('escalation');
     }, [searchParams]);
 
@@ -126,6 +126,7 @@ const Leases = () => {
                                     <select value={eventFilter} onChange={(e) => setEventFilter(e.target.value)}>
                                         <option value="">All Events</option>
                                         <option value="30">Expiring in 30 Days</option>
+                                        <option value="60">Expiring in 60 Days</option>
                                         <option value="90">Expiring in 90 Days</option>
                                         <option value="escalation">Rent Escalations Due</option>
                                     </select>
@@ -173,9 +174,7 @@ const Leases = () => {
                                 </div>
                             </div>
 
-                            <button className="white-btn filter-btn">
-                                More Filters <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                            </button>
+
 
                         </div>
                     </div>
