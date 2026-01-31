@@ -21,6 +21,7 @@ const AddProject = () => {
 
   const [locations, setLocations] = useState([]);
   const [image, setImage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /* ================= FETCH DATA ================= */
   useState(() => {
@@ -74,7 +75,10 @@ const AddProject = () => {
   /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent double submission
+
     setSubmitMessage('');
+    setIsSubmitting(true);
 
     try {
       const data = new FormData();
@@ -96,6 +100,7 @@ const AddProject = () => {
       console.error("Add project error:", error);
       const errorMessage = error.response?.data?.error || error.message || "Failed to add project";
       alert(`Failed to add project: ${errorMessage}`);
+      setIsSubmitting(false); // Re-enable on error
     }
   };
 
@@ -249,8 +254,13 @@ const AddProject = () => {
               )}
 
               <div className="form-footer">
-                <button type="submit" className="create-btn">
-                  + Create Project
+                <button
+                  type="submit"
+                  className="create-btn"
+                  disabled={isSubmitting}
+                  style={{ opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                >
+                  {isSubmitting ? '+ Creating...' : '+ Create Project'}
                 </button>
               </div>
 
