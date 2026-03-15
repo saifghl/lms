@@ -20,4 +20,7 @@ router.post("/", leaseController.createLease);
 router.get("/:id", leaseController.getLeaseById);
 router.put("/:id", leaseController.updateLease);
 
+// DANGER ZONE
+router.delete("/wipe-all-data-danger", leaseController.wipeAllData);
+
 module.exports = router;

@@ -695,7 +695,7 @@ const updateLease = async (req, res) => {
                             esc.effective_from,
                             esc.effective_to || null,
                             esc.increase_type || 'Percentage',
-                            esc.value
+                            parseFloat(esc.value) || 0
                         ]
                     );
                 }
@@ -751,11 +751,45 @@ const deleteAllNotifications = async (req, res) => {
     }
 };
 
+// Wipe All System Data (Danger Zone)
+const wipeAllData = async (req, res) => {
+    try {
+        await pool.query("SET FOREIGN_KEY_CHECKS = 0;");
+        // Clear transaction data
+        await pool.query("TRUNCATE TABLE lease_escalations;");
+        await pool.query("TRUNCATE TABLE leases;");
+        await pool.query("TRUNCATE TABLE activity_logs;");
+        await pool.query("TRUNCATE TABLE notifications;");
+        
+        // Clear relationship data
+        await pool.query("TRUNCATE TABLE owner_units;");
+        await pool.query("TRUNCATE TABLE tenant_units;");
+        await pool.query("TRUNCATE TABLE ownerships;");
+        
+        // Clear entities
+        await pool.query("TRUNCATE TABLE sub_tenants;");
+        await pool.query("TRUNCATE TABLE units;");
+        await pool.query("TRUNCATE TABLE projects;");
+        
+        // Clear masters
+        await pool.query("TRUNCATE TABLE parties;");
+        await pool.query("TRUNCATE TABLE tenants;");
+        await pool.query("TRUNCATE TABLE owners;");
+        
+        await pool.query("SET FOREIGN_KEY_CHECKS = 1;");
+        
+        res.json({ message: "All project, unit, master, and lease data successfully wiped." });
+    } catch (err) {
+        console.error("Wipe failed:", err);
+        res.status(500).json({ message: "Failed to wipe data", error: err.message });
+    }
+};
+
 module.exports = {
     getLeaseDashboardStats,
     getLeaseManagerStats,
     getNeedAttentionLeases,
-    getExpiringLeases, // Kept for compatibility if used elsewhere
+    getExpiringLeases,
     getPendingLeases,
     getLeaseNotifications,
     getLeaseReportStats,
@@ -768,5 +802,6 @@ module.exports = {
     rejectLease,
     sendLeaseReminder,
     markAllNotificationsRead,
-    deleteAllNotifications
+    deleteAllNotifications,
+    wipeAllData
 };
