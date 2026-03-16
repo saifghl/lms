@@ -134,7 +134,7 @@ const Step2RentConfig = ({
                             </div>
                         </div>
                         <div className="form-group">
-                            <label>Min Guarantee Amount (Calc)</label>
+                            <label>1) Minimum Guarantee</label>
                             <div className="currency-input">
                                 <span className="currency-symbol">₹</span>
                                 <input
@@ -148,7 +148,21 @@ const Step2RentConfig = ({
                             </div>
                         </div>
                         <div className="form-group">
-                            <label>Revenue Share Percentage (%)</label>
+                            <label>2) Monthly NET SALE</label>
+                            <div className="currency-input">
+                                <span className="currency-symbol">₹</span>
+                                <input
+                                    type="number"
+                                    placeholder="Enter net sale"
+                                    className="form-control"
+                                    value={formData.monthly_net_sales}
+                                    onChange={(e) => setFormData({ ...formData, monthly_net_sales: e.target.value })}
+                                />
+                                <span className="currency-code">INR</span>
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>3) Revenue Share Percentage (%)</label>
                             <div className="input-with-suffix" style={{ display: 'flex', alignItems: 'center' }}>
                                 <input
                                     type="number"
@@ -161,23 +175,71 @@ const Step2RentConfig = ({
                             </div>
                         </div>
                         <div className="form-group">
-                            <label>Projected Share Amount (Calc)</label>
+                            <label>4) Revenue Share Amount</label>
                             <div className="currency-input">
                                 <span className="currency-symbol">₹</span>
                                 <input
                                     type="number"
-                                    placeholder="Calculating..."
+                                    placeholder="0.00"
                                     readOnly
-                                    style={{ backgroundColor: '#f3f4f6' }}
+                                    style={{ backgroundColor: '#e0f2fe' }}
                                     value={
-                                        (formData.revenue_share_percentage && (rentModel === 'Hybrid' ? formData.minimum_guarantee : formData.monthly_rent))
-                                            ? ((parseFloat(rentModel === 'Hybrid' ? formData.minimum_guarantee : formData.monthly_rent) / parseFloat(formData.revenue_share_percentage)) * 100).toFixed(2)
+                                        (formData.monthly_net_sales && formData.revenue_share_percentage)
+                                            ? ((parseFloat(formData.monthly_net_sales) * parseFloat(formData.revenue_share_percentage)) / 100).toFixed(2)
                                             : '0.00'
                                     }
                                 />
-                                <span className="currency-code">Sales</span>
+                                <span className="currency-code">INR</span>
                             </div>
-                            <small style={{ color: '#666', fontSize: '0.8em' }}>Sales required to match MGR</small>
+                            <small style={{ color: '#666', fontSize: '0.8em' }}>(NET SALE × %)</small>
+                        </div>
+                        <div className="form-group">
+                            <label>5) Total</label>
+                            <div className="currency-input">
+                                <span className="currency-symbol">₹</span>
+                                <input
+                                    type="number"
+                                    placeholder="0.00"
+                                    readOnly
+                                    style={{ backgroundColor: '#e0f2fe' }}
+                                    value={
+                                        (() => {
+                                            const mg = parseFloat(rentModel === 'Hybrid' ? (formData.minimum_guarantee || 0) : (formData.monthly_rent || 0));
+                                            const rsAmount = (formData.monthly_net_sales && formData.revenue_share_percentage)
+                                                ? ((parseFloat(formData.monthly_net_sales) * parseFloat(formData.revenue_share_percentage)) / 100)
+                                                : 0;
+                                            return (mg + rsAmount).toFixed(2);
+                                        })()
+                                    }
+                                />
+                                <span className="currency-code">INR</span>
+                            </div>
+                            <small style={{ color: '#666', fontSize: '0.8em' }}>(Min Guarantee + Rev Share)</small>
+                        </div>
+                    </div>
+                    <div className="form-row" style={{ marginTop: '15px' }}>
+                        <div className="form-group">
+                            <label>6) Final Payable (Higher Value)</label>
+                            <div className="currency-input">
+                                <span className="currency-symbol">₹</span>
+                                <input
+                                    type="number"
+                                    placeholder="0.00"
+                                    readOnly
+                                    style={{ backgroundColor: '#dcfce7', fontWeight: 'bold' }}
+                                    value={
+                                        (() => {
+                                            const mg = parseFloat(rentModel === 'Hybrid' ? (formData.minimum_guarantee || 0) : (formData.monthly_rent || 0));
+                                            const rsAmount = (formData.monthly_net_sales && formData.revenue_share_percentage)
+                                                ? ((parseFloat(formData.monthly_net_sales) * parseFloat(formData.revenue_share_percentage)) / 100)
+                                                : 0;
+                                            return Math.max(mg, rsAmount).toFixed(2);
+                                        })()
+                                    }
+                                />
+                                <span className="currency-code">INR</span>
+                            </div>
+                            <small style={{ color: '#166534', fontSize: '0.8em' }}>Pays higher of MG vs Revenue Share Amount</small>
                         </div>
                     </div>
                     <div className="form-row" style={{ marginTop: '15px' }}>

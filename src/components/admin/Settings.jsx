@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import './Settings.css';
 import { settingsAPI, FILE_BASE_URL } from '../../services/api';
+import axios from 'axios';
 
 const Settings = () => {
 
@@ -134,6 +135,25 @@ const Settings = () => {
                 } else {
                     setMessage({ text: 'Password update failed', type: 'error' });
                 }
+            });
+    };
+
+    /* ============================
+       WIPE DATA
+    ============================ */
+    const handleWipeData = () => {
+        if (!window.confirm("WARNING: This will permanently delete ALL data (projects, units, leases, masters) and update the database schema. This action CANNOT be undone. Proceed?")) {
+            return;
+        }
+        
+        axios.delete(`${FILE_BASE_URL.replace('/uploads', '')}/api/leases/wipe-all-data-danger`)
+            .then((res) => {
+                setMessage({ text: 'Data wiped successfully!', type: 'success' });
+                alert("Data wiped successfully! You can now start fresh.");
+            })
+            .catch((err) => {
+                console.error("Wipe failed:", err);
+                setMessage({ text: 'Failed to wipe data: ' + (err.response?.data?.message || err.message), type: 'error' });
             });
     };
 
@@ -307,6 +327,22 @@ const Settings = () => {
 
                     <button className="btn-save" onClick={handlePasswordUpdate}>
                         Update Password
+                    </button>
+                </section>
+
+                <hr />
+
+                {/* ================= DANGER ZONE ================= */}
+                <section className="settings-section" style={{ border: '1px solid #dc2626', padding: '20px', borderRadius: '8px', marginTop: '20px' }}>
+                    <h3 style={{ color: '#dc2626' }}>Danger Zone</h3>
+                    <p style={{ color: '#666', marginBottom: '15px' }}>
+                        Permanently delete all projects, units, leases, parties, and masters from the system. This will also ensure the database schema is up-to-date.
+                    </p>
+                    <button 
+                        style={{ background: '#dc2626', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }} 
+                        onClick={handleWipeData}
+                    >
+                        Wipe All Data
                     </button>
                 </section>
             </main>

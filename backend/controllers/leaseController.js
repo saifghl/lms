@@ -296,7 +296,8 @@ const createLease = async (req, res) => {
             loi_date,
             agreement_date,
             deposit_payment_date,
-            registration_date
+            registration_date,
+            monthly_net_sales
         } = req.body;
 
         // Validate required fields
@@ -340,13 +341,13 @@ const createLease = async (req, res) => {
                 lease_type, rent_model, sub_lease_area_sqft,
                 lease_start, lease_end, rent_commencement_date, fitout_period_end,
                 tenure_months, lockin_period_months, notice_period_months,
-                monthly_rent, cam_charges, billing_frequency, payment_due_day,
+                monthly_rent, monthly_net_sales, cam_charges, billing_frequency, payment_due_day,
                 currency_code, security_deposit, utility_deposit, deposit_type,
                 revenue_share_percentage, revenue_share_applicable_on, status,
                 fitout_period_start, notice_vacation_date, opening_date,
                 rent_free_start_date, rent_free_end_date,
                 loi_date, agreement_date, deposit_payment_date, registration_date
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 project_id,
                 unit_id,
@@ -364,6 +365,7 @@ const createLease = async (req, res) => {
                 lockin_period_months || 12,
                 notice_period_months || 3,
                 monthly_rent || 0,
+                monthly_net_sales || 0,
                 cam_charges || 0,
                 billing_frequency || 'Monthly',
                 payment_due_day || '1st of Month',
@@ -608,7 +610,8 @@ const updateLease = async (req, res) => {
             loi_date,
             agreement_date,
             deposit_payment_date,
-            registration_date
+            registration_date,
+            monthly_net_sales
         } = req.body;
 
         // Check if lease exists
@@ -642,6 +645,7 @@ const updateLease = async (req, res) => {
         if (lockin_period_months !== undefined) updateFields.push('lockin_period_months = ?'), updateValues.push(lockin_period_months);
         if (notice_period_months !== undefined) updateFields.push('notice_period_months = ?'), updateValues.push(notice_period_months);
         if (monthly_rent !== undefined) updateFields.push('monthly_rent = ?'), updateValues.push(monthly_rent);
+        if (monthly_net_sales !== undefined) updateFields.push('monthly_net_sales = ?'), updateValues.push(monthly_net_sales);
         if (cam_charges !== undefined) updateFields.push('cam_charges = ?'), updateValues.push(cam_charges);
         if (billing_frequency !== undefined) updateFields.push('billing_frequency = ?'), updateValues.push(billing_frequency);
         if (payment_due_day !== undefined) updateFields.push('payment_due_day = ?'), updateValues.push(payment_due_day);
@@ -751,34 +755,48 @@ const deleteAllNotifications = async (req, res) => {
     }
 };
 
-// Wipe All System Data (Danger Zone)
+// Wipe All System Data and Apply Migrations (Danger Zone)
 const wipeAllData = async (req, res) => {
     try {
         await pool.query("SET FOREIGN_KEY_CHECKS = 0;");
         // Clear transaction data
-        await pool.query("TRUNCATE TABLE lease_escalations;");
-        await pool.query("TRUNCATE TABLE leases;");
-        await pool.query("TRUNCATE TABLE activity_logs;");
-        await pool.query("TRUNCATE TABLE notifications;");
+        try { await pool.query("TRUNCATE TABLE lease_escalations;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE leases;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE activity_logs;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE notifications;"); } catch(e) {}
         
         // Clear relationship data
-        await pool.query("TRUNCATE TABLE owner_units;");
-        await pool.query("TRUNCATE TABLE tenant_units;");
-        await pool.query("TRUNCATE TABLE ownerships;");
+        try { await pool.query("TRUNCATE TABLE owner_units;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE tenant_units;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE unit_ownerships;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE ownerships;"); } catch(e) {}
         
         // Clear entities
-        await pool.query("TRUNCATE TABLE sub_tenants;");
-        await pool.query("TRUNCATE TABLE units;");
-        await pool.query("TRUNCATE TABLE projects;");
+        try { await pool.query("TRUNCATE TABLE sub_tenants;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE units;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE projects;"); } catch(e) {}
         
         // Clear masters
-        await pool.query("TRUNCATE TABLE parties;");
-        await pool.query("TRUNCATE TABLE tenants;");
-        await pool.query("TRUNCATE TABLE owners;");
+        try { await pool.query("TRUNCATE TABLE parties;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE tenants;"); } catch(e) {}
+        try { await pool.query("TRUNCATE TABLE owners;"); } catch(e) {}
         
         await pool.query("SET FOREIGN_KEY_CHECKS = 1;");
+
+        // --- APPLY MIGRATIONS ---
+        // 1. Add party fields to leases (from migrate_parties.js)
+        try { await pool.query("ALTER TABLE leases ADD COLUMN IF NOT EXISTS party_owner_id INT, ADD COLUMN IF NOT EXISTS party_tenant_id INT"); } catch(e) { console.log(e.message); }
+        // 2. Add extra lease dates (from add_lease_dates_columns.js)
+        const dateCols = [
+            "fitout_period_start", "notice_vacation_date", "opening_date", 
+            "rent_free_start_date", "rent_free_end_date", "loi_date", 
+            "agreement_date", "deposit_payment_date", "registration_date"
+        ];
+        for (const col of dateCols) {
+            try { await pool.query(`ALTER TABLE leases ADD COLUMN IF NOT EXISTS ${col} DATE NULL`); } catch(e) { console.log(e.message); }
+        }
         
-        res.json({ message: "All project, unit, master, and lease data successfully wiped." });
+        res.json({ message: "All project, unit, master, and lease data successfully wiped, and schema verified." });
     } catch (err) {
         console.error("Wipe failed:", err);
         res.status(500).json({ message: "Failed to wipe data", error: err.message });

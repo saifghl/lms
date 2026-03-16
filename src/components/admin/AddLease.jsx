@@ -26,18 +26,21 @@ const AddLease = () => {
     const [formData, setFormData] = useState({
         project_id: '',
         unit_id: '',
-        party_owner_id: '',
-        party_tenant_id: '',
-        sub_tenant_id: '',
+        party_owner_id: '',  // For direct lease
+        party_tenant_id: '', // For direct lease / Subtenant
+        sub_tenant_id: '',   // For Subtenant lease
+        lease_type: '',
+        rent_model: 'Fixed',
         sub_lease_area_sqft: '',
         lease_start: '',
         lease_end: '',
         rent_commencement_date: '',
         fitout_period_end: '',
-        lockin_period_months: 12,
-        notice_period_months: 3,
+        tenure_months: '',
+        lockin_period_months: '',
+        notice_period_months: '',
         monthly_rent: '',
-        minimum_guarantee: '', // For Hybrid
+        monthly_net_sales: '', // ADDED THIS
         cam_charges: '',
         billing_frequency: 'Monthly',
         payment_due_day: '1st of Month',
@@ -47,21 +50,18 @@ const AddLease = () => {
         deposit_type: 'Cash',
         revenue_share_percentage: '',
         revenue_share_applicable_on: 'Net Sales',
-
-        // New Docs Fields
+        
+        // New Dates
+        fitout_period_start: '',
+        notice_vacation_date: '',
+        opening_date: '',
+        rent_free_start_date: '',
+        rent_free_end_date: '',
         loi_date: '',
         agreement_date: '',
         deposit_payment_date: '',
         registration_date: '',
-
-        // Rent Free Period
-        rent_free_start_date: '',
-        rent_free_end_date: '',
-
-        // Additional Dates & Validations
-        fitout_period_start: '',
-        notice_vacation_date: '',
-        opening_date: ''
+        status: 'draft',
     });
 
 
@@ -211,6 +211,7 @@ const AddLease = () => {
                 lockin_period_months: parseInt(formData.lockin_period_months) || 12,
                 notice_period_months: parseInt(formData.notice_period_months) || 3,
                 monthly_rent: parseFloat(formData.monthly_rent) || 0,
+                monthly_net_sales: parseFloat(formData.monthly_net_sales) || 0,
                 cam_charges: parseFloat(formData.cam_charges) || 0,
                 billing_frequency: formData.billing_frequency,
                 payment_due_day: formData.payment_due_day,
