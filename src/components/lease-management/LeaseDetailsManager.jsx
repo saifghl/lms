@@ -143,7 +143,7 @@ const LeaseDetailsManager = () => {
                                 </div>
                                 <div className="info-item">
                                     <label>Area (Rentable)</label>
-                                    <p>{lease.super_area} sqft</p>
+                                    <p>{lease.chargeable_area} sqft</p>
                                 </div>
                                 <div className="info-item">
                                     <label>Usage Type</label>

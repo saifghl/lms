@@ -90,8 +90,8 @@ export const unitAPI = {
     }),
   updateUnit: (id, data) => API.put(`/units/${id}`, data),
   deleteUnit: (id) => API.delete(`/units/${id}`),
-  getUnitsByProject: (projectId) =>
-    API.get(`/units?projectId=${projectId}`),
+  getUnitsByProject: (projectId, excludeSold = false) =>
+    API.get(`/units?projectId=${projectId}${excludeSold ? '&excludeSold=true' : ''}`),
 };
 
 // ---------------- TENANTS ----------------
@@ -153,8 +153,8 @@ export const managementAPI = {
 };
 
 // ---------------- DASHBOARD ----------------
-export const getDashboardStats = () =>
-  API.get("/dashboard/stats");
+export const getDashboardStats = (params) =>
+  API.get("/dashboard/stats", { params });
 
 // ---------------- ACTIVITY LOG ----------------
 export const getActivityLogs = (
@@ -187,6 +187,8 @@ export const leaseAPI = {
     API.post("/leases", data),
   updateLease: (id, data) =>
     API.put(`/leases/${id}`, data),
+  deleteLease: (id) =>
+    API.delete(`/leases/${id}`),
   // Dashboard & Stats
   getLeaseDashboardStats: () => API.get("/leases/stats"),
   getNeedAttentionLeases: () => API.get("/leases/need-attention"),
@@ -229,6 +231,13 @@ export const ownershipAPI = {
   addDocumentType: (data) => API.post("/ownerships/document-types", data),
   uploadDocument: (data) => API.post("/ownerships/documents", data),
   getDocuments: (unitId, partyId) => API.get(`/ownerships/documents/${unitId}/${partyId}`),
+};
+
+// ---------------- FILTERS ----------------
+export const filterAPI = {
+  getFilterOptions: (category) => API.get(`/filters${category ? '?category=' + category : ''}`),
+  addFilterOption: (data) => API.post("/filters", data),
+  deleteFilterOption: (id) => API.delete(`/filters/${id}`),
 };
 
 // Backward compatibility

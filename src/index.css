@@ -314,4 +314,60 @@ tr:hover td {
   h2 {
     font-size: 1.25rem;
   }
+  .status-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
 }
+
+/* Custom Action Buttons (Global) */
+.action-icon-wrapper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.action-icon-wrapper.right {
+  justify-content: flex-end;
+}
+.action-icon-wrapper.center {
+  justify-content: center;
+}
+.action-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  color: white;
+  background: transparent;
+  padding: 0;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.action-icon-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+.action-icon-btn:active {
+  transform: scale(0.95);
+}
+.action-icon-btn.view {
+  background-color: #4da3ff; /* bright blue */
+}
+.action-icon-btn.edit {
+  background-color: #4da3ff; /* bright blue */
+}
+.action-icon-btn.delete {
+  background-color: #f43f5e; /* bright red */
+}
+.action-icon-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: white;
+  stroke-width: 2.5;
+  fill: none;
+}

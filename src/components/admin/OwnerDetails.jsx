@@ -350,7 +350,7 @@ const OwnerDetails = () => {
                       </div>
                       <div className="doc-info">
                         <a
-                          href={`${FILE_BASE_URL.replace('/api', '')}/${doc.document_path}`}
+                          href={`${FILE_BASE_URL.replace('/api', '')}/${doc.document_path ? doc.document_path.replace(/\\\\/g, '/') : ''}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="doc-name"

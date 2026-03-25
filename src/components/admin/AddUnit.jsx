@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { unitAPI, getProjects } from '../../services/api';
+import { unitAPI, getProjects, filterAPI } from '../../services/api';
 import './AddUnit.css';
 
 const AddUnit = () => {
@@ -10,6 +10,16 @@ const AddUnit = () => {
     const fileInputRef = useRef(null);
     // const [loading, setLoading] = useState(false);
     const [projects, setProjects] = useState([]);
+    const [unitConditions, setUnitConditions] = useState([
+        { value: 'fully_fitted', label: 'Fully Fitted' }
+    ]);
+    const [plcs, setPlcs] = useState([
+        { value: 'front_facing', label: 'Front Facing' }
+    ]);
+    const [blocks, setBlocks] = useState([]);
+    const [floors, setFloors] = useState([]);
+    const [unitCategories, setUnitCategories] = useState([]);
+    const [unitZoningTypes, setUnitZoningTypes] = useState([]);
 
     // Get projectId from URL params if available
     const queryParams = new URLSearchParams(location.search);
@@ -19,12 +29,14 @@ const AddUnit = () => {
         project_id: preSelectedProjectId,
         unit_number: '',
         floor_number: '',
-        block_tower: '', // Added
-        super_area: '',
+        block_tower: '',
+        chargeable_area: '',
         carpet_area: '',
         covered_area: '',
         unit_condition: 'fully_fitted',
         plc: 'front_facing',
+        unit_category: '',
+        unit_zoning_type: '',
         projected_rent: ''
     });
 
@@ -41,7 +53,48 @@ const AddUnit = () => {
                 console.error("Failed to fetch projects", err);
             }
         };
+        const fetchFilters = async () => {
+            try {
+                const ucRes = await filterAPI.getFilterOptions("unit_condition");
+                if (ucRes.data.data.length > 0) {
+                    setUnitConditions(ucRes.data.data.map(t => ({ value: t.option_value, label: t.option_value })));
+                } else {
+                    setUnitConditions([
+                        { value: 'vacant', label: 'Vacant' },
+                        { value: 'maintenance', label: 'Maintenance' }
+                    ]);
+                }
+                const plcRes = await filterAPI.getFilterOptions("plc");
+                if (plcRes.data.data.length > 0) {
+                    setPlcs(plcRes.data.data.map(t => ({ value: t.option_value, label: t.option_value })));
+                } else {
+                    setPlcs([
+                        { value: 'none', label: 'None' }
+                    ]);
+                }
+                
+                const blockRes = await filterAPI.getFilterOptions("block_tower");
+                if (blockRes.data?.data?.length > 0) {
+                    setBlocks(blockRes.data.data.map(t => t.option_value));
+                }
+                const floorRes = await filterAPI.getFilterOptions("floor_number");
+                if (floorRes.data?.data?.length > 0) {
+                    setFloors(floorRes.data.data.map(t => t.option_value));
+                }
+                const catRes = await filterAPI.getFilterOptions("unit_category");
+                if (catRes.data?.data?.length > 0) {
+                    setUnitCategories(catRes.data.data.map(t => ({ value: t.option_value, label: t.option_value })));
+                }
+                const zoneRes = await filterAPI.getFilterOptions("unit_zoning_type");
+                if (zoneRes.data?.data?.length > 0) {
+                    setUnitZoningTypes(zoneRes.data.data.map(t => ({ value: t.option_value, label: t.option_value })));
+                }
+            } catch (error) {
+                console.error("Error fetching filters", error);
+            }
+        };
         fetchProjects();
+        fetchFilters();
     }, []);
 
     // State for the unit input suffix (e.g., "101")
@@ -54,7 +107,7 @@ const AddUnit = () => {
     useEffect(() => {
         // Find selected project to get calculation basis
         const selectedProject = projects.find(p => p.id === parseInt(formData.project_id));
-        const calcType = selectedProject?.calculation_type || 'Super Area';
+        const calcType = selectedProject?.calculation_type || 'Chargeable Area';
 
         let area = 0;
         if (calcType === 'Covered Area') {
@@ -62,7 +115,7 @@ const AddUnit = () => {
         } else if (calcType === 'Carpet Area') {
             area = parseFloat(formData.carpet_area) || 0;
         } else {
-            area = parseFloat(formData.super_area) || 0;
+            area = parseFloat(formData.chargeable_area) || 0;
         }
 
         const rate = parseFloat(rentPerSqft) || 0;
@@ -72,29 +125,29 @@ const AddUnit = () => {
             ...prev,
             projected_rent: total > 0 ? total.toString() : ''
         }));
-    }, [formData.super_area, formData.covered_area, formData.carpet_area, formData.project_id, rentPerSqft, projects]);
+    }, [formData.chargeable_area, formData.covered_area, formData.carpet_area, formData.project_id, rentPerSqft, projects]);
 
     // Validation Effect
     useEffect(() => {
-        const superArea = parseFloat(formData.super_area) || 0;
+        const superArea = parseFloat(formData.chargeable_area) || 0;
         const coveredArea = parseFloat(formData.covered_area) || 0;
         const carpetArea = parseFloat(formData.carpet_area) || 0;
 
         const newErrors = {};
 
         if (formData.covered_area && superArea > 0 && coveredArea >= superArea) {
-            newErrors.covered_area = "Must be less than Super Area";
+            newErrors.covered_area = "Must be less than Chargeable Area";
         }
 
         if (formData.carpet_area && coveredArea > 0 && carpetArea >= coveredArea) {
             newErrors.carpet_area = "Must be less than Covered Area";
         } else if (formData.carpet_area && superArea > 0 && carpetArea >= superArea) {
             // Fallback if covered area is missing but super area exists
-            newErrors.carpet_area = "Must be less than Super Area";
+            newErrors.carpet_area = "Must be less than Chargeable Area";
         }
 
         setErrors(newErrors);
-    }, [formData.super_area, formData.covered_area, formData.carpet_area]);
+    }, [formData.chargeable_area, formData.covered_area, formData.carpet_area]);
 
     // Specific handler for Floor Selection
     const handleFloorChange = (e) => {
@@ -169,6 +222,12 @@ const AddUnit = () => {
             return;
         }
 
+        if (!formData.chargeable_area && !formData.carpet_area && !formData.covered_area) {
+            setSubmitMessage("At least ONE area (Chargeable, Covered, or Carpet) is mandatory.");
+            setIsSubmitting(false);
+            return;
+        }
+
         if (Object.keys(errors).length > 0) {
             setSubmitMessage("Please fix validation errors before submitting.");
             setIsSubmitting(false);
@@ -232,29 +291,51 @@ const AddUnit = () => {
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label>Block / Tower (Optional)</label>
-                                        <input
-                                            type="text"
-                                            name="block_tower"
-                                            value={formData.block_tower}
-                                            onChange={handleChange}
-                                            placeholder="e.g. A, B, Tower 1"
-                                        />
+                                        {blocks.length > 0 ? (
+                                            <div className="select-wrapper">
+                                                <select name="block_tower" value={formData.block_tower} onChange={handleChange}>
+                                                    <option value="">Select Block/Tower</option>
+                                                    {blocks.map(b => (
+                                                        <option key={b} value={b}>{b}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                name="block_tower"
+                                                value={formData.block_tower}
+                                                onChange={handleChange}
+                                                placeholder="e.g. A, B, Tower 1"
+                                            />
+                                        )}
                                     </div>
                                     <div className="form-group">
                                         <label>Floor Number</label>
-                                        <div className="select-wrapper">
-                                            <select
+                                        {floors.length > 0 ? (
+                                            <div className="select-wrapper">
+                                                <select
+                                                    name="floor_number"
+                                                    value={formData.floor_number}
+                                                    onChange={handleFloorChange}
+                                                    required
+                                                >
+                                                    <option value="">Select Floor</option>
+                                                    {floors.map(f => (
+                                                        <option key={f} value={f}>{f}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <input
+                                                type="text"
                                                 name="floor_number"
                                                 value={formData.floor_number}
                                                 onChange={handleFloorChange}
+                                                placeholder="e.g. GF, 1F"
                                                 required
-                                            >
-                                                <option value="">Select Floor</option>
-                                                {['GF', 'FF', 'SF', 'TF', '4F', '5F', '6F', '7F', '8F', '9F', '10F'].map(f => (
-                                                    <option key={f} value={f}>{f}</option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                            />
+                                        )}
                                     </div>
                                     <div className="form-group">
                                         <label>Unit Number (Suffix)</label>
@@ -283,11 +364,11 @@ const AddUnit = () => {
                                 <h3>Specifications & Dimensions</h3>
                                 <div className="form-row three-cols">
                                     <div className="form-group">
-                                        <label>Super Area (sq ft)</label>
+                                        <label>Chargeable Area (sq ft)</label>
                                         <input
                                             type="number"
-                                            name="super_area"
-                                            value={formData.super_area}
+                                            name="chargeable_area"
+                                            value={formData.chargeable_area}
                                             onChange={handleChange}
                                         />
                                     </div>
@@ -300,6 +381,11 @@ const AddUnit = () => {
                                             onChange={handleChange}
                                             style={{ borderColor: errors.covered_area ? 'red' : undefined }}
                                         />
+                                        {formData.covered_area && formData.chargeable_area && (
+                                            <span style={{ fontSize: '11px', color: '#6B7280', display: 'block', marginTop: '4px' }}>
+                                                Loading Output (% Loading): {((parseFloat(formData.covered_area) / parseFloat(formData.chargeable_area)) * 100).toFixed(1)}%
+                                            </span>
+                                        )}
                                         {errors.covered_area && <span style={{ color: 'red', fontSize: '12px' }}>{errors.covered_area}</span>}
                                     </div>
                                     <div className="form-group">
@@ -311,18 +397,47 @@ const AddUnit = () => {
                                             onChange={handleChange}
                                             style={{ borderColor: errors.carpet_area ? 'red' : undefined }}
                                         />
+                                        {formData.carpet_area && formData.chargeable_area && (
+                                            <span style={{ fontSize: '11px', color: '#6B7280', display: 'block', marginTop: '4px' }}>
+                                                Efficiency (% Carpet): {((parseFloat(formData.carpet_area) / parseFloat(formData.chargeable_area)) * 100).toFixed(1)}%
+                                            </span>
+                                        )}
                                         {errors.carpet_area && <span style={{ color: 'red', fontSize: '12px' }}>{errors.carpet_area}</span>}
                                     </div>
                                 </div>
 
                                 <div className="form-row">
-                                    <div className="form-group half-width">
+                                    <div className="form-group">
                                         <label>Unit Condition</label>
                                         <div className="select-wrapper">
                                             <select name="unit_condition" value={formData.unit_condition} onChange={handleChange}>
-                                                <option value="fully_fitted">Fully Fitted</option>
-                                                <option value="semi_fitted">Semi Fitted</option>
-                                                <option value="bare_shell">Bare Shell</option>
+                                                {unitConditions.map(uc => (
+                                                    <option key={uc.value} value={uc.value}>{uc.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Unit Category</label>
+                                        <div className="select-wrapper">
+                                            <select name="unit_category" value={formData.unit_category} onChange={handleChange}>
+                                                <option value="">Select Category</option>
+                                                {unitCategories.map(uc => (
+                                                    <option key={uc.value} value={uc.value}>{uc.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Unit Zoning Type</label>
+                                        <div className="select-wrapper">
+                                            <select name="unit_zoning_type" value={formData.unit_zoning_type} onChange={handleChange}>
+                                                <option value="">Select Zoning</option>
+                                                {unitZoningTypes.map(uc => (
+                                                    <option key={uc.value} value={uc.value}>{uc.label}</option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
@@ -334,13 +449,13 @@ const AddUnit = () => {
                                 <h3>Commercials</h3>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>PLC</label>
+                                        <label>Premium on Lease</label>
                                         <div className="select-wrapper">
                                             <select name="plc" value={formData.plc} onChange={handleChange}>
-                                                <option value="front_facing">Front Facing</option>
-                                                <option value="corner">Corner</option>
-                                                <option value="park_facing">Park Facing</option>
-                                                <option value="road_facing">Road Facing</option>
+                                                <option value="">Select Premium On Lease (Optional)</option>
+                                                {plcs.map(plc => (
+                                                    <option key={plc.value} value={plc.value}>{plc.label}</option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
@@ -368,7 +483,7 @@ const AddUnit = () => {
                                                 readOnly
                                                 placeholder="Calculated automatically"
                                                 style={{ backgroundColor: '#f9fafb' }}
-                                                title={`Calculated based on ${projects.find(p => p.id === parseInt(formData.project_id))?.calculation_type || 'Super Area'}`}
+                                                title={`Calculated based on ${projects.find(p => p.id === parseInt(formData.project_id))?.calculation_type || 'Chargeable Area'}`}
                                             />
                                             <span className="suffix">INR/mo</span>
                                         </div>

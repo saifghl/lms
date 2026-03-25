@@ -130,7 +130,7 @@ const LeaseList = () => {
                                         <td><span className="lease-id">L-{2024}-{1000 + lease.id}</span></td>
                                         <td>
                                             <span className="project-name">{lease.project_name || 'N/A'}</span>
-                                            <span className="unit-info">Unit {lease.unit_number || '-'} • {lease.super_area || '0'} sqft</span>
+                                            <span className="unit-info">Unit {lease.unit_number || '-'} • {lease.chargeable_area || '0'} sqft</span>
                                         </td>
                                         <td><span className="tenant-name">{lease.tenant_name}</span></td>
                                         <td>

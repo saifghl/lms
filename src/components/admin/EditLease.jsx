@@ -1,139 +1,305 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { leaseAPI, getProjects, unitAPI, partyAPI } from '../../services/api';
-import './EditLease.css';
+import Step1BasicDetails from './lease-creation/Step1BasicDetails';
+import Step2TermsFinalization from './lease-creation/Step2TermsFinalization';
+import Step3RentConfig from './lease-creation/Step3RentConfig';
+import Step4Escalations from './lease-creation/Step4Escalations';
+import Step5DocsExecute from './lease-creation/Step5DocsExecute';
+import { leaseAPI, getProjects, unitAPI, partyAPI, ownershipAPI } from '../../services/api';
+import './AddLease.css';
 import './dashboard.css';
 
 const EditLease = () => {
     const navigate = useNavigate();
     const { id } = useParams();
-
-    const [saving, setSaving] = useState(false);
+    
+    const [currentStep, setCurrentStep] = useState(1);
+    const [rentModel, setRentModel] = useState('Fixed'); // 'Fixed' | 'RevenueShare' | 'Hybrid'
+    const [isSubLease, setIsSubLease] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
 
-    // Form Fields
-    const [formData, setFormData] = useState({
-        project: '',
-        unit: '',
-        tenant: '', // Keep for UI, but will store party_tenant_id
-        owner: '',  // Keep for UI, but will store party_owner_id
-        party_owner_id: '',
-        party_tenant_id: '',
-        startDate: '',
-        endDate: '',
-        rentCommencementDate: '',
-        duration: '',
-        lockinPeriod: '',
-        noticePeriod: '',
-        baseRent: '',
-        mgr: '',
-        camCharges: '',
-        paymentDueDay: '1st of Month',
-        billingFrequency: 'Monthly',
-        latePaymentFee: '',
-        revenueShare: '',
-        applicableOn: 'Net Sales',
-        reportingFrequency: 'Monthly',
-        securityDeposit: '',
-        utilityDeposit: '',
-        depositType: 'Cash / Check'
-    });
-
-    const [escalationSteps, setEscalationSteps] = useState([]);
-
-    // Dropdown Data
+    // Data States
     const [projects, setProjects] = useState([]);
     const [units, setUnits] = useState([]);
     const [parties, setParties] = useState([]);
+    const [activeOwner, setActiveOwner] = useState(null);
 
+    // Form State mapped to DB identical to AddLease
+    const [formData, setFormData] = useState({
+        project_id: '',
+        unit_id: '',
+        party_owner_id: '',  
+        party_tenant_id: '', 
+        sub_tenant_id: '',   
+        lease_type: '',
+        rent_model: 'Fixed',
+        sub_lease_area_sqft: '',
+        lease_start: '',
+        lease_end: '',
+        rent_commencement_date: '',
+        fitout_period_end: '',
+        tenure_months: '',
+        lockin_period_months: '',
+        notice_period_months: '',
+        lessee_lockin_period_months: '',
+        lessor_lockin_period_months: '',
+        lessee_notice_period_months: '',
+        lessor_notice_period_months: '',
+        unit_handover_date: '',
+        rent_amount_option: 'Option B',
+        mg_amount_sqft: '',
+        mg_amount: '',
+        monthly_rent: '',
+        monthly_net_sales: '', 
+        cam_charges: '',
+        billing_frequency: 'Monthly',
+        payment_due_day: '1st of Month',
+        currency_code: 'INR',
+        security_deposit: '',
+        utility_deposit: '',
+        deposit_type: 'Cash',
+        revenue_share_percentage: '',
+        revenue_share_applicable_on: 'Net Sales',
+        
+        fitout_period_start: '',
+        notice_vacation_date: '',
+        opening_date: '',
+        rent_free_start_date: '',
+        rent_free_end_date: '',
+        loi_date: '',
+        agreement_date: '',
+        deposit_payment_date: '',
+        registration_date: '',
+        status: 'active',
+    });
+    // eslint-disable-next-line no-unused-vars
+    const [files, setFiles] = useState({});
+    const [escalationSteps, setEscalationSteps] = useState([]);
+
+    // Fetch Initial Dropdown Data
     useEffect(() => {
-        const loadInitialData = async () => {
+        const fetchDropdowns = async () => {
             try {
-                // Load Dropdown Data
-                const [projRes, unitRes, partyRes] = await Promise.all([
+                const [projectsRes, partiesRes] = await Promise.all([
                     getProjects(),
-                    unitAPI.getUnits(),
                     partyAPI.getAllParties()
                 ]);
-                setProjects(projRes.data?.data || []);
-                setUnits(unitRes.data?.data || []);
-                setParties(partyRes.data || []);
-
+                setProjects(projectsRes.data?.data || []);
+                setParties(partiesRes.data || []);
             } catch (err) {
-                console.error("Error loading dropdown data:", err);
+                console.error('Failed to fetch data:', err);
             }
         };
-        loadInitialData();
+        fetchDropdowns();
     }, []);
 
+    // Fetch Lease Data
     useEffect(() => {
         if (!id) return;
-
         const fetchLease = async () => {
             try {
                 const res = await leaseAPI.getLeaseById(id);
                 const data = res.data;
+                
+                const isSub = data.lease_type === 'Subtenant lease';
+                setIsSubLease(isSub);
+                setRentModel(data.rent_model || 'Fixed');
 
-                setFormData({
-                    // If backend returns IDs, mapped logic might be needed, assuming names for now based on previous code
-                    // But ideally we should use IDs. The previous code mapped names. 
-                    // Let's assume data comes with standard fields.
-                    project: data.project_id || '',
-                    unit: data.unit_id || '',
+                const formatDate = (dateStr) => dateStr ? dateStr.substring(0, 10) : '';
+
+                setFormData(prev => ({
+                    ...prev,
+                    project_id: data.project_id || '',
+                    unit_id: data.unit_id || '',
                     party_owner_id: data.party_owner_id || '',
                     party_tenant_id: data.party_tenant_id || '',
-                    owner: data.party_owner_id || '',
-                    tenant: data.party_tenant_id || '',
-                    startDate: data.lease_start ? data.lease_start.substring(0, 10) : '',
-                    endDate: data.lease_end ? data.lease_end.substring(0, 10) : '',
-                    rentCommencementDate: data.rent_commencement_date ? data.rent_commencement_date.substring(0, 10) : '',
-                    duration: data.tenure_months ? `${data.tenure_months}` : '',
-                    lockinPeriod: data.lockin_period_months || '',
-                    noticePeriod: data.notice_period_months || '',
-                    baseRent: data.monthly_rent || '',
-                    mgr: data.monthly_rent || '', // Assuming MGR logic matches base rent for now
-                    camCharges: data.cam_charges || '',
-                    paymentDueDay: data.payment_due_day || '1st of Month',
-                    billingFrequency: data.billing_frequency || 'Monthly',
-                    latePaymentFee: '', // Not in DB view
-                    revenueShare: data.revenue_share_percentage || '',
-                    applicableOn: data.revenue_share_applicable_on || 'Net Sales',
-                    reportingFrequency: 'Monthly',
-                    securityDeposit: data.security_deposit || '',
-                    utilityDeposit: data.utility_deposit || '',
-                    depositType: data.deposit_type || 'Cash / Check'
-                });
+                    sub_tenant_id: data.sub_tenant_id || '',
+                    lease_type: data.lease_type || 'Direct lease',
+                    rent_model: data.rent_model || 'Fixed',
+                    sub_lease_area_sqft: data.sub_lease_area_sqft || '',
+                    lease_start: formatDate(data.lease_start),
+                    lease_end: formatDate(data.lease_end),
+                    rent_commencement_date: formatDate(data.rent_commencement_date),
+                    fitout_period_end: formatDate(data.fitout_period_end),
+                    tenure_months: data.tenure_months || '',
+                    lockin_period_months: data.lockin_period_months || '',
+                    notice_period_months: data.notice_period_months || '',
+                    lessee_lockin_period_months: data.lessee_lockin_period_months || '',
+                    lessor_lockin_period_months: data.lessor_lockin_period_months || '',
+                    lessee_notice_period_months: data.lessee_notice_period_months || '',
+                    lessor_notice_period_months: data.lessor_notice_period_months || '',
+                    unit_handover_date: formatDate(data.unit_handover_date),
+                    rent_amount_option: data.rent_amount_option || 'Option B',
+                    mg_amount_sqft: data.mg_amount_sqft || '',
+                    mg_amount: data.mg_amount || '',
+                    monthly_rent: data.monthly_rent || '',
+                    monthly_net_sales: data.monthly_net_sales || '',
+                    cam_charges: data.cam_charges || '',
+                    billing_frequency: data.billing_frequency || 'Monthly',
+                    payment_due_day: data.payment_due_day || '1st of Month',
+                    currency_code: data.currency_code || 'INR',
+                    security_deposit: data.security_deposit || '',
+                    utility_deposit: data.utility_deposit || '',
+                    deposit_type: data.deposit_type || 'Cash',
+                    revenue_share_percentage: data.revenue_share_percentage || '',
+                    revenue_share_applicable_on: data.revenue_share_applicable_on || 'Net Sales',
+                    
+                    fitout_period_start: formatDate(data.fitout_period_start),
+                    notice_vacation_date: formatDate(data.notice_vacation_date),
+                    opening_date: formatDate(data.opening_date),
+                    rent_free_start_date: formatDate(data.rent_free_start_date),
+                    rent_free_end_date: formatDate(data.rent_free_end_date),
+                    loi_date: formatDate(data.loi_date),
+                    agreement_date: formatDate(data.agreement_date),
+                    deposit_payment_date: formatDate(data.deposit_payment_date),
+                    registration_date: formatDate(data.registration_date),
+                    status: data.status || 'active',
+                }));
 
                 setEscalationSteps(
                     (data.escalations || []).map(esc => ({
-                        effectiveDate: esc.effective_from ? esc.effective_from.substring(0, 10) : '',
-                        effectiveToDate: esc.effective_to ? esc.effective_to.substring(0, 10) : '',
-                        increaseType: esc.increase_type === 'Fixed Amount' ? 'Fixed Amount (₹)' : 'Percentage (%)',
-                        value: esc.value
+                        effectiveDate: formatDate(esc.effective_from),
+                        effectiveToDate: formatDate(esc.effective_to),
+                        increaseType: esc.increase_type === 'Fixed Amount' ? 'Fixed Amount' : (esc.increase_type === 'Rate Per Sqft' ? 'Rate Per Sqft' : 'Percentage (%)'),
+                        value: esc.value,
+                        escalation_on: esc.escalation_on || 'mg'
                     }))
                 );
+                
+                // Fetch Units for this project to populate dropdown immediately
+                if (data.project_id) {
+                    const uRes = await unitAPI.getUnitsByProject(data.project_id);
+                    setUnits(Array.isArray(uRes.data) ? uRes.data : (uRes.data?.data || []));
+                }
+
             } catch (err) {
                 console.error(err);
-                alert('Failed to load lease details');
+                alert("Failed to load lease details");
             }
         };
-
         fetchLease();
     }, [id]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+    // Handle Unit Logic
+    const handleUnitChange = async (val) => {
+        const unitId = parseInt(val);
+        setFormData(prev => ({ ...prev, unit_id: val }));
+
+        try {
+            const res = await ownershipAPI.getOwnersByUnit(unitId);
+            const owners = res.data || [];
+            const active = owners.find(o => o.ownership_status === 'Active');
+
+            if (active) {
+                setActiveOwner(active);
+                setFormData(prev => ({ ...prev, party_owner_id: active.party_id }));
+            } else {
+                setActiveOwner(null);
+                setFormData(prev => ({ ...prev, party_owner_id: '' }));
+            }
+        } catch (e) {
+            console.error("Failed to fetch unit owner", e);
+        }
     };
 
+    // Load units when project changes
+    useEffect(() => {
+        if (formData.project_id && units.length === 0) { // Keep if empty, otherwise we already fetched above
+            const fetchUnits = async () => {
+                try {
+                    const res = await unitAPI.getUnitsByProject(formData.project_id);
+                    setUnits(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+                } catch (e) { console.error(e); }
+            };
+            fetchUnits();
+        }
+    }, [formData.project_id, units.length]);
+
+    const handleFileChange = (e, fieldName) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFiles(prev => ({ ...prev, [fieldName]: file }));
+        }
+    };
+
+    // Validation & Navigation
+    const nextStep = () => {
+        if (currentStep === 1) {
+            if (!formData.project_id || !formData.unit_id || (!isSubLease && !formData.party_tenant_id)) {
+                alert("Please fill all required fields.");
+                return;
+            }
+        }
+        setCurrentStep(prev => prev + 1);
+    };
+
+    const prevStep = () => setCurrentStep(prev => prev - 1);
+
     const addEscalationStep = () => {
-        setEscalationSteps([...escalationSteps, { effectiveDate: '', effectiveToDate: '', increaseType: 'Percentage (%)', value: '' }]);
+        setEscalationSteps([...escalationSteps, { effectiveDate: '', effectiveToDate: '', increaseType: 'Percentage (%)', value: '', escalation_on: 'mg' }]);
     };
 
     const removeEscalationStep = (index) => {
-        const newSteps = escalationSteps.filter((_, i) => i !== index);
-        setEscalationSteps(newSteps);
+        setEscalationSteps(escalationSteps.filter((_, i) => i !== index));
+    };
+
+    // Final Submit
+    const handleSubmit = async () => {
+        if (isSubmitting) return; // Prevent double clicking
+        setIsSubmitting(true);
+        try {
+            // Transform Data
+            const escalations = escalationSteps
+                .filter(step => step.effectiveDate && step.value)
+                .map(step => ({
+                    effective_from: step.effectiveDate,
+                    effective_to: step.effectiveToDate || null,
+                    increase_type: step.increaseType === 'Percentage (%)' ? 'Percentage' : (step.increaseType === 'Fixed Amount' ? 'Fixed Amount' : 'Rate Per Sqft'),
+                    value: parseFloat(step.value),
+                    escalation_on: step.escalation_on || 'mg'
+                }));
+
+            // Tenure validation rule 25 states Editing duration is blocked, but backend uses dates. We keep existing structure.
+            const startDate = new Date(formData.lease_start);
+            const endDate = new Date(formData.lease_end);
+            const tenureMonths = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
+
+            const payload = {
+                ...formData,
+                project_id: parseInt(formData.project_id),
+                unit_id: parseInt(formData.unit_id),
+                party_owner_id: isSubLease ? null : parseInt(formData.party_owner_id),
+                party_tenant_id: parseInt(formData.party_tenant_id),
+                sub_tenant_id: isSubLease ? parseInt(formData.sub_tenant_id) : null,
+                lease_type: isSubLease ? 'Subtenant lease' : 'Direct lease',
+                rent_model: rentModel,
+                sub_lease_area_sqft: isSubLease ? (parseFloat(formData.sub_lease_area_sqft) || 0) : null,
+                tenure_months: isNaN(tenureMonths) ? formData.tenure_months : tenureMonths,
+                lockin_period_months: parseInt(formData.lockin_period_months) || 0,
+                notice_period_months: parseInt(formData.notice_period_months) || 0,
+                lessee_lockin_period_months: parseInt(formData.lessee_lockin_period_months) || 0,
+                lessor_lockin_period_months: parseInt(formData.lessor_lockin_period_months) || 0,
+                lessee_notice_period_months: parseInt(formData.lessee_notice_period_months) || 0,
+                lessor_notice_period_months: parseInt(formData.lessor_notice_period_months) || 0,
+                monthly_rent: parseFloat(formData.monthly_rent) || 0,
+                cam_charges: parseFloat(formData.cam_charges) || 0,
+                revenue_share_percentage: (rentModel === 'RevenueShare' || rentModel === 'Hybrid') ? (parseFloat(formData.revenue_share_percentage) || 0) : null,
+                revenue_share_applicable_on: (rentModel === 'RevenueShare' || rentModel === 'Hybrid') ? formData.revenue_share_applicable_on : null,
+                escalations: escalations,
+            };
+
+            await leaseAPI.updateLease(id, payload);
+            setSubmitMessage('Lease updated successfully!');
+            setTimeout(() => navigate('/admin/leases'), 2000);
+
+        } catch (error) {
+            console.error(error);
+            alert("Failed to update lease: " + (error.response?.data?.message || error.message));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -141,327 +307,111 @@ const EditLease = () => {
             <Sidebar />
             <main className="main-content">
                 <header className="page-header">
-                    <div className="header-left">
-                        <div className="breadcrumb">
-                            <Link to="/admin/dashboard" className="text-muted">HOME</Link> &gt;
-                            <Link to="/admin/leases" className="text-muted"> LEASES</Link> &gt;
-                            <span className="active"> EDIT LEASE</span>
-                        </div>
-                        <h1>Edit Lease: {id}</h1>
-                        <p>Update lease agreement details, terms, and financials.</p>
+                    <div className="breadcrumb">
+                        <Link to="/admin/dashboard">HOME</Link> &gt; <Link to="/admin/leases">LEASES</Link> &gt; <span className="active">EDIT LEASE '{id}'</span>
                     </div>
+                    <h1>Edit Lease ID: {id}</h1>
+                    <p>Step {currentStep} of 5: {
+                        currentStep === 1 ? 'Basic Details' :
+                            currentStep === 2 ? 'Term Finalization' :
+                                currentStep === 3 ? 'Rent Config' : 
+                                    currentStep === 4 ? 'Escalations' : 'Docs Execution'
+                    }</p>
                 </header>
 
-                <div className="form-layout">
-                    {/* Section 1: Property & Parties */}
-                    <div className="form-section">
-                        <h3>Property & Parties</h3>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Project</label>
-                                <select name="project" value={formData.project} onChange={handleChange}>
-                                    <option value="" disabled>Select Project</option>
-                                    {projects.map(p => (
-                                        <option key={p.id} value={p.id}>{p.project_name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Unit</label>
-                                <select name="unit" value={formData.unit} onChange={handleChange}>
-                                    <option value="" disabled>Select Unit</option>
-                                    {units
-                                        .filter(u => !formData.project || String(u.project_id) === String(formData.project)) // Filter by project
-                                        .map(u => (
-                                            <option key={u.id} value={u.id}>{u.unit_number}</option>
-                                        ))}
-                                </select>
-                            </div>
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Tenant</label>
-                                <select name="party_tenant_id" value={formData.party_tenant_id} onChange={handleChange}>
-                                    <option value="" disabled>Select Tenant</option>
-                                    {parties.map(p => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.company_name || `${p.first_name} ${p.last_name}`}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Owner (Landlord)</label>
-                                <select name="party_owner_id" value={formData.party_owner_id} onChange={handleChange}>
-                                    <option value="" disabled>Select Owner</option>
-                                    {parties.map(p => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.company_name || `${p.first_name} ${p.last_name}`}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
+                <div className="form-layout wizard-container">
+                    {/* Stepper UI */}
+                    <div className="stepper">
+                        <div className={`step ${currentStep >= 1 ? 'completed' : ''}`}>1. Basics</div>
+                        <div className="line"></div>
+                        <div className={`step ${currentStep >= 2 ? 'completed' : ''}`}>2. Terms</div>
+                        <div className="line"></div>
+                        <div className={`step ${currentStep >= 3 ? 'completed' : ''}`}>3. Rent</div>
+                        <div className="line"></div>
+                        <div className={`step ${currentStep >= 4 ? 'completed' : ''}`}>4. Escalations</div>
+                        <div className="line"></div>
+                        <div className={`step ${currentStep >= 5 ? 'completed' : ''}`}>5. Docs</div>
                     </div>
 
-                    {/* Section 2: Lease Period & Lockin */}
-                    <div className="form-section">
-                        <h3>Lease Period & Lockin</h3>
-                        <div className="form-row date-row">
-                            <div className="form-group">
-                                <label>Lease Start Date</label>
-                                <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} />
-                            </div>
-                            <div className="form-group">
-                                <label>Lease End Date</label>
-                                <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} />
-                            </div>
-                            <div className="form-group">
-                                <label>Rent Commencement Date</label>
-                                <input type="date" name="rentCommencementDate" value={formData.rentCommencementDate} onChange={handleChange} />
-                                <small style={{ color: '#718096', fontSize: '0.8rem' }}>Fit-out period ends</small>
-                            </div>
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Duration (Months)</label>
-                                <input type="text" name="duration" value={formData.duration} readOnly style={{ backgroundColor: '#f7fafc' }} />
-                            </div>
-                            <div className="form-group">
-                                <label>Lockin Period (Months)</label>
-                                <input type="number" name="lockinPeriod" value={formData.lockinPeriod} onChange={handleChange} />
-                            </div>
-                            <div className="form-group">
-                                <label>Notice Period (Months)</label>
-                                <input type="number" name="noticePeriod" value={formData.noticePeriod} onChange={handleChange} />
-                            </div>
-                        </div>
-                    </div>
+                    {/* Steps Rendering */}
+                    {currentStep === 1 && (
+                        <Step1BasicDetails
+                            formData={formData}
+                            setFormData={setFormData}
+                            projects={projects}
+                            units={units}
+                            parties={parties}
+                            handleUnitChange={handleUnitChange}
+                            activeOwner={activeOwner}
+                            rentModel={rentModel}
+                            setRentModel={setRentModel}
+                            isSubLease={isSubLease}
+                            setIsSubLease={setIsSubLease}
+                        />
+                    )}
 
-                    {/* Section 3: Rent & Financials */}
-                    <div className="form-section">
-                        <h3>Rent & Financials</h3>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Base Monthly Rent</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" name="baseRent" value={formData.baseRent} onChange={handleChange} />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Min. Guaranteed Rent (MGR)</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" name="mgr" value={formData.mgr} onChange={handleChange} />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>CAM Charges (Monthly)</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" name="camCharges" value={formData.camCharges} onChange={handleChange} />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                        </div>
+                    {currentStep === 2 && (
+                        <Step2TermsFinalization
+                            formData={formData}
+                            setFormData={setFormData}
+                            selectedProject={projects.find(p => p.id === parseInt(formData.project_id))}
+                            selectedUnit={units.find(u => u.id === parseInt(formData.unit_id))}
+                        />
+                    )}
 
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Payment Due Day</label>
-                                <select name="paymentDueDay" value={formData.paymentDueDay} onChange={handleChange}>
-                                    <option>1st of Month</option>
-                                    <option>5th of Month</option>
-                                    <option>10th of Month</option>
-                                    <option>End of Month</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Billing Frequency</label>
-                                <select name="billingFrequency" value={formData.billingFrequency} onChange={handleChange}>
-                                    <option>Monthly</option>
-                                    <option>Quarterly</option>
-                                    <option>Half-Yearly</option>
-                                    <option>Yearly</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Late Payment Fee (%)</label>
-                                <input type="number" name="latePaymentFee" value={formData.latePaymentFee} onChange={handleChange} />
-                            </div>
-                        </div>
+                    {currentStep === 3 && (
+                        <Step3RentConfig
+                            rentModel={rentModel}
+                            formData={formData}
+                            setFormData={setFormData}
+                            selectedProject={projects.find(p => p.id === parseInt(formData.project_id))}
+                            selectedUnit={units.find(u => u.id === parseInt(formData.unit_id))}
+                            isSubLease={isSubLease}
+                        />
+                    )}
 
-                        <h4 style={{ fontSize: '0.95rem', margin: '16px 0 12px 0', color: '#4a5568', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Revenue Share Details</h4>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Revenue Share Percentage (%)</label>
-                                <input type="number" name="revenueShare" value={formData.revenueShare} onChange={handleChange} />
-                            </div>
-                            <div className="form-group">
-                                <label>Applicable On</label>
-                                <select name="applicableOn" value={formData.applicableOn} onChange={handleChange}>
-                                    <option>Net Sales</option>
-                                    <option>Gross Sales</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Reporting Frequency</label>
-                                <select name="reportingFrequency" value={formData.reportingFrequency} onChange={handleChange}>
-                                    <option>Monthly</option>
-                                    <option>Quarterly</option>
-                                </select>
-                            </div>
-                        </div>
+                    {currentStep === 4 && (
+                        <Step4Escalations
+                            escalationSteps={escalationSteps}
+                            setEscalationSteps={setEscalationSteps}
+                            addEscalationStep={addEscalationStep}
+                            removeEscalationStep={removeEscalationStep}
+                            formData={formData}
+                            rentModel={rentModel}
+                        />
+                    )}
 
-                        <h4 style={{ fontSize: '0.95rem', margin: '16px 0 12px 0', color: '#4a5568', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Security Deposits</h4>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Security Deposit</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" name="securityDeposit" value={formData.securityDeposit} onChange={handleChange} />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Utility Deposit</label>
-                                <div className="currency-input">
-                                    <span className="currency-symbol">₹</span>
-                                    <input type="number" name="utilityDeposit" value={formData.utilityDeposit} onChange={handleChange} />
-                                    <span className="currency-code">INR</span>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Deposit Type</label>
-                                <select name="depositType" value={formData.depositType} onChange={handleChange}>
-                                    <option>Cash / Check</option>
-                                    <option>Bank Guarantee</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                    {currentStep === 5 && (
+                        <Step5DocsExecute
+                            formData={formData}
+                            setFormData={setFormData}
+                            handleFileChange={handleFileChange}
+                        />
+                    )}
 
-                    {/* Section 4: Rent Escalations */}
-                    <div className="form-section">
-                        <h3>Rent Escalations</h3>
-                        <p style={{ fontSize: '0.9rem', color: '#718096', marginBottom: '16px' }}>Define specific dates for rent increases instead of a fixed cycle.</p>
+                    {/* Navigation Actions */}
+                    <div className="form-actions" style={{ marginTop: '30px', justifyContent: 'space-between' }}>
+                        {currentStep > 1 ? (
+                            <button className="secondary-btn" onClick={prevStep}>Back</button>
+                        ) : (
+                            <button className="secondary-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>
+                        )}
 
-                        {escalationSteps.map((step, index) => (
-                            <div className="escalation-row" key={index}>
-                                <div className="form-group">
-                                    <label>Effective From Date</label>
-                                    <input type="date" value={step.effectiveDate} onChange={(e) => {
-                                        const newSteps = [...escalationSteps];
-                                        newSteps[index].effectiveDate = e.target.value;
-                                        setEscalationSteps(newSteps);
-                                    }} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Effective To (Optional)</label>
-                                    <input type="date" value={step.effectiveToDate} onChange={(e) => {
-                                        const newSteps = [...escalationSteps];
-                                        newSteps[index].effectiveToDate = e.target.value;
-                                        setEscalationSteps(newSteps);
-                                    }} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Increase Type</label>
-                                    <select value={step.increaseType} onChange={(e) => {
-                                        const newSteps = [...escalationSteps];
-                                        newSteps[index].increaseType = e.target.value;
-                                        setEscalationSteps(newSteps);
-                                    }}>
-                                        <option>Percentage (%)</option>
-                                        <option>Fixed Amount (₹)</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Value</label>
-                                    <input type="number" value={step.value} onChange={(e) => {
-                                        const newSteps = [...escalationSteps];
-                                        newSteps[index].value = e.target.value;
-                                        setEscalationSteps(newSteps);
-                                    }} />
-                                </div>
-                                <button className="remove-step-btn" onClick={() => removeEscalationStep(index)}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                </button>
-                            </div>
-                        ))}
-
-                        <button className="add-step-btn" onClick={addEscalationStep}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            Add Escalation Step
-                        </button>
+                        {currentStep < 5 ? (
+                            <button className="primary-btn" onClick={nextStep} disabled={isSubmitting}>Next Step</button>
+                        ) : (
+                            <button className="primary-btn submit-btn" onClick={handleSubmit} disabled={isSubmitting}>
+                                {isSubmitting ? 'Submitting...' : 'Update Lease'}
+                            </button>
+                        )}
                     </div>
 
                     {submitMessage && (
-                        <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontWeight: '500' }}>
+                        <div style={{ marginTop: '20px', padding: '15px', background: '#dcfce7', color: '#166534', borderRadius: '6px', textAlign: 'center' }}>
                             {submitMessage}
                         </div>
                     )}
 
-                    <div className="form-actions">
-                        <button className="cancel-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>
-                        <button
-                            className="create-btn"
-                            disabled={saving}
-                            onClick={async () => {
-                                try {
-                                    setSaving(true);
-                                    setSubmitMessage('');
-
-                                    const payload = {
-                                        project_id: formData.project,
-                                        unit_id: formData.unit,
-                                        party_tenant_id: formData.party_tenant_id,
-                                        party_owner_id: formData.party_owner_id,
-                                        lease_start: formData.startDate,
-                                        lease_end: formData.endDate,
-                                        rent_commencement_date: formData.rentCommencementDate,
-                                        lockin_period_months: parseInt(formData.lockinPeriod, 10) || 12,
-                                        notice_period_months: parseInt(formData.noticePeriod, 10) || 3,
-                                        monthly_rent: parseFloat(formData.baseRent) || 0,
-                                        cam_charges: parseFloat(formData.camCharges) || 0,
-                                        security_deposit: parseFloat(formData.securityDeposit) || 0,
-                                        utility_deposit: parseFloat(formData.utilityDeposit) || 0,
-                                        billing_frequency: formData.billingFrequency,
-                                        payment_due_day: formData.paymentDueDay,
-                                        revenue_share_percentage: formData.revenueShare
-                                            ? parseFloat(formData.revenueShare)
-                                            : null,
-                                        revenue_share_applicable_on: formData.revenueShare
-                                            ? formData.applicableOn
-                                            : null,
-                                        escalations: escalationSteps
-                                            .filter(step => step.effectiveDate && step.value)
-                                            .map(step => ({
-                                                effective_from: step.effectiveDate,
-                                                effective_to: step.effectiveToDate || null,
-                                                increase_type: step.increaseType.startsWith('Fixed')
-                                                    ? 'Fixed Amount'
-                                                    : 'Percentage',
-                                                value: parseFloat(step.value)
-                                            }))
-                                    };
-
-                                    await leaseAPI.updateLease(id, payload);
-
-                                    setSubmitMessage('Lease updated successfully');
-                                    setTimeout(() => navigate('/admin/leases'), 2000);
-                                } catch (err) {
-                                    console.error(err);
-                                    alert(err.response?.data?.message || err.message || 'Failed to update lease');
-                                } finally {
-                                    setSaving(false);
-                                }
-                            }}
-                        >
-                            {saving ? 'Saving...' : 'Update Lease'}
-                        </button>
-                    </div>
                 </div>
             </main>
         </div>

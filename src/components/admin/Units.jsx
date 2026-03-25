@@ -57,10 +57,10 @@ const Units = () => {
                     unitNo: unit.unit_number || 'N/A',
                     building: unit.building || 'N/A',
                     blockTower: unit.block_tower || '-',
-                    area: unit.super_area || 'N/A',
+                    area: unit.chargeable_area || 'N/A',
                     status: unit.status || 'unknown',
                     statusType: unit.status || 'unknown',
-                    statusDesc: unit.status === 'vacant' ? 'Available for leasing' : 'Occupied'
+                    statusDesc: unit.status === 'vacant' ? 'Available for leasing' : 'Leased'
                 }));
                 setUnits(mappedUnits);
                 setError(null);
@@ -163,7 +163,7 @@ const Units = () => {
                                 <select value={selectedUnitType} onChange={handleUnitTypeChange}>
                                     <option value="All">All Status</option>
                                     <option value="vacant">Vacant</option>
-                                    <option value="occupied">Occupied</option>
+                                    <option value="occupied">Leased</option>
                                     <option value="maintenance">Maintenance</option>
                                 </select>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -200,17 +200,17 @@ const Units = () => {
                                             <td>{unit.building}</td>
                                             <td>{unit.blockTower}</td>
                                             <td>{unit.area}</td>
-                                            <td><span className={`status-badge ${unit.status}`}>{unit.status}</span></td>
+                                            <td><span className={`status-badge ${unit.status}`}>{unit.status === 'occupied' ? 'leased' : unit.status}</span></td>
                                             <td>
-                                                <div className="action-buttons">
-                                                    <Link to={`/admin/view-unit/${unit.id}`} className="action-btn view" title="View">
-                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                <div className="action-icon-wrapper">
+                                                    <Link to={`/admin/view-unit/${unit.id}`} className="action-icon-btn view" title="View">
+                                                        <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                                     </Link>
-                                                    <Link to={`/admin/edit-unit/${unit.id}`} className="action-btn edit" title="Edit">
-                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                    <Link to={`/admin/edit-unit/${unit.id}`} className="action-icon-btn edit" title="Edit">
+                                                        <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                                     </Link>
-                                                    <button className="action-btn delete" onClick={() => handleDelete(unit.id)} title="Delete">
-                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                    <button className="action-icon-btn delete" onClick={() => handleDelete(unit.id)} title="Delete">
+                                                        <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                                     </button>
                                                 </div>
                                             </td>

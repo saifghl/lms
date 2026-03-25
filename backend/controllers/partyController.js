@@ -28,22 +28,25 @@ exports.getPartyById = async (req, res) => {
 // Create a new party
 exports.createParty = async (req, res) => {
     const {
-        type, company_name, brand_name, legal_entity_type, title, first_name, last_name,
+        type, party_type, company_name, brand_name, brand_category, legal_entity_type, title, first_name, last_name,
         email, phone, alt_phone, identification_type, identification_number,
-        address_line1, address_line2, city, state, postal_code, country
+        address_line1, address_line2, city, state, postal_code, country,
+        representative_designation, owner_group
     } = req.body;
 
     try {
         const [result] = await pool.query(
             `INSERT INTO parties (
-                type, company_name, brand_name, legal_entity_type, title, first_name, last_name,
+                type, party_type, company_name, brand_name, brand_category, legal_entity_type, title, first_name, last_name,
                 email, phone, alt_phone, identification_type, identification_number,
-                address_line1, address_line2, city, state, postal_code, country
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                address_line1, address_line2, city, state, postal_code, country,
+                representative_designation, owner_group
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                type || 'Individual', company_name, brand_name, legal_entity_type, title, first_name, last_name,
+                type || 'Individual', party_type || 'Tenant', company_name, brand_name, brand_category, legal_entity_type, title, first_name, last_name,
                 email, phone, alt_phone, identification_type, identification_number,
-                address_line1, address_line2, city, state, postal_code, country
+                address_line1, address_line2, city, state, postal_code, country,
+                representative_designation, owner_group
             ]
         );
         res.status(201).json({ id: result.insertId, ...req.body });
@@ -56,22 +59,25 @@ exports.createParty = async (req, res) => {
 // Update a party
 exports.updateParty = async (req, res) => {
     const {
-        type, company_name, brand_name, legal_entity_type, title, first_name, last_name,
+        type, party_type, company_name, brand_name, brand_category, legal_entity_type, title, first_name, last_name,
         email, phone, alt_phone, identification_type, identification_number,
-        address_line1, address_line2, city, state, postal_code, country
+        address_line1, address_line2, city, state, postal_code, country,
+        representative_designation, owner_group
     } = req.body;
 
     try {
         await pool.query(
             `UPDATE parties SET
-                type=?, company_name=?, brand_name=?, legal_entity_type=?, title=?, first_name=?, last_name=?,
+                type=?, party_type=?, company_name=?, brand_name=?, brand_category=?, legal_entity_type=?, title=?, first_name=?, last_name=?,
                 email=?, phone=?, alt_phone=?, identification_type=?, identification_number=?,
-                address_line1=?, address_line2=?, city=?, state=?, postal_code=?, country=?
+                address_line1=?, address_line2=?, city=?, state=?, postal_code=?, country=?,
+                representative_designation=?, owner_group=?
              WHERE id=?`,
             [
-                type, company_name, brand_name, legal_entity_type, title, first_name, last_name,
+                type, party_type, company_name, brand_name, brand_category, legal_entity_type, title, first_name, last_name,
                 email, phone, alt_phone, identification_type, identification_number,
                 address_line1, address_line2, city, state, postal_code, country,
+                representative_designation, owner_group,
                 req.params.id
             ]
         );

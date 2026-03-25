@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { partyAPI } from '../../services/api';
-import { indianStates, indianCities } from '../../utils/indianLocations';
+import { filterAPI, partyAPI } from '../../services/api';
+import { indianStates, getCitiesByState } from '../../utils/indianLocations';
 import { isValidPhone, isValidPAN, isValidAadhaar, isValidCIN } from '../../utils/validators';
 import './PartyForm.css';
 
@@ -11,12 +11,15 @@ const EditParty = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [brandCategories, setBrandCategories] = useState([]);
 
     // Form State
     const [formData, setFormData] = useState({
         type: 'Individual',
+        party_type: 'Tenant',
         company_name: '',
         brand_name: '',
+        brand_category: '',
         legal_entity_type: '',
         title: '',
         first_name: '',
@@ -31,10 +34,21 @@ const EditParty = () => {
         city: '',
         state: '',
         postal_code: '',
-        country: 'India'
+        country: 'India',
+        representative_designation: '',
+        owner_group: ''
     });
 
     useEffect(() => {
+        const fetchFilters = async () => {
+            try {
+                const bcRes = await filterAPI.getFilterOptions("brand_category");
+                setBrandCategories(bcRes.data.data || []);
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        fetchFilters();
         fetchParty();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
@@ -61,7 +75,12 @@ const EditParty = () => {
     };
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name === 'state') {
+            setFormData({ ...formData, state: value, city: '' });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -123,11 +142,25 @@ const EditParty = () => {
                     {/* TYPE SELECTION */}
                     <div className="form-section">
                         <div className="section-header">
-                            <h3>Party Type</h3>
+                            <h3>Party Role & Structure</h3>
                         </div>
                         <div className="form-row">
                             <div className="form-group" style={{ maxWidth: '300px' }}>
-                                <label>Legal Entity Type *</label>
+                                <label>Party Role *</label>
+                                <select
+                                    className="form-select"
+                                    name="party_type"
+                                    value={formData.party_type}
+                                    onChange={handleChange}
+                                >
+                                    <option value="Tenant">Tenant</option>
+                                    <option value="Owner">Owner</option>
+                                    <option value="Lessor">Lessor</option>
+                                    <option value="Sub-Lessee">Sub-Lessee</option>
+                                </select>
+                            </div>
+                            <div className="form-group" style={{ maxWidth: '300px' }}>
+                                <label>Profile Structure *</label>
                                 <select
                                     className="form-select"
                                     name="type"
@@ -170,6 +203,20 @@ const EditParty = () => {
                                     />
                                 </div>
                                 <div className="form-group">
+                                    <label>Brand Category</label>
+                                    <select
+                                        className="form-select"
+                                        name="brand_category"
+                                        value={formData.brand_category}
+                                        onChange={handleChange}
+                                    >
+                                        <option value="">Select Category</option>
+                                        {brandCategories.map((c) => (
+                                            <option key={c.id} value={c.option_value}>{c.option_value}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
                                     <label>Legal Entity Type</label>
                                     <select
                                         className="form-select"
@@ -197,6 +244,20 @@ const EditParty = () => {
                         <div className="section-header">
                             <h3>{formData.type === 'Company' ? 'Representative Information' : 'Personal Information'}</h3>
                         </div>
+                        {formData.type === 'Company' && (
+                            <div className="form-row" style={{ marginBottom: '15px' }}>
+                                <div className="form-group">
+                                    <label>Rep in the capacity of</label>
+                                    <input
+                                        className="form-input"
+                                        name="representative_designation"
+                                        value={formData.representative_designation}
+                                        onChange={handleChange}
+                                        placeholder="e.g. Director, Manager"
+                                    />
+                                </div>
+                            </div>
+                        )}
                         <div className="form-row">
                             <div className="form-group" style={{ flex: 0.2 }}>
                                 <label>Title</label>
@@ -274,10 +335,31 @@ const EditParty = () => {
                         </div>
                     </div>
 
+                    {/* OWNER DETAILS */}
+                    {formData.party_type === 'Owner' && (
+                        <div className="form-section">
+                            <div className="section-header">
+                                <h3>Owner Grouping</h3>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group" style={{ maxWidth: '400px' }}>
+                                    <label>Grouping of Owners</label>
+                                    <input
+                                        className="form-input"
+                                        name="owner_group"
+                                        value={formData.owner_group}
+                                        onChange={handleChange}
+                                        placeholder="Enter Owner Group (Optional)"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* IDENTIFICATION */}
                     <div className="form-section">
                         <div className="section-header">
-                            <h3>Identification</h3>
+                            <h3>Party Details</h3>
                         </div>
                         <div className="form-row">
                             <div className="form-group">
@@ -339,22 +421,6 @@ const EditParty = () => {
                         </div>
                         <div className="form-row">
                             <div className="form-group">
-                                <label>City</label>
-                                <input
-                                    className="form-input"
-                                    name="city"
-                                    list="city-options"
-                                    value={formData.city}
-                                    onChange={handleChange}
-                                    placeholder="Select or Type City"
-                                />
-                                <datalist id="city-options">
-                                    {indianCities.map((city, index) => (
-                                        <option key={index} value={city} />
-                                    ))}
-                                </datalist>
-                            </div>
-                            <div className="form-group">
                                 <label>State</label>
                                 <select
                                     className="form-select"
@@ -365,6 +431,20 @@ const EditParty = () => {
                                     <option value="">Select State</option>
                                     {indianStates.map((state, index) => (
                                         <option key={index} value={state}>{state}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>City</label>
+                                <select
+                                    className="form-select"
+                                    name="city"
+                                    value={formData.city}
+                                    onChange={handleChange}
+                                >
+                                    <option value="">Select City</option>
+                                    {getCitiesByState(formData.state).map((city, index) => (
+                                        <option key={index} value={city}>{city}</option>
                                     ))}
                                 </select>
                             </div>

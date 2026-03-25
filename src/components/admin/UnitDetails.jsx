@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { unitAPI, ownershipAPI } from '../../services/api';
+import { unitAPI, ownershipAPI, leaseAPI } from '../../services/api';
 import './UnitDetails.css';
 
 const UnitDetails = () => {
@@ -11,6 +11,7 @@ const UnitDetails = () => {
     // const [error, setError] = useState(null);
 
     const [activeOwner, setActiveOwner] = useState(null);
+    const [activeLease, setActiveLease] = useState(null);
 
     useEffect(() => {
         const fetchUnit = async () => {
@@ -23,6 +24,13 @@ const UnitDetails = () => {
                 const owners = ownerRes.data || [];
                 const active = owners.find(o => o.ownership_status === 'Active');
                 setActiveOwner(active);
+
+                // Fetch Active Lease
+                const leaseRes = await leaseAPI.getAllLeases({ unit_id: id, status: 'Active', limit: 1 });
+                const leases = await leaseRes.data;
+                if (leases && leases.length > 0) {
+                    setActiveLease(leases[0]);
+                }
             } catch (err) {
                 console.error("Error fetching unit:", err);
             } finally {
@@ -87,19 +95,30 @@ const UnitDetails = () => {
                                 <div className="card-header">
                                     <div className="user-info">
                                         <div className="avatar tenant-avatar">
-                                            <img src="https://ui-avatars.com/api/?name=Sarah+Smith&background=random" alt="Sarah" />
-                                            <img src="https://ui-avatars.com/api/?name=Mike+Ross&background=random" alt="Mike" style={{ marginLeft: '-10px' }} />
+                                            {activeLease ? (
+                                                <div style={{ width: '100%', height: '100%', background: '#4F46E5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                                    {(activeLease.tenant_name || 'T').charAt(0)}
+                                                </div>
+                                            ) : (
+                                                <div style={{ width: '100%', height: '100%', background: '#e2e8f0' }}></div>
+                                            )}
                                         </div>
                                         <div>
-                                            <h3>Sarah Smith & Mike Ross</h3>
-                                            <span className="since">Since Jan 2021</span>
+                                            <h3>{activeLease ? activeLease.tenant_name : 'No Active Tenant'}</h3>
+                                            <span className="since">{activeLease ? `Since ${new Date(activeLease.lease_start).toLocaleDateString()}` : 'Vacant'}</span>
                                         </div>
                                     </div>
-                                    <span className="badge active-lease">Active Lease</span>
+                                    {activeLease && <span className="badge active-lease">Active Lease</span>}
                                 </div>
                                 <div className="card-footer">
-                                    <span>Lease #: L-9921</span>
-                                    <Link to="#" className="details-link">Details →</Link>
+                                    {activeLease ? (
+                                        <>
+                                            <span>Lease #: L-{activeLease.id}</span>
+                                            <Link to={`/admin/view-lease/${activeLease.id}`} className="details-link">Details →</Link>
+                                        </>
+                                    ) : (
+                                        <Link to="/admin/add-lease" className="details-link">Create Lease →</Link>
+                                    )}
                                 </div>
                             </div>
 
@@ -181,7 +200,7 @@ const UnitDetails = () => {
                             <div className="stat-item">
                                 <label>Area:</label>
                                 <div className="stat-values">
-                                    <span>Super Area: {unit.super_area ?? "-"} sq ft</span>
+                                    <span>Chargeable Area: {unit.chargeable_area ?? "-"} sq ft</span>
                                     <span>Covered Area: {unit.covered_area ?? "-"} sq ft</span>
                                     <span>Carpet Area: {unit.carpet_area ?? "-"} sq ft</span>
                                 </div>

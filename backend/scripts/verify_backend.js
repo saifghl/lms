@@ -75,7 +75,7 @@ async function verify() {
             project_id: projectId,
             unit_number: `U-${uniqueSuffix}`,
             floor_number: '1',
-            super_area: 1000,
+            chargeable_area: 1000,
             projected_rent: 50000,
             status: 'vacant'
         });

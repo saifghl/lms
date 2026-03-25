@@ -398,7 +398,7 @@ const EditTenant = () => {
                                                             checked={formData.unit_ids.includes(u.id)}
                                                             onChange={() => handleUnitToggle(u.id)}
                                                         />
-                                                        <span>Unit {u.unit_number} ({u.super_area} sqft) - {u.status}</span>
+                                                        <span>Unit {u.unit_number} ({u.chargeable_area} sqft) - {u.status}</span>
                                                     </label>
                                                 ))}
                                             </div>

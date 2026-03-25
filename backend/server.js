@@ -21,6 +21,7 @@ const userRoutes = require("./routes/userRoutes"); // New Route
 const roleRoutes = require("./routes/roleRoutes");
 const partyRoutes = require("./routes/partyRoutes");
 const ownershipRoutes = require("./routes/ownershipRoutes");
+const filterOptionsRoutes = require("./routes/filterOptionsRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -92,6 +93,7 @@ app.use("/api/roles", roleRoutes); // Mounted Route
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/parties", partyRoutes);
 app.use("/api/ownerships", ownershipRoutes);
+app.use("/api/filters", filterOptionsRoutes);
 // Ownership routes registered - Restart Trigger 7 (Path Fix)
 
 /* =========================

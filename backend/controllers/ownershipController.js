@@ -1,29 +1,53 @@
 const pool = require('../config/db');
 
-// Assign a party as an owner to a unit
+// Assign parties as owners to a unit (Joint Owners)
 exports.assignOwner = async (req, res) => {
-    const { unit_id, party_id, start_date } = req.body;
+    const { unit_id, owners, start_date } = req.body; // owners: [{party_id, share_percentage}]
 
+    if (!Array.isArray(owners) || owners.length === 0 || owners.length > 4) {
+        return res.status(400).json({ message: 'Must provide 1 to 4 joint owners.' });
+    }
+
+    const totalShare = owners.reduce((sum, o) => sum + Number(o.share_percentage || 0), 0);
+    if (Math.abs(totalShare - 100) > 0.01) {
+        return res.status(400).json({ message: 'Total share percentage must be exactly 100%.' });
+    }
+
+    const conn = await pool.getConnection();
     try {
-        // Check if already assigned and active
-        const [existing] = await pool.query(
-            'SELECT * FROM unit_ownerships WHERE unit_id = ? AND party_id = ? AND ownership_status = "Active"',
-            [unit_id, party_id]
-        );
+        await conn.beginTransaction();
 
-        if (existing.length > 0) {
-            return res.status(400).json({ message: 'Party is already an active owner of this unit' });
+        // Optional: Ensure all existing active are removed or just check?
+        // Let's rely on removeOwner to remove previous owners.
+        
+        // Check if any of these parties is already an active owner
+        for (const owner of owners) {
+            const [existing] = await conn.query(
+                'SELECT * FROM unit_ownerships WHERE unit_id = ? AND party_id = ? AND ownership_status = "Active"',
+                [unit_id, owner.party_id]
+            );
+            if (existing.length > 0) {
+                await conn.rollback();
+                return res.status(400).json({ message: 'One or more parties is already an active owner.' });
+            }
         }
 
-        await pool.query(
-            'INSERT INTO unit_ownerships (unit_id, party_id, start_date, ownership_status) VALUES (?, ?, ?, "Active")',
-            [unit_id, party_id, start_date || new Date()]
-        );
+        const assignDate = start_date || new Date();
+        for (const owner of owners) {
+            await conn.query(
+                'INSERT INTO unit_ownerships (unit_id, party_id, start_date, ownership_status, share_percentage) VALUES (?, ?, ?, "Active", ?)',
+                [unit_id, owner.party_id, assignDate, owner.share_percentage]
+            );
+        }
 
-        res.status(201).json({ message: 'Owner assigned successfully' });
+        await conn.commit();
+        res.status(201).json({ message: 'Owners assigned successfully' });
     } catch (err) {
+        await conn.rollback();
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
+    } finally {
+        conn.release();
     }
 };
 

@@ -395,7 +395,7 @@ const AddTenant = () => {
                                                     <div>
                                                         <div style={{ fontWeight: '600', color: '#1e293b' }}>Unit {unit.unit_number}</div>
                                                         <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                                                            {unit.super_area} sqft • Floor {unit.floor_number}
+                                                            {unit.chargeable_area} sqft • Floor {unit.floor_number}
                                                         </div>
                                                     </div>
                                                 </div>

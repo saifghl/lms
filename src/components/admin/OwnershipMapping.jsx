@@ -10,7 +10,7 @@ const OwnershipMapping = () => {
     const [selectedProject, setSelectedProject] = useState('');
     const [selectedUnit, setSelectedUnit] = useState('');
     const [unitOwners, setUnitOwners] = useState([]);
-    const [currentOwner, setCurrentOwner] = useState(null);
+    const [activeOwners, setActiveOwners] = useState([]);
     const [documentTypes, setDocumentTypes] = useState([]);
     const [documents, setDocuments] = useState([]); // Documents for current owner
     const [refreshDocs, setRefreshDocs] = useState(0);
@@ -35,17 +35,18 @@ const OwnershipMapping = () => {
             fetchOwnerships(selectedUnit);
         } else {
             setUnitOwners([]);
-            setCurrentOwner(null);
+            setActiveOwners([]);
         }
     }, [selectedUnit]);
 
     useEffect(() => {
-        if (selectedUnit && currentOwner) {
-            fetchDocuments(selectedUnit, currentOwner.party_id);
+        if (selectedUnit && activeOwners.length > 0) {
+            // Using the lead owner (first one) to store documents, as they are shared per assignment
+            fetchDocuments(selectedUnit, activeOwners[0].party_id);
         } else {
             setDocuments([]);
         }
-    }, [selectedUnit, currentOwner, refreshDocs]);
+    }, [selectedUnit, activeOwners, refreshDocs]);
 
     const fetchProjects = async () => {
         try {
@@ -56,7 +57,8 @@ const OwnershipMapping = () => {
 
     const fetchUnits = async (projectId) => {
         try {
-            const res = await unitAPI.getUnitsByProject(projectId);
+            // Updated to fetch only unsold units
+            const res = await unitAPI.getUnitsByProject(projectId, true);
             setUnits(Array.isArray(res.data) ? res.data : (res.data?.data || []));
         } catch (error) { console.error(error); }
     };
@@ -66,8 +68,8 @@ const OwnershipMapping = () => {
             const res = await ownershipAPI.getOwnersByUnit(unitId);
             const owners = res.data || [];
             setUnitOwners(owners);
-            const active = owners.find(o => o.ownership_status === 'Active');
-            setCurrentOwner(active || null);
+            const active = owners.filter(o => o.ownership_status === 'Active');
+            setActiveOwners(active);
         } catch (error) { console.error("Failed to fetch ownerships", error); }
     };
 
@@ -85,12 +87,12 @@ const OwnershipMapping = () => {
         } catch (error) { console.error("Failed to fetch docs", error); }
     };
 
-    const handleRemoveOwner = async () => {
-        if (!currentOwner) return;
-        if (window.confirm('Are you sure you want to remove the current owner?')) {
+    const handleRemoveOwner = async (owner) => {
+        if (window.confirm(`Are you sure you want to remove ${owner.company_name || owner.first_name}?`)) {
             try {
-                await ownershipAPI.removeOwner({ unit_id: selectedUnit, party_id: currentOwner.party_id, end_date: new Date().toISOString().split('T')[0] });
+                await ownershipAPI.removeOwner({ unit_id: selectedUnit, party_id: owner.party_id, end_date: new Date().toISOString().split('T')[0] });
                 fetchOwnerships(selectedUnit);
+                fetchUnits(selectedProject); // refresh unit list in case it's now available
             } catch (error) { alert('Failed to remove owner'); }
         }
     };
@@ -101,7 +103,7 @@ const OwnershipMapping = () => {
             return;
         }
         const file = e.target.files[0];
-        if (!file || !currentOwner) return;
+        if (!file || activeOwners.length === 0) return;
 
         // Prompt for date, defaulting to today
         const defaultDate = new Date().toISOString().split('T')[0];
@@ -110,7 +112,7 @@ const OwnershipMapping = () => {
 
         const formData = new FormData();
         formData.append('unit_id', selectedUnit);
-        formData.append('party_id', currentOwner.party_id);
+        formData.append('party_id', activeOwners[0].party_id);
         formData.append('document_type_id', typeId);
         formData.append('document_date', date);
         formData.append('document', file);
@@ -125,7 +127,6 @@ const OwnershipMapping = () => {
 
     const viewDocument = (doc) => {
         if (doc?.file_path) {
-            // Ensure proper path construction
             const url = `${FILE_BASE_URL}${doc.file_path}`;
             window.open(url, '_blank');
         }
@@ -155,7 +156,7 @@ const OwnershipMapping = () => {
                             </select>
                         </div>
                         <div className="selection-group">
-                            <label>Select Unit</label>
+                            <label>Select Unit (Available)</label>
                             <select value={selectedUnit} onChange={(e) => setSelectedUnit(e.target.value)} disabled={!selectedProject}>
                                 <option value="">-- Choose Unit --</option>
                                 {units.map(u => (
@@ -169,33 +170,37 @@ const OwnershipMapping = () => {
                         {!selectedUnit ? (
                             <div className="no-unit-selected">
                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                                <p>Select a Unit to view ownership details</p>
+                                <p>Select an Available Unit to configure ownership details</p>
                             </div>
                         ) : (
                             <>
                                 <h3>Current Ownership</h3>
-                                {currentOwner ? (
-                                    <div className="current-owner-card">
-                                        <div className="owner-info">
-                                            <h4>{currentOwner.company_name || `${currentOwner.first_name} ${currentOwner.last_name}`}</h4>
-                                            <p>Since: {new Date(currentOwner.start_date).toLocaleDateString()}</p>
+                                {activeOwners.length > 0 ? (
+                                    activeOwners.map(owner => (
+                                        <div key={owner.party_id} className="current-owner-card" style={{ marginBottom: '10px' }}>
+                                            <div className="owner-info">
+                                                <h4>
+                                                    {owner.company_name || `${owner.first_name} ${owner.last_name}`}
+                                                    {owner.share_percentage ? ` - Share: ${Number(owner.share_percentage)}%` : ''}
+                                                </h4>
+                                                <p>Since: {new Date(owner.start_date).toLocaleDateString()}</p>
+                                            </div>
+                                            <button className="remove-btn" onClick={() => handleRemoveOwner(owner)}>Remove</button>
                                         </div>
-                                        <button className="remove-btn" onClick={handleRemoveOwner}>Remove</button>
-                                    </div>
+                                    ))
                                 ) : (
                                     <div className="current-owner-card" style={{ background: '#f8fafc', border: '1px dashed #cbd5e1' }}>
                                         <div className="owner-info">
                                             <h4 style={{ color: '#64748b' }}>No Active Owner</h4>
                                         </div>
-                                        <button className="assign-btn" onClick={() => setIsAssignModalOpen(true)}>Assign New Owner</button>
+                                        <button className="assign-btn" onClick={() => setIsAssignModalOpen(true)}>Assign New Owner(s)</button>
                                     </div>
                                 )}
 
-                                {currentOwner && (
+                                {activeOwners.length > 0 && (
                                     <>
                                         <div style={{ marginTop: '30px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <h3>Ownership Documents</h3>
-                                            {/* Removed Manage Types Button */}
                                         </div>
 
                                         <div className="doc-chain-table" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
@@ -208,8 +213,7 @@ const OwnershipMapping = () => {
                                             </div>
 
                                             {/* Document Rows */}
-                                            {['Allotment Letter', 'SBA', 'Purchase Agreement', 'Possession Handover', 'Conveyance Deed', 'Sale Deed'].map((defaultName, index) => {
-                                                const type = documentTypes.find(t => t.name === defaultName) || { id: null, name: defaultName };
+                                            {documentTypes.map((type, index) => {
                                                 const doc = documents.find(d => d.document_type_id === type.id);
 
                                                 return (
@@ -226,7 +230,7 @@ const OwnershipMapping = () => {
                                                                 flexShrink: 0
                                                             }} />
                                                             <span style={{ fontSize: '15px', fontWeight: 500, color: '#334155' }}>
-                                                                {defaultName}
+                                                                {type.name}
                                                             </span>
                                                         </div>
 
@@ -237,32 +241,30 @@ const OwnershipMapping = () => {
                                                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                                                 </span>
                                                             ) : (
-                                                                type.id ? (
-                                                                    <label className="upload-plus-btn" style={{
-                                                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                                        width: '28px', height: '28px', background: '#3b82f6', color: 'white',
-                                                                        borderRadius: '4px', cursor: 'pointer', transition: 'background 0.2s'
-                                                                    }} title="Upload Document">
-                                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                                                        <input type="file" hidden onChange={(e) => handleFileUpload(e, type.id)} />
-                                                                    </label>
-                                                                ) : (
-                                                                    <span style={{ fontSize: '18px', color: '#cbd5e1' }} title="Type not found">•</span>
-                                                                )
+                                                                <label className="upload-plus-btn" style={{
+                                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                                    width: '28px', height: '28px', background: '#3b82f6', color: 'white',
+                                                                    borderRadius: '4px', cursor: 'pointer', transition: 'background 0.2s'
+                                                                }} title="Upload Document">
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                                    <input type="file" hidden onChange={(e) => handleFileUpload(e, type.id)} />
+                                                                </label>
                                                             )}
                                                         </div>
 
                                                         {/* Date Column */}
                                                         <div style={{ textAlign: 'center', fontSize: '14px', color: '#64748b' }}>
-                                                            {doc ? new Date(doc.document_date).toLocaleDateString() : '11/1/26'}
+                                                            {doc ? new Date(doc.document_date).toLocaleDateString() : 'N/A'}
                                                         </div>
 
                                                         {/* Action Column */}
                                                         <div style={{ textAlign: 'center' }}>
                                                             {doc ? (
-                                                                <button className="icon-btn" onClick={() => viewDocument(doc)} title="View Document" style={{ color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>
-                                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                                                </button>
+                                                                <div className="action-icon-wrapper center">
+                                                                    <button className="action-icon-btn view" onClick={() => viewDocument(doc)} title="View Document">
+                                                                        <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                                    </button>
+                                                                </div>
                                                             ) : (
                                                                 <span style={{ color: '#cbd5e1' }}>-</span>
                                                             )}
@@ -270,6 +272,9 @@ const OwnershipMapping = () => {
                                                     </div>
                                                 );
                                             })}
+                                            {documentTypes.length === 0 && (
+                                                <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>No document types configured.</div>
+                                            )}
                                         </div>
                                     </>
                                 )}
@@ -279,6 +284,7 @@ const OwnershipMapping = () => {
                                     <thead>
                                         <tr>
                                             <th>Owner Name</th>
+                                            <th>Share %</th>
                                             <th>Status</th>
                                             <th>Start Date</th>
                                             <th>End Date</th>
@@ -288,6 +294,7 @@ const OwnershipMapping = () => {
                                         {unitOwners.map(o => (
                                             <tr key={o.id}>
                                                 <td>{o.company_name || `${o.first_name} ${o.last_name}`}</td>
+                                                <td>{o.share_percentage ? Number(o.share_percentage) : 100}%</td>
                                                 <td>
                                                     <span className={`status-badge ${o.ownership_status.toLowerCase() === 'active' ? 'individual' : 'company'}`} style={{ background: o.ownership_status === 'Active' ? '#dcfce7' : '#f1f5f9', color: o.ownership_status === 'Active' ? '#166534' : '#64748b' }}>
                                                         {o.ownership_status}
@@ -297,7 +304,7 @@ const OwnershipMapping = () => {
                                                 <td>{o.end_date ? new Date(o.end_date).toLocaleDateString() : '-'}</td>
                                             </tr>
                                         ))}
-                                        {unitOwners.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center' }}>No history found</td></tr>}
+                                        {unitOwners.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center' }}>No history found</td></tr>}
                                     </tbody>
                                 </table>
                             </>
@@ -313,6 +320,8 @@ const OwnershipMapping = () => {
                         onAssign={() => {
                             setIsAssignModalOpen(false);
                             fetchOwnerships(selectedUnit);
+                            fetchUnits(selectedProject); // refresh unit list
+                            setSelectedUnit(''); // Reset selection as it's now sold
                         }}
                     />
                 )}
@@ -324,7 +333,7 @@ const OwnershipMapping = () => {
 const AssignOwnerModal = ({ isOpen, onClose, unitId, onAssign }) => {
     const [search, setSearch] = useState('');
     const [parties, setParties] = useState([]);
-    const [selectedParty, setSelectedParty] = useState(null);
+    const [selectedOwners, setSelectedOwners] = useState([]); // Array of { party, share }
     const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
 
     useEffect(() => {
@@ -337,10 +346,54 @@ const AssignOwnerModal = ({ isOpen, onClose, unitId, onAssign }) => {
         searchParties();
     }, [search]);
 
+    const handleAddOwner = (party) => {
+        if (selectedOwners.length >= 4) {
+            alert('Maximum 4 joint owners allowed.');
+            return;
+        }
+        if (selectedOwners.some(o => o.party.id === party.id)) {
+            alert('Owner already added.');
+            return;
+        }
+        
+        let initialShare = 100;
+        if (selectedOwners.length === 1) initialShare = 50;
+        else if (selectedOwners.length > 0) initialShare = 0;
+        
+        // Auto-balance existing slightly if just 2
+        let newOwners = [...selectedOwners];
+        if (newOwners.length === 1 && newOwners[0].share === 100) {
+            newOwners[0].share = 50;
+        }
+
+        setSelectedOwners([...newOwners, { party, share: initialShare }]);
+        setSearch(''); // clear search
+    };
+
+    const handleRemoveOwner = (id) => {
+        setSelectedOwners(selectedOwners.filter(o => o.party.id !== id));
+    };
+
+    const handleShareChange = (id, newShare) => {
+        const value = Math.max(0, Math.min(100, Number(newShare)));
+        setSelectedOwners(selectedOwners.map(o => o.party.id === id ? { ...o, share: value } : o));
+    };
+
     const handleAssign = async () => {
-        if (!selectedParty) return;
+        if (selectedOwners.length === 0) return;
+        
+        const totalShare = selectedOwners.reduce((sum, o) => sum + Number(o.share || 0), 0);
+        if (Math.abs(totalShare - 100) > 0.01) {
+            alert(`Total share percentage is ${totalShare}%. It must be exactly 100%.`);
+            return;
+        }
+
         try {
-            await ownershipAPI.assignOwner({ unit_id: unitId, party_id: selectedParty.id, start_date: startDate });
+            await ownershipAPI.assignOwner({ 
+                unit_id: unitId, 
+                start_date: startDate,
+                owners: selectedOwners.map(o => ({ party_id: o.party.id, share_percentage: o.share }))
+            });
             onAssign();
         } catch (e) {
             alert("Failed to assign: " + (e.response?.data?.message || e.message));
@@ -349,36 +402,74 @@ const AssignOwnerModal = ({ isOpen, onClose, unitId, onAssign }) => {
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content">
-                <h3>Assign Owner</h3>
-                <div className="form-group">
-                    <label>Search Party</label>
-                    <input
-                        className="form-input"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Type name..."
-                        autoFocus
-                    />
-                    <div className="search-results">
-                        {parties.map(p => (
-                            <div
-                                key={p.id}
-                                className={`search-item ${selectedParty?.id === p.id ? 'selected' : ''}`}
-                                onClick={() => setSelectedParty(p)}
-                            >
-                                {p.company_name || `${p.first_name} ${p.last_name}`} ({p.type})
+            <div className="modal-content" style={{ maxWidth: '600px', width: '90%' }}>
+                <h3>Assign Owner(s)</h3>
+                
+                <div style={{ marginBottom: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '10px' }}>
+                        Selected Joint Owners ({selectedOwners.length}/4)
+                    </p>
+                    
+                    {selectedOwners.map(owner => (
+                        <div key={owner.party.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', background: '#f8fafc', padding: '10px', borderRadius: '4px' }}>
+                            <div style={{ flex: 1 }}>
+                                <strong>{owner.party.company_name || `${owner.party.first_name} ${owner.party.last_name}`}</strong>
                             </div>
-                        ))}
-                    </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <input 
+                                    type="number" 
+                                    value={owner.share} 
+                                    onChange={(e) => handleShareChange(owner.party.id, e.target.value)}
+                                    style={{ width: '60px', padding: '5px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                    min="0" max="100" step="0.01"
+                                /> %
+                            </div>
+                            <button onClick={() => handleRemoveOwner(owner.party.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+                        </div>
+                    ))}
+                    {selectedOwners.length === 0 && (
+                        <div style={{ padding: '10px', background: '#f8fafc', color: '#94a3b8', textAlign: 'center', borderRadius: '4px' }}>
+                            Search and select below to add owners...
+                        </div>
+                    )}
                 </div>
+
+                {selectedOwners.length < 4 && (
+                    <div className="form-group" style={{ position: 'relative' }}>
+                        <label>Search Party to Add</label>
+                        <input
+                            className="form-input"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Type company or name..."
+                        />
+                        {search && parties.length > 0 && (
+                            <div className="search-results" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: '#fff', border: '1px solid #cbd5e1', maxHeight: '150px', overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                                {parties.map(p => (
+                                    <div
+                                        key={p.id}
+                                        className="search-item"
+                                        onClick={() => handleAddOwner(p)}
+                                        style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
+                                        onMouseEnter={(e) => e.target.style.background = '#f1f5f9'}
+                                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                    >
+                                        {p.company_name || `${p.first_name} ${p.last_name}`} ({p.type})
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <div className="form-group" style={{ marginTop: '16px' }}>
                     <label>Assignment Date</label>
                     <input type="date" className="form-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                 </div>
-                <div className="form-actions">
+                
+                <div className="form-actions" style={{ marginTop: '20px' }}>
                     <button className="btn-cancel" onClick={onClose}>Cancel</button>
-                    <button className="btn-submit" onClick={handleAssign} disabled={!selectedParty}>Assign</button>
+                    <button className="btn-submit" onClick={handleAssign} disabled={selectedOwners.length === 0}>Assign Owner(s)</button>
                 </div>
             </div>
         </div>

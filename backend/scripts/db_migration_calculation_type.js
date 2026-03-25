@@ -24,7 +24,7 @@ async function runMigration() {
         } else {
             await pool.execute(`
         ALTER TABLE projects 
-        ADD COLUMN calculation_type ENUM('Super Area', 'Covered Area', 'Carpet Area') DEFAULT 'Super Area' AFTER project_type
+        ADD COLUMN calculation_type ENUM('Chargeable Area', 'Covered Area', 'Carpet Area') DEFAULT 'Chargeable Area' AFTER project_type
       `);
             console.log('Successfully added calculation_type column.');
         }

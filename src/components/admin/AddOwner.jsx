@@ -54,7 +54,7 @@ const AddOwner = () => {
     setSelectedUnits(selectedObjs);
   };
 
-  const totalArea = selectedUnits.reduce((acc, curr) => acc + (parseFloat(curr.super_area) || 0), 0);
+  const totalArea = selectedUnits.reduce((acc, curr) => acc + (parseFloat(curr.chargeable_area) || 0), 0);
 
   const handleCancel = () => navigate('/admin/owner');
 
@@ -180,7 +180,7 @@ const AddOwner = () => {
                 {units.length === 0 && <option disabled>No vacant units available</option>}
                 {units.map(u => (
                   <option key={u.id} value={u.id}>
-                    Unit {u.unit_number} - {u.project_name || 'Project'} ({u.super_area} sqft)
+                    Unit {u.unit_number} - {u.project_name || 'Project'} ({u.chargeable_area} sqft)
                   </option>
                 ))}
               </select>

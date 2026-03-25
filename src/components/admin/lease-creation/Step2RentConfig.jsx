@@ -15,13 +15,13 @@ const Step2RentConfig = ({
 
     React.useEffect(() => {
         if (rentRate && selectedProject && selectedUnit) {
-            const calcType = selectedProject.calculation_type || 'Super Area';
+            const calcType = selectedProject.calculation_type || 'Chargeable Area';
             let area = 0;
             // Note: Assuming unit object has these fields. If not, might need to ensure they are fetched.
             // Based on AddUnit, they should be there.
             if (calcType === 'Covered Area') area = parseFloat(selectedUnit.covered_area) || 0;
             else if (calcType === 'Carpet Area') area = parseFloat(selectedUnit.carpet_area) || 0;
-            else area = parseFloat(selectedUnit.super_area) || 0;
+            else area = parseFloat(selectedUnit.chargeable_area) || 0;
 
             const total = parseFloat(rentRate) * area;
             setFormData(prev => ({ ...prev, monthly_rent: total > 0 ? total.toString() : '' }));
@@ -30,11 +30,11 @@ const Step2RentConfig = ({
 
     React.useEffect(() => {
         if (mgRate && selectedProject && selectedUnit) {
-            const calcType = selectedProject.calculation_type || 'Super Area';
+            const calcType = selectedProject.calculation_type || 'Chargeable Area';
             let area = 0;
             if (calcType === 'Covered Area') area = parseFloat(selectedUnit.covered_area) || 0;
             else if (calcType === 'Carpet Area') area = parseFloat(selectedUnit.carpet_area) || 0;
-            else area = parseFloat(selectedUnit.super_area) || 0;
+            else area = parseFloat(selectedUnit.chargeable_area) || 0;
 
             const total = parseFloat(mgRate) * area;
             // For Hybrid, it sets minimum_guarantee. For RevenueShare, it sets monthly_rent (which acts as MG/Base).
@@ -66,7 +66,7 @@ const Step2RentConfig = ({
                                     onChange={(e) => setRentRate(e.target.value)}
                                 />
                                 <span style={{ marginLeft: '10px', fontSize: '0.9rem', color: '#666' }}>
-                                    on {selectedProject?.calculation_type || 'Super Area'}
+                                    on {selectedProject?.calculation_type || 'Chargeable Area'}
                                 </span>
                             </div>
                         </div>
@@ -129,7 +129,7 @@ const Step2RentConfig = ({
                                     onChange={(e) => setMgRate(e.target.value)}
                                 />
                                 <span style={{ marginLeft: '10px', fontSize: '0.9rem', color: '#666' }}>
-                                    on {selectedProject?.calculation_type || 'Super Area'}
+                                    on {selectedProject?.calculation_type || 'Chargeable Area'}
                                 </span>
                             </div>
                         </div>

@@ -11,6 +11,7 @@ const ProjectDetails = () => {
     const [activeTab, setActiveTab] = useState('home');
     const [units, setUnits] = useState([]);
     const [tenants, setTenants] = useState([]);
+    const [owners, setOwners] = useState([]);
     const [loading, setLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
 
@@ -27,9 +28,9 @@ const ProjectDetails = () => {
                 const unitsRes = await unitAPI.getUnits({ projectId: id });
                 setUnits(unitsRes.data.data || unitsRes.data);
 
-                // 3. Fetch Tenants for this project
-                const tenantsRes = await tenantAPI.getTenants({ projectId: id });
-                setTenants(tenantsRes.data);
+                // tenants and owners are now sent by the backend getProjectById directly
+                setTenants(projRes.data.tenants || []);
+                setOwners(projRes.data.owners || []);
 
             } catch (error) {
                 console.error("Error fetching project details:", error);
@@ -110,8 +111,16 @@ const ProjectDetails = () => {
                 <div className="detail-card">
                     <h3>Property Stats</h3>
                     <div className="stat-row">
+                        <span>Total Floors:</span>
+                        <strong>{project.actual_total_floors || 0}</strong>
+                    </div>
+                    <div className="stat-row">
                         <span>Total Units:</span>
-                        <strong>{project.total_units || 0}</strong>
+                        <strong>{project.total_units_count || 0}</strong>
+                    </div>
+                    <div className="stat-row">
+                        <span>Units Sold:</span>
+                        <strong>{project.units_sold || 0}</strong>
                     </div>
                     <div className="stat-row">
                         <span>Leased Units:</span>
@@ -155,7 +164,7 @@ const ProjectDetails = () => {
                             <tr key={unit.id}>
                                 <td>{unit.unit_number}</td>
                                 <td>{unit.floor_number}</td>
-                                <td>{unit.super_area}</td>
+                                <td>{unit.chargeable_area}</td>
                                 <td><span className={`status-badge ${unit.status}`}>{unit.status}</span></td>
                                 <td>
                                     <Link to={`/admin/edit-unit/${unit.id}`} className="action-link">Edit</Link>
@@ -189,6 +198,35 @@ const ProjectDetails = () => {
                                 <td>{tenant.contact_person_name || 'N/A'}</td>
                                 <td>{tenant.contact_person_email}</td>
                                 <td><span className={`status-badge ${tenant.status}`}>{tenant.status}</span></td>
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+
+    const renderOwnersTab = () => (
+        <div className="tab-content-table">
+            <table className="data-table">
+                <thead>
+                    <tr>
+                        <th>Owner Name</th>
+                        <th>Entity Type</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {owners.length === 0 ? (
+                        <tr><td colSpan="4">No owners found for this project.</td></tr>
+                    ) : (
+                        owners.map(owner => (
+                            <tr key={owner.id}>
+                                <td>{owner.first_name} {owner.last_name}</td>
+                                <td>{owner.legal_entity_type || owner.type}</td>
+                                <td>{owner.email}</td>
+                                <td>{owner.phone}</td>
                             </tr>
                         ))
                     )}
@@ -282,7 +320,7 @@ const ProjectDetails = () => {
                         {activeTab === 'home' && renderHomeTab()}
                         {activeTab === 'units' && renderUnitsTab()}
                         {activeTab === 'tenants' && renderTenantsTab()}
-                        {activeTab === 'owner' && <div style={{ padding: '20px' }}>Owner Details Component Placeholder</div>}
+                        {activeTab === 'owner' && renderOwnersTab()}
                     </div>
                 </div>
 

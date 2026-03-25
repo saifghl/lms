@@ -11,7 +11,7 @@ const UnitDataEntry = () => {
     const [formData, setFormData] = useState({
         unit_number: '',
         floor_number: '',
-        super_area: '',
+        chargeable_area: '',
         status: 'vacant',
         unit_type: '2 Bedrooms' // Just for UI selection, might map to description or logic
     });
@@ -51,7 +51,7 @@ const UnitDataEntry = () => {
                 project_id: selectedProject,
                 unit_number: formData.unit_number,
                 floor_number: formData.floor_number,
-                super_area: formData.super_area,
+                chargeable_area: formData.chargeable_area,
                 status: formData.status,
                 // unit_condition: ...
             };
@@ -143,8 +143,8 @@ const UnitDataEntry = () => {
                                 <input
                                     type="number"
                                     placeholder="0.00"
-                                    value={formData.super_area}
-                                    onChange={(e) => setFormData({ ...formData, super_area: e.target.value })}
+                                    value={formData.chargeable_area}
+                                    onChange={(e) => setFormData({ ...formData, chargeable_area: e.target.value })}
                                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}
                                 />
                                 <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 'bold' }}>SQ FT</span>
@@ -196,7 +196,7 @@ const UnitDataEntry = () => {
                 </div>
 
                 <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                    <button className="btn-secondary" style={{ background: 'white', borderColor: '#e2e8f0' }} onClick={() => setFormData({ unit_number: '', floor_number: '', super_area: '', status: 'vacant', unit_type: '2 Bedrooms' })}>Reset Form</button>
+                    <button className="btn-secondary" style={{ background: 'white', borderColor: '#e2e8f0' }} onClick={() => setFormData({ unit_number: '', floor_number: '', chargeable_area: '', status: 'vacant', unit_type: '2 Bedrooms' })}>Reset Form</button>
                     <button className="btn-action" onClick={handleSubmit} disabled={loading}>
                         {loading ? 'Submitting...' : 'Submit for Approval ➤'}
                     </button>

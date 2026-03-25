@@ -10,7 +10,7 @@ const getUnits = async (req, res) => {
                 u.id,
                 u.unit_number,
                 p.project_name AS building,
-                u.super_area,
+                u.chargeable_area,
                 u.status,
                 u.project_id,
                 (SELECT owner_id FROM owner_units WHERE unit_id = u.id LIMIT 1) as owner_id
@@ -23,6 +23,10 @@ const getUnits = async (req, res) => {
         if (projectId && projectId !== 'All') {
             query += " AND u.project_id = ?";
             params.push(projectId);
+        }
+
+        if (req.query.excludeSold === 'true') {
+            query += " AND u.id NOT IN (SELECT unit_id FROM unit_ownerships WHERE ownership_status = 'Active')";
         }
 
         if (status && status !== 'All') {
@@ -58,12 +62,14 @@ const createUnit = async (req, res) => {
             unit_number,
             floor_number,
             block_tower,
-            super_area,
+            chargeable_area,
             carpet_area,
             covered_area,
             builtup_area,
             unit_condition,
             plc,
+            unit_category,
+            unit_zoning_type,
             projected_rent
         } = req.body;
 
@@ -82,27 +88,31 @@ const createUnit = async (req, res) => {
                 unit_number,
                 floor_number,
                 block_tower,
-                super_area,
+                chargeable_area,
                 carpet_area,
                 covered_area,
                 builtup_area,
                 unit_condition,
                 plc,
+                unit_category,
+                unit_zoning_type,
                 projected_rent,
                 status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'vacant')
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'vacant')
             `,
             [
                 project_id,
                 unit_number,
                 floor_number || null,
                 block_tower || null,
-                super_area || null,
+                chargeable_area || null,
                 carpet_area || null,
                 covered_area || null,
                 builtup_area || null,
                 unit_condition || 'bare_shell',
                 plc || null,
+                unit_category || null,
+                unit_zoning_type || null,
                 projected_rent || null
             ]
         );
@@ -124,7 +134,7 @@ const createUnit = async (req, res) => {
         await conn.query(
             `UPDATE projects 
              SET total_project_area = (
-                SELECT COALESCE(SUM(super_area), 0) 
+                SELECT COALESCE(SUM(chargeable_area), 0) 
                 FROM units 
                 WHERE project_id = ?
              ) 
@@ -155,10 +165,12 @@ const updateUnit = async (req, res) => {
         unit_number,
         floor_number,
         block_tower,
-        super_area,
+        chargeable_area,
         carpet_area,
         unit_condition,
         plc,
+        unit_category,
+        unit_zoning_type,
         projected_rent,
         status
     } = req.body;
@@ -171,10 +183,12 @@ const updateUnit = async (req, res) => {
                 unit_number = ?, 
                 floor_number = ?, 
                 block_tower = ?,
-                super_area = ?, 
+                chargeable_area = ?, 
                 carpet_area = ?, 
                 unit_condition = ?, 
                 plc = ?, 
+                unit_category = ?,
+                unit_zoning_type = ?,
                 projected_rent = ?, 
                 status = ?
             WHERE id = ?
@@ -183,10 +197,12 @@ const updateUnit = async (req, res) => {
                 unit_number,
                 floor_number || null,
                 block_tower || null,
-                super_area || null,
+                chargeable_area || null,
                 carpet_area || null,
                 unit_condition || 'bare_shell',
                 plc || null,
+                unit_category || null,
+                unit_zoning_type || null,
                 projected_rent || null,
                 status || 'vacant',
                 id
@@ -205,7 +221,7 @@ const updateUnit = async (req, res) => {
             await pool.query(
                 `UPDATE projects 
                  SET total_project_area = (
-                    SELECT COALESCE(SUM(super_area), 0) 
+                    SELECT COALESCE(SUM(chargeable_area), 0) 
                     FROM units 
                     WHERE project_id = ?
                  ) 
@@ -233,12 +249,14 @@ const getUnitById = async (req, res) => {
                 u.unit_number,
                 u.floor_number,
                 u.block_tower,
-                u.super_area,
+                u.chargeable_area,
                 u.carpet_area,
                 u.covered_area,
                 u.builtup_area,
                 u.unit_condition,
                 u.plc,
+                u.unit_category,
+                u.unit_zoning_type,
                 u.projected_rent,
                 u.status,
                 p.project_name,
@@ -278,7 +296,7 @@ const deleteUnit = async (req, res) => {
             await pool.query(
                 `UPDATE projects 
                  SET total_project_area = (
-                    SELECT COALESCE(SUM(super_area), 0) 
+                    SELECT COALESCE(SUM(chargeable_area), 0) 
                     FROM units 
                     WHERE project_id = ?
                  ) 

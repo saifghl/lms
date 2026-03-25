@@ -47,6 +47,35 @@ const LeaseDetails = () => {
     const leaseType = lease.lease_type === 'Subtenant lease' ? 'sub_lease' : 'direct';
     const rentModel = lease.rent_model === 'RevenueShare' ? 'revenue_share' : 'fixed';
 
+    const getEffectiveRent = () => {
+        let base = parseFloat(lease.monthly_rent || 0);
+        if (!lease.escalations || lease.escalations.length === 0) return base;
+        
+        const today = new Date();
+        // Sort escalations by date ascending
+        const sortedEscalations = [...lease.escalations].sort((a, b) => new Date(a.effective_from) - new Date(b.effective_from));
+        
+        let currentRent = base;
+        for (const esc of sortedEscalations) {
+            const fromDate = new Date(esc.effective_from);
+            const toDate = esc.effective_to ? new Date(esc.effective_to) : null;
+            
+            if (today >= fromDate && (!toDate || today <= toDate)) {
+                if (esc.increase_type === 'Fixed Amount') {
+                    currentRent = base + parseFloat(esc.value || 0);
+                } else if (esc.increase_type === 'Rate Per Sqft') {
+                    currentRent = parseFloat(esc.value || 0) * (lease.sub_lease_area_sqft || lease.chargeable_area || 1);
+                } else {
+                    currentRent = base * (1 + parseFloat(esc.value || 0) / 100);
+                }
+                break; // Found the active one
+            }
+        }
+        return currentRent;
+    };
+
+    const effectiveRent = getEffectiveRent();
+
     return (
         <div className="dashboard-container">
             <Sidebar />
@@ -126,7 +155,7 @@ const LeaseDetails = () => {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <label style={{ display: 'block', fontSize: '0.8rem', color: '#718096', marginBottom: '4px' }}>Size:</label>
-                                <div style={{ fontWeight: 500, color: '#2d3748' }}>{lease.super_area ? parseInt(lease.super_area).toLocaleString() : '0'} sq ft</div>
+                                <div style={{ fontWeight: 500, color: '#2d3748' }}>{lease.chargeable_area ? parseInt(lease.chargeable_area).toLocaleString() : '0'} sq ft</div>
                             </div>
                         </div>
                     </div>
@@ -202,15 +231,26 @@ const LeaseDetails = () => {
                         </div>
 
                         <div className="rent-breakdown">
+                            <div className="rent-item" style={{ background: '#e0f2fe', padding: '10px', borderRadius: '6px', margin: '-5px -10px 10px', display: 'flex', justifyContent: 'space-between' }}>
+                                <label style={{ color: '#0369a1', fontWeight: 600 }}>Currently Effective Rent</label>
+                                <span className="amount" style={{ color: '#0369a1', fontWeight: 700 }}>{formatCurrency(effectiveRent)}</span>
+                            </div>
+                            
                             <div className="rent-item">
-                                <label>{rentModel === 'revenue_share' ? 'Minimum Guarantee (MGR)' : 'Base Rent'}</label>
-                                <span className="amount">{formatCurrency(lease.monthly_rent)}</span>
+                                <label>Original Base Rent</label>
+                                <span className="amount" style={{ color: '#718096' }}>{formatCurrency(lease.monthly_rent)}</span>
                             </div>
                             {rentModel === 'revenue_share' && (
-                                <div className="rent-item">
-                                    <label>Revenue Share</label>
-                                    <span className="amount">{lease.revenue_share_percentage}% of {lease.revenue_share_applicable_on}</span>
-                                </div>
+                                <>
+                                    <div className="rent-item">
+                                        <label>Total Sales Amount (Net/Gross)</label>
+                                        <span className="amount">{formatCurrency(lease.monthly_net_sales)}</span>
+                                    </div>
+                                    <div className="rent-item">
+                                        <label>Revenue Share</label>
+                                        <span className="amount">{lease.revenue_share_percentage}% of {lease.revenue_share_applicable_on}</span>
+                                    </div>
+                                </>
                             )}
                             <div className="rent-item">
                                 <label>CAM / Service</label>
@@ -232,26 +272,43 @@ const LeaseDetails = () => {
                         </div>
                     </div>
 
-                    {/* Security Deposit */}
-                    <div className="deposit-card">
-                        <h3 style={{ margin: 0, color: '#2d3748', textTransform: 'none', fontWeight: 600, fontSize: '1.1rem' }}>Security Deposit</h3>
-
-                        <div className="deposit-highlight">
-                            <label style={{ fontSize: '0.8rem', color: '#3182ce', fontWeight: 600 }}>Amount Held</label>
-                            <span className="deposit-amount">{formatCurrency(lease.security_deposit)}</span>
-                            <span style={{ fontSize: '0.75rem', color: '#718096' }}>Type: {lease.deposit_type}</span>
-                        </div>
-
-                        <div className="deposit-details">
-                            <div className="deposit-row" style={{ marginBottom: '8px' }}>
-                                <span>Utility Deposit:</span>
-                                <span>{formatCurrency(lease.utility_deposit)}</span>
+                    {/* Security Deposit & Escalations */}
+                    <div className="deposit-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div>
+                            <h3 style={{ margin: 0, color: '#2d3748', textTransform: 'none', fontWeight: 600, fontSize: '1.1rem', marginBottom: '15px' }}>Security Deposit</h3>
+                            <div className="deposit-highlight">
+                                <label style={{ fontSize: '0.8rem', color: '#3182ce', fontWeight: 600 }}>Amount Held</label>
+                                <span className="deposit-amount">{formatCurrency(lease.security_deposit)}</span>
+                                <span style={{ fontSize: '0.75rem', color: '#718096' }}>Type: {lease.deposit_type}</span>
                             </div>
-                            {/* <div className="deposit-row">
-                                <span>Refund Status:</span>
-                                <span>Pending Expiry</span>
-                            </div> */}
+
+                            <div className="deposit-details">
+                                <div className="deposit-row" style={{ marginBottom: '8px' }}>
+                                    <span>Utility Deposit:</span>
+                                    <span>{formatCurrency(lease.utility_deposit)}</span>
+                                </div>
+                            </div>
                         </div>
+
+                        {lease.escalations && lease.escalations.length > 0 && (
+                            <div>
+                                <h3 style={{ margin: 0, color: '#2d3748', textTransform: 'none', fontWeight: 600, fontSize: '1.1rem', marginBottom: '15px', paddingTop: '15px', borderTop: '1px solid #e2e8f0' }}>Rent Escalations</h3>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {lease.escalations.map((esc, idx) => (
+                                        <div key={idx} style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', fontSize: '0.85rem' }}>
+                                            <div style={{ fontWeight: 600, color: '#2d3748', marginBottom: '4px' }}>
+                                                {formatDate(esc.effective_from)} to {esc.effective_to ? formatDate(esc.effective_to) : 'Present'}
+                                            </div>
+                                            <div style={{ color: '#4a5568' }}>
+                                                {esc.increase_type}: {esc.value}
+                                                {esc.increase_type === 'Percentage' ? '%' : (esc.increase_type === 'Rate Per Sqft' ? ' / sqft' : ' ₹ addition')}
+                                            </div>
+                                            <div style={{ color: '#718096', fontSize: '0.75rem', marginTop: '2px' }}>Applies to: {esc.escalation_on === 'mg' ? 'MG Base' : esc.escalation_on}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

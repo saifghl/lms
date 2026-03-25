@@ -7,11 +7,11 @@ const Step3Finalize = ({ formData, setFormData, selectedProject, selectedUnit })
 
     React.useEffect(() => {
         if (selectedProject && selectedUnit) {
-            const calcType = selectedProject.calculation_type || 'Super Area';
+            const calcType = selectedProject.calculation_type || 'Chargeable Area';
             let area = 0;
             if (calcType === 'Covered Area') area = parseFloat(selectedUnit.covered_area) || 0;
             else if (calcType === 'Carpet Area') area = parseFloat(selectedUnit.carpet_area) || 0;
-            else area = parseFloat(selectedUnit.super_area) || 0;
+            else area = parseFloat(selectedUnit.chargeable_area) || 0;
 
 
 
@@ -191,7 +191,7 @@ const Step3Finalize = ({ formData, setFormData, selectedProject, selectedUnit })
                             onChange={(e) => setSecurityDepositRate(e.target.value)}
                         />
                         <span style={{ marginLeft: '10px', fontSize: '0.9rem', color: '#666' }}>
-                            on {selectedProject?.calculation_type || 'Super Area'}
+                            on {selectedProject?.calculation_type || 'Chargeable Area'}
                         </span>
                     </div>
                 </div>
@@ -222,7 +222,7 @@ const Step3Finalize = ({ formData, setFormData, selectedProject, selectedUnit })
                             onChange={(e) => setUtilityDepositRate(e.target.value)}
                         />
                         <span style={{ marginLeft: '10px', fontSize: '0.9rem', color: '#666' }}>
-                            on {selectedProject?.calculation_type || 'Super Area'}
+                            on {selectedProject?.calculation_type || 'Chargeable Area'}
                         </span>
                     </div>
                 </div>

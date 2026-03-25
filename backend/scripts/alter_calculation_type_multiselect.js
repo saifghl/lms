@@ -13,7 +13,7 @@ async function runMigration() {
         // Alter the table
         await pool.execute(`
             ALTER TABLE projects 
-            MODIFY COLUMN calculation_type VARCHAR(255) DEFAULT 'Super Area'
+            MODIFY COLUMN calculation_type VARCHAR(255) DEFAULT 'Chargeable Area'
         `);
 
         console.log('Successfully modified calculation_type to VARCHAR(255).');

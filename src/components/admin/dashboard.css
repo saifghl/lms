@@ -9,6 +9,12 @@
     --label: #4B5563;
     --title: #111827;
 
+    /* Aliases used in table components */
+    --border-color: #E5E7EB;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --primary-blue: #2E66FF;
+
     --blue: #2E66FF;
     --green: #16A34A;
     --red: #DC2626;
@@ -623,4 +629,56 @@ body {
     .stats-grid-5 {
         grid-template-columns: 1fr;
     }
+}
+/* Override all action buttons to be highly visible */
+table .action-btn,
+.actions-cell .action-btn,
+.action-buttons .action-btn,
+.action-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+    background-color: #2e66ff !important;
+    border: 1px solid #1d4ed8 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+}
+
+table .action-btn svg,
+.actions-cell .action-btn svg,
+.action-buttons .action-btn svg,
+.action-btn svg {
+    stroke: #ffffff !important;
+    fill: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+table .action-btn.delete,
+.actions-cell .action-btn.delete,
+.action-buttons .action-btn.delete,
+.action-btn.delete {
+    background-color: #ef4444 !important;
+    border-color: #dc2626 !important;
+}
+
+table .action-btn:hover,
+.actions-cell .action-btn:hover,
+.action-buttons .action-btn:hover,
+.action-btn:hover {
+    background-color: #1d4ed8 !important;
+    filter: brightness(0.9);
+}
+
+table .action-btn.delete:hover,
+.actions-cell .action-btn.delete:hover,
+.action-buttons .action-btn.delete:hover,
+.action-btn.delete:hover {
+    background-color: #dc2626 !important;
 }

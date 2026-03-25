@@ -110,9 +110,11 @@ const Step1BasicDetails = ({
                         className="form-control"
                     >
                         <option value="">Select Unit</option>
-                        {units.map(unit => (
+                        {units
+                            .filter(unit => !isSubLease || unit.status === 'occupied')
+                            .map(unit => (
                             <option key={unit.id} value={unit.id}>
-                                {unit.unit_number} - {unit.super_area} sqft {unit.status !== 'vacant' ? `(${unit.status})` : ''}
+                                {unit.unit_number} - {unit.chargeable_area} sqft {unit.status !== 'vacant' ? `(${unit.status})` : ''}
                             </option>
                         ))}
                     </select>
@@ -122,33 +124,13 @@ const Step1BasicDetails = ({
             {/* Parties */}
             <h4 style={{ margin: '20px 0 10px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Parties</h4>
             <div className="form-row">
-                <div className="form-group">
-                    <label>{isSubLease ? 'Sub Tenant *' : 'Master *'}</label>
-                    <select
-                        value={formData.party_tenant_id}
-                        onChange={(e) => setFormData({ ...formData, party_tenant_id: e.target.value })}
-                        className="form-control"
-                    >
-                        <option value="">Select Master</option>
-                        {parties.map(party => (
-                            <option key={party.id} value={party.id}>
-                                {party.company_name || `${party.first_name} ${party.last_name}`} ({party.type})
-                            </option>
-                        ))}
-                    </select>
-                    {!isSubLease && formData.party_tenant_id && formData.party_owner_id && formData.party_tenant_id === formData.party_owner_id && (
-                        <small className="error-text" style={{ color: 'red' }}>Owner and Tenant cannot be the same party.</small>
-                    )}
-                    {isSubLease && formData.party_tenant_id && formData.sub_tenant_id && formData.party_tenant_id === formData.sub_tenant_id && (
-                        <small className="error-text" style={{ color: 'red' }}>Sub Tenant and Main Tenant cannot be the same party.</small>
-                    )}
-                </div>
+                {/* LESSOR DROP DOWN */}
                 <div className="form-group">
                     <label>{isSubLease ? 'Main Tenant (Lessor) *' : 'Owner (Landlord) *'}</label>
                     {isSubLease ? (
                         <select
-                            value={formData.sub_tenant_id} // Mapping sub_tenant logic correctly
-                            onChange={(e) => setFormData({ ...formData, sub_tenant_id: e.target.value })}
+                            value={formData.party_tenant_id} // The main lease tenant becomes the lessor in a sublease
+                            onChange={(e) => setFormData({ ...formData, party_tenant_id: e.target.value })}
                             className="form-control"
                         >
                             <option value="">Select Main Tenant</option>
@@ -169,6 +151,35 @@ const Step1BasicDetails = ({
                     )}
                     {!isSubLease && !activeOwner && formData.unit_id && (
                         <small className="error-text">Unit has no active owner. Please assign one in Ownership Mapping.</small>
+                    )}
+                </div>
+
+                {/* LESSEE DROP DOWN */}
+                <div className="form-group">
+                    <label>{isSubLease ? 'Sub Tenant (Lessee) *' : 'Master Tenant (Lessee) *'}</label>
+                    <select
+                        value={isSubLease ? formData.sub_tenant_id : formData.party_tenant_id}
+                        onChange={(e) => {
+                            if (isSubLease) {
+                                setFormData({ ...formData, sub_tenant_id: e.target.value });
+                            } else {
+                                setFormData({ ...formData, party_tenant_id: e.target.value });
+                            }
+                        }}
+                        className="form-control"
+                    >
+                        <option value="">Select Lessee</option>
+                        {parties.map(party => (
+                            <option key={party.id} value={party.id}>
+                                {party.company_name || `${party.first_name} ${party.last_name}`} ({party.type})
+                            </option>
+                        ))}
+                    </select>
+                    {!isSubLease && formData.party_tenant_id && formData.party_owner_id && parseInt(formData.party_tenant_id) === parseInt(formData.party_owner_id) && (
+                        <small className="error-text" style={{ color: 'red' }}>Owner and Tenant cannot be the same party.</small>
+                    )}
+                    {isSubLease && formData.party_tenant_id && formData.sub_tenant_id && parseInt(formData.party_tenant_id) === parseInt(formData.sub_tenant_id) && (
+                        <small className="error-text" style={{ color: 'red' }}>Sub Tenant and Main Tenant cannot be the same party.</small>
                     )}
                 </div>
             </div>

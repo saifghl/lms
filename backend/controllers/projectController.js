@@ -45,7 +45,7 @@ const addProject = async (req, res) => {
       location || null,
       address || null,
       project_type || null,
-      calculation_type || 'Super Area',
+      calculation_type || 'Chargeable Area',
       floors,
       area,
       image,
@@ -136,11 +136,13 @@ const getProjectById = async (req, res) => {
     const query = `
             SELECT 
                 p.*,
-                COUNT(u.id) AS total_units,
+                p.total_floors AS actual_total_floors,
+                (SELECT COUNT(*) FROM units WHERE project_id = p.id) AS total_units_count,
+                (SELECT COUNT(DISTINCT uo.unit_id) FROM unit_ownerships uo JOIN units un ON un.id = uo.unit_id WHERE un.project_id = p.id AND uo.ownership_status = 'Active') AS units_sold,
                 SUM(CASE WHEN u.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_units,
                 SUM(CASE WHEN u.status = 'vacant' THEN 1 ELSE 0 END) AS vacant_units,
-                COALESCE(SUM(u.super_area), 0) AS total_area,
-                COALESCE(SUM(CASE WHEN u.status = 'occupied' THEN u.super_area ELSE 0 END), 0) AS leased_area
+                COALESCE(SUM(u.chargeable_area), 0) AS total_area,
+                COALESCE(SUM(CASE WHEN u.status = 'occupied' THEN u.chargeable_area ELSE 0 END), 0) AS leased_area
             FROM projects p
             LEFT JOIN units u ON p.id = u.project_id
             WHERE p.id = ?
@@ -153,7 +155,30 @@ const getProjectById = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    res.json({ data: rows[0] });
+    // Fetch related tenants who have active leases in this project
+    const [tenantsRows] = await pool.query(
+      `SELECT DISTINCT pt.* 
+       FROM parties pt 
+       JOIN leases l ON l.party_tenant_id = pt.id 
+       WHERE l.project_id = ? AND l.status = 'active'`,
+      [id]
+    );
+
+    // Fetch related owners who actively own units in this project
+    const [ownersRows] = await pool.query(
+      `SELECT DISTINCT po.* 
+       FROM parties po 
+       JOIN unit_ownerships uo ON uo.party_id = po.id
+       JOIN units u ON u.id = uo.unit_id 
+       WHERE u.project_id = ? AND uo.ownership_status = 'Active'`,
+      [id]
+    );
+
+    res.json({ 
+        data: rows[0],
+        tenants: tenantsRows,
+        owners: ownersRows
+    });
   } catch (err) {
     console.error("Get project error:", err);
     res.status(500).json({ error: err.message });
@@ -190,7 +215,7 @@ const updateProject = async (req, res) => {
       location || null,
       address || null,
       project_type || null,
-      calculation_type || 'Super Area',
+      calculation_type || 'Chargeable Area',
       floors,
       area,
       description || null,
@@ -236,7 +261,7 @@ const getUnitsByProject = async (req, res) => {
         u.id, 
         u.unit_number, 
         u.floor_number, 
-        u.super_area, 
+        u.chargeable_area, 
         u.status 
       FROM units u
       WHERE u.project_id = ?

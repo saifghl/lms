@@ -3,8 +3,20 @@ const pool = require("../config/db");
 const getDashboardStats = async (req, res) => {
   try {
     const connection = await pool.getConnection();
+    const projectId = req.query.project_id || null;
 
-    // Default response structure with safe defaults (0 instead of undefined)
+    // Filters for dynamic queries
+    const pFilter = projectId ? "WHERE id = ?" : "";
+    const pFilterAnd = projectId ? "AND id = ?" : "";
+    const uFilter = projectId ? "WHERE project_id = ?" : "";
+    const uFilterAnd = projectId ? "AND project_id = ?" : "";
+    const uAliasFilter = projectId ? "WHERE u.project_id = ?" : "";
+    const uAliasFilterAnd = projectId ? "AND u.project_id = ?" : "";
+    const lFilterAnd = projectId ? "AND project_id = ?" : "";
+    
+    const params = projectId ? [projectId] : [];
+
+    // Default response structure with safe defaults
     const response = {
       topRow: {
         totalProjects: { value: 0, label: "Total Projects" },
@@ -40,20 +52,18 @@ const getDashboardStats = async (req, res) => {
 
     try {
       // --- 1. Top Row: Projects, Units, Total Area ---
-      // Total Projects
       let totalProjects = 0;
       try {
-        const [projRows] = await connection.query("SELECT COUNT(*) as count FROM projects");
+        const [projRows] = await connection.query(`SELECT COUNT(*) as count FROM projects ${pFilter}`, params);
         totalProjects = projRows[0]?.count || 0;
         response.topRow.totalProjects.value = totalProjects;
       } catch (e) { console.error("Error fetching projects:", e.message); }
 
-      // Total Units
       let totalUnits = 0;
       let totalProjectArea = 0;
       let globalProjectedRentTotal = 0;
       try {
-        const [unitRows] = await connection.query("SELECT COUNT(*) as count, COALESCE(SUM(super_area), 0) as total_area, COALESCE(SUM(projected_rent), 0) as total_projected_rent FROM units");
+        const [unitRows] = await connection.query(`SELECT COUNT(*) as count, COALESCE(SUM(chargeable_area), 0) as total_area, COALESCE(SUM(projected_rent * COALESCE(chargeable_area, 0)), 0) as total_projected_rent FROM units ${uFilter}`, params);
         totalUnits = unitRows[0]?.count || 0;
         totalProjectArea = parseFloat(unitRows[0]?.total_area || 0);
         globalProjectedRentTotal = parseFloat(unitRows[0]?.total_projected_rent || 0);
@@ -67,11 +77,11 @@ const getDashboardStats = async (req, res) => {
       let areaSold = 0;
       try {
         const [soldRows] = await connection.query(`
-            SELECT COUNT(DISTINCT u.id) as count, COALESCE(SUM(u.super_area), 0) as area
+            SELECT COUNT(DISTINCT u.id) as count, COALESCE(SUM(u.chargeable_area), 0) as area
             FROM units u
             JOIN unit_ownerships uo ON u.id = uo.unit_id
-            WHERE uo.ownership_status = 'Active'
-          `);
+            WHERE uo.ownership_status = 'Active' ${uAliasFilterAnd}
+          `, params);
         unitsSold = soldRows[0]?.count || 0;
         areaSold = parseFloat(soldRows[0]?.area || 0);
 
@@ -82,7 +92,12 @@ const getDashboardStats = async (req, res) => {
       } catch (e) { console.error("Error fetching sales:", e.message); }
 
       try {
-        const [ownershipRows] = await connection.query("SELECT COUNT(*) as count FROM unit_ownerships WHERE ownership_status = 'Active'");
+        const [ownershipRows] = await connection.query(`
+            SELECT COUNT(DISTINCT uo.party_id) as count 
+            FROM unit_ownerships uo
+            JOIN units u ON u.id = uo.unit_id
+            WHERE uo.ownership_status = 'Active' ${uAliasFilterAnd}
+          `, params);
         response.secondRow.unitOwnership.value = ownershipRows[0]?.count || 0;
       } catch (e) { console.error("Error fetching ownership:", e.message); }
 
@@ -91,12 +106,15 @@ const getDashboardStats = async (req, res) => {
       let areaLeased = 0;
       let totalActualRentMonthly = 0;
       try {
+        // Need to pass params multiple times if used multiple times in the query
+        // The safest way is to inject the ID if it's a number, or just pass the array 3 times
+        const pArr = projectId ? [projectId, projectId, projectId] : [];
         const [leasedRows] = await connection.query(`
-            SELECT COUNT(DISTINCT u.id) as count, COALESCE(SUM(u.super_area), 0) as area, COALESCE(SUM(l.monthly_rent), 0) as total_rent
-            FROM units u
-            JOIN leases l ON u.id = l.unit_id
-            WHERE l.status = 'active'
-          `);
+            SELECT 
+                (SELECT COUNT(DISTINCT unit_id) FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}) as count,
+                (SELECT COALESCE(SUM(chargeable_area), 0) FROM units WHERE id IN (SELECT unit_id FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}) ${uFilterAnd}) as area,
+                (SELECT COALESCE(SUM(monthly_rent), 0) FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}) as total_rent
+          `, pArr);
         unitsLeased = leasedRows[0]?.count || 0;
         areaLeased = parseFloat(leasedRows[0]?.area || 0);
         totalActualRentMonthly = parseFloat(leasedRows[0]?.total_rent || 0);
@@ -108,7 +126,7 @@ const getDashboardStats = async (req, res) => {
       } catch (e) { console.error("Error fetching leases:", e.message); }
 
       try {
-        const [lesseeRows] = await connection.query("SELECT COUNT(DISTINCT party_tenant_id) as count FROM leases WHERE status = 'active'");
+        const [lesseeRows] = await connection.query(`SELECT COUNT(DISTINCT party_tenant_id) as count FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}`, params);
         response.thirdRow.totalLessees.value = lesseeRows[0]?.count || 0;
       } catch (e) { console.error("Error fetching lessees:", e.message); }
 
@@ -121,10 +139,11 @@ const getDashboardStats = async (req, res) => {
 
       try {
         const [vacantProjRows] = await connection.query(`
-            SELECT COALESCE(SUM(projected_rent), 0) as loss
-            FROM units
-            WHERE id NOT IN (SELECT unit_id FROM leases WHERE status = 'active')
-          `);
+            SELECT COALESCE(SUM(projected_rent * COALESCE(chargeable_area, 0)), 0) as loss
+            FROM units u
+            WHERE u.id NOT IN (SELECT unit_id FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd})
+            ${uAliasFilterAnd}
+          `, projectId ? [projectId, projectId] : []);
         response.financials.opportunityLoss.value = parseFloat(vacantProjRows[0]?.loss || 0);
       } catch (e) { console.error("Error fetching vacancy loss:", e.message); }
 
@@ -151,11 +170,12 @@ const getDashboardStats = async (req, res) => {
           const startOfMonth = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
           const endOfMonth = new Date(year, d.getMonth() + 1, 0).toISOString().slice(0, 10);
 
+          const trendParams = projectId ? [endOfMonth, startOfMonth, projectId] : [endOfMonth, startOfMonth];
           const [trendRes] = await connection.query(`
                 SELECT COALESCE(SUM(monthly_rent), 0) as revenue 
                 FROM leases 
-                WHERE lease_start <= ? AND (lease_end >= ? OR lease_end IS NULL)
-            `, [endOfMonth, startOfMonth]);
+                WHERE lease_start <= ? AND (lease_end >= ? OR lease_end IS NULL) ${lFilterAnd}
+            `, trendParams);
 
           revenueTrends.push({
             month: monthName,

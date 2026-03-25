@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
-import { addProject, getProjectLocations } from "../../services/api";
+import { addProject, getProjectLocations, filterAPI } from "../../services/api";
 import { indianCities } from "../../utils/indianLocations";
 import "./AddProject.css";
 
@@ -14,13 +14,14 @@ const AddProject = () => {
     location: "",
     address: "",
     project_type: "",
-    calculation_type: "Super Area",
+    calculation_type: "Chargeable Area",
     total_floors: "",
     total_project_area: "",
     description: "",
   });
 
   const [locations, setLocations] = useState([]);
+  const [types, setTypes] = useState(["RETAIL/SHOP", "Commercial", "Industrial", "Mixed Use"]);
   const [image, setImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,8 +39,16 @@ const AddProject = () => {
         // Fallback to just Indian cities if API fails
         setLocations(indianCities);
       }
+      try {
+        const response = await filterAPI.getFilterOptions("project_type");
+        const apiTypes = response.data.data.map(t => t.option_value);
+        setTypes(apiTypes);
+      } catch (error) {
+        console.error("Error fetching types:", error);
+      }
     };
     fetchLocations();
+    // Rebuilt successfully
   }, []);
 
 
@@ -197,17 +206,16 @@ const AddProject = () => {
                     required
                   >
                     <option value="">Select Type</option>
-                    <option value="RETAIL/SHOP">RETAIL/SHOP</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Industrial">Industrial</option>
-                    <option value="Mixed Use">Mixed Use</option>
+                    {types.map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label>Calculation Basis (Select all that apply)</label>
                   <div className="checkbox-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '5px' }}>
-                    {["Super Area", "Covered Area", "Carpet Area"].map((type) => (
+                    {["Chargeable Area", "Covered Area", "Carpet Area"].map((type) => (
                       <label key={type} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
                         <input
                           type="checkbox"

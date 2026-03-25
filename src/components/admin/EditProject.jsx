@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { getProjectById, updateProject, getProjectLocations } from "../../services/api";
+import { getProjectById, updateProject, getProjectLocations, filterAPI } from "../../services/api";
 import { indianCities } from "../../utils/indianLocations";
 import "./EditProject.css";
 
@@ -23,10 +23,12 @@ const EditProject = () => {
 
   const [image, setImage] = useState(null);
   const [locations, setLocations] = useState([]);
+  const [types, setTypes] = useState(["RETAIL/SHOP", "Commercial", "Industrial", "Mixed Use"]);
+  const [message, setMessage] = useState('');
 
-  // Fetch Locations
+  // Fetch Locations and Types
   useEffect(() => {
-    const fetchLocations = async () => {
+    const fetchInitialData = async () => {
       try {
         const response = await getProjectLocations();
         const fetched = response.data || [];
@@ -36,9 +38,17 @@ const EditProject = () => {
         console.error("Failed to fetch locations:", error);
         setLocations(indianCities);
       }
+
+      try {
+        const response = await filterAPI.getFilterOptions("project_type");
+        const apiTypes = response.data.data.map(t => t.option_value);
+        setTypes(apiTypes);
+      } catch (error) {
+        console.error("Error fetching types:", error);
+      }
     };
-    fetchLocations();
-  }, []);
+    fetchInitialData();
+  }, []); // Empty dependency array to run once on mount
 
   // Fetch Project
   useEffect(() => {
@@ -51,7 +61,7 @@ const EditProject = () => {
           location: data.location || "",
           address: data.address || "",
           project_type: data.project_type || "RETAIL/SHOP",
-          calculation_type: data.calculation_type || "Super Area",
+          calculation_type: data.calculation_type || "Chargeable Area",
           total_floors: data.total_floors || "",
           total_project_area: data.total_project_area || "",
           description: data.description || "",
@@ -62,7 +72,7 @@ const EditProject = () => {
       }
     };
     fetchProject();
-  }, [id]);
+  }, [id]); // Dependency on 'id' to refetch if ID changes
 
   /* ================= HANDLERS ================= */
   const handleChange = (e) => {
@@ -176,17 +186,17 @@ const EditProject = () => {
                   <div className="form-group vertical">
                     <label>Project Type</label>
                     <select name="project_type" value={formData.project_type} onChange={handleChange}>
-                      <option value="RETAIL/SHOP">RETAIL/SHOP</option>
-                      <option value="Commercial">Commercial</option>
-                      <option value="Industrial">Industrial</option>
-                      <option value="Mixed Use">Mixed Use</option>
+                      <option value="">Select Type</option>
+                      {types.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
                 <div className="form-group vertical">
                   <label>Calculation Basis</label>
                   <select name="calculation_type" value={formData.calculation_type} onChange={handleChange}>
-                    <option value="Super Area">Super Area</option>
+                    <option value="Chargeable Area">Chargeable Area</option>
                     <option value="Covered Area">Covered Area</option>
                     <option value="Carpet Area">Carpet Area</option>
                   </select>

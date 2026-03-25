@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Step1BasicDetails from './lease-creation/Step1BasicDetails';
-import Step2Docs from './lease-creation/Step2Docs';
-import Step2RentConfig from './lease-creation/Step2RentConfig';
-import Step3Finalize from './lease-creation/Step3Finalize';
+import Step2TermsFinalization from './lease-creation/Step2TermsFinalization';
+import Step3RentConfig from './lease-creation/Step3RentConfig';
 import Step4Escalations from './lease-creation/Step4Escalations';
+import Step5DocsExecute from './lease-creation/Step5DocsExecute';
 import { leaseAPI, getProjects, unitAPI, partyAPI, ownershipAPI } from '../../services/api';
 import './AddLease.css';
 import './dashboard.css';
@@ -69,10 +69,11 @@ const AddLease = () => {
     const [files, setFiles] = useState({}); // Store files
 
     const [escalationSteps, setEscalationSteps] = useState([
-        { effectiveDate: '', effectiveToDate: '', increaseType: 'Percentage (%)', value: '' }
+        { effectiveDate: '', effectiveToDate: '', increaseType: 'Percentage (%)', value: '', escalation_on: 'mg' }
     ]);
 
     const [submitMessage, setSubmitMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Fetch Initial Data
     useEffect(() => {
@@ -178,6 +179,8 @@ const AddLease = () => {
 
     // Final Submit
     const handleSubmit = async () => {
+        if (isSubmitting) return; // Prevent double clicking
+        setIsSubmitting(true);
         try {
             // Transform Data
             const escalations = escalationSteps
@@ -256,6 +259,8 @@ const AddLease = () => {
         } catch (error) {
             console.error(error);
             alert("Failed to create lease: " + (error.response?.data?.message || error.message));
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -268,10 +273,11 @@ const AddLease = () => {
                         <Link to="/admin/dashboard">HOME</Link> &gt; <Link to="/admin/leases">LEASES</Link> &gt; <span className="active">ADD NEW</span>
                     </div>
                     <h1>Add New Lease</h1>
-                    <p>Step {currentStep} of 4: {
+                    <p>Step {currentStep} of 5: {
                         currentStep === 1 ? 'Basic Details' :
-                            currentStep === 2 ? 'Docs Execution' :
-                                currentStep === 3 ? 'Terms & Rent' : 'Escalations'
+                            currentStep === 2 ? 'Term Finalization' :
+                                currentStep === 3 ? 'Rent Config' : 
+                                    currentStep === 4 ? 'Escalations' : 'Docs Execution'
                     }</p>
                 </header>
 
@@ -280,11 +286,13 @@ const AddLease = () => {
                     <div className="stepper">
                         <div className={`step ${currentStep >= 1 ? 'completed' : ''}`}>1. Basics</div>
                         <div className="line"></div>
-                        <div className={`step ${currentStep >= 2 ? 'completed' : ''}`}>2. Docs</div>
+                        <div className={`step ${currentStep >= 2 ? 'completed' : ''}`}>2. Terms</div>
                         <div className="line"></div>
-                        <div className={`step ${currentStep >= 3 ? 'completed' : ''}`}>3. Terms</div>
+                        <div className={`step ${currentStep >= 3 ? 'completed' : ''}`}>3. Rent</div>
                         <div className="line"></div>
-                        <div className={`step ${currentStep >= 4 ? 'completed' : ''}`}>4. Escalation</div>
+                        <div className={`step ${currentStep >= 4 ? 'completed' : ''}`}>4. Escalations</div>
+                        <div className="line"></div>
+                        <div className={`step ${currentStep >= 5 ? 'completed' : ''}`}>5. Docs</div>
                     </div>
 
                     {/* Steps Rendering */}
@@ -305,33 +313,23 @@ const AddLease = () => {
                     )}
 
                     {currentStep === 2 && (
-                        <Step2Docs
+                        <Step2TermsFinalization
                             formData={formData}
                             setFormData={setFormData}
-                            handleFileChange={handleFileChange}
+                            selectedProject={projects.find(p => p.id === parseInt(formData.project_id))}
+                            selectedUnit={units.find(u => u.id === parseInt(formData.unit_id))}
                         />
                     )}
 
-
                     {currentStep === 3 && (
-                        <>
-                            <Step2RentConfig // Renamed conceptually to Terms/Rent
-                                rentModel={rentModel}
-                                formData={formData}
-                                setFormData={setFormData}
-                                escalationSteps={[]} // Not used here anymore
-                                setEscalationSteps={null}
-                                selectedProject={projects.find(p => p.id === parseInt(formData.project_id))}
-                                selectedUnit={units.find(u => u.id === parseInt(formData.unit_id))}
-                            />
-                            <Step3Finalize // Merging Terms here or keeping separate? 
-                                // Ideally Step3Finalize should be part of this step or renamed
-                                formData={formData}
-                                setFormData={setFormData}
-                                selectedProject={projects.find(p => p.id === parseInt(formData.project_id))}
-                                selectedUnit={units.find(u => u.id === parseInt(formData.unit_id))}
-                            />
-                        </>
+                        <Step3RentConfig
+                            rentModel={rentModel}
+                            formData={formData}
+                            setFormData={setFormData}
+                            selectedProject={projects.find(p => p.id === parseInt(formData.project_id))}
+                            selectedUnit={units.find(u => u.id === parseInt(formData.unit_id))}
+                            isSubLease={isSubLease}
+                        />
                     )}
 
                     {currentStep === 4 && (
@@ -340,6 +338,16 @@ const AddLease = () => {
                             setEscalationSteps={setEscalationSteps}
                             addEscalationStep={addEscalationStep}
                             removeEscalationStep={removeEscalationStep}
+                            formData={formData}
+                            rentModel={rentModel}
+                        />
+                    )}
+
+                    {currentStep === 5 && (
+                        <Step5DocsExecute
+                            formData={formData}
+                            setFormData={setFormData}
+                            handleFileChange={handleFileChange}
                         />
                     )}
 
@@ -351,10 +359,12 @@ const AddLease = () => {
                             <button className="secondary-btn" onClick={() => navigate('/admin/leases')}>Cancel</button>
                         )}
 
-                        {currentStep < 4 ? (
-                            <button className="primary-btn" onClick={nextStep}>Next Step</button>
+                        {currentStep < 5 ? (
+                            <button className="primary-btn" onClick={nextStep} disabled={isSubmitting}>Next Step</button>
                         ) : (
-                            <button className="primary-btn submit-btn" onClick={handleSubmit}>Create Lease</button>
+                            <button className="primary-btn submit-btn" onClick={handleSubmit} disabled={isSubmitting}>
+                                {isSubmitting ? 'Submitting...' : 'Create Lease'}
+                            </button>
                         )}
                     </div>
 

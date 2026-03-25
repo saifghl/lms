@@ -171,7 +171,7 @@ exports.getAllTenants = async (req, res) => {
                 t.contact_person_phone,
                 t.contact_person_email,
                 t.status,
-                COALESCE(SUM(u.super_area), 0) AS area_occupied,
+                COALESCE(SUM(u.chargeable_area), 0) AS area_occupied,
                 GROUP_CONCAT(u.unit_number SEPARATOR ', ') AS occupied_units
             FROM tenants t
             LEFT JOIN tenant_units tu ON t.id = tu.tenant_id
@@ -242,7 +242,7 @@ exports.getTenantById = async (req, res) => {
 
         // Calculate total area occupied
         const totalArea = units.reduce((sum, unit) => {
-            return sum + (parseFloat(unit.super_area) || 0);
+            return sum + (parseFloat(unit.chargeable_area) || 0);
         }, 0);
 
         // Return tenant with nested data for frontend compatibility

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import './EditUnit.css';
-import { unitAPI, getProjectById } from '../../services/api';
+import { unitAPI, getProjectById, filterAPI } from '../../services/api';
 
 const EditUnit = () => {
     const { id } = useParams();
@@ -11,7 +11,7 @@ const EditUnit = () => {
     const [formData, setFormData] = useState({
         unit_number: '',
         status: '',
-        super_area: '',
+        chargeable_area: '',
         projected_rent: '', // Changed from monthly_rent to match DB
         floor_number: '',
         block_tower: '', // Added
@@ -25,6 +25,17 @@ const EditUnit = () => {
 
     const [project, setProject] = useState(null);
     const [rentPerSqft, setRentPerSqft] = useState('');
+    const [unitConditions, setUnitConditions] = useState([
+        { value: 'fully_fitted', label: 'Fully Fitted' },
+        { value: 'semi_fitted', label: 'Semi Fitted' },
+        { value: 'bare_shell', label: 'Bare Shell' }
+    ]);
+    const [plcs, setPlcs] = useState([
+        { value: 'front_facing', label: 'Front Facing' },
+        { value: 'corner', label: 'Corner' },
+        { value: 'park_facing', label: 'Park Facing' },
+        { value: 'road_facing', label: 'Road Facing' }
+    ]);
 
     useEffect(() => {
         const fetchUnitAndProject = async () => {
@@ -34,7 +45,7 @@ const EditUnit = () => {
                 setFormData({
                     unit_number: data.unit_number || '',
                     status: data.status || 'vacant',
-                    super_area: data.super_area || '',
+                    chargeable_area: data.chargeable_area || '',
                     projected_rent: data.projected_rent || '',
                     floor_number: data.floor_number || '',
                     block_tower: data.block_tower || '', // Added
@@ -46,7 +57,7 @@ const EditUnit = () => {
                 });
 
                 // Calculate initial rent per sqft if rent exists
-                if (data.projected_rent > 0 && data.super_area > 0) { // Default to super area for initial display if needed, or just let it recalculate
+                if (data.projected_rent > 0 && data.chargeable_area > 0) { // Default to super area for initial display if needed, or just let it recalculate
                     // Actually better to not reverse calculate to avoid rounding errors, just let user enter new rate if they want to change
                 }
 
@@ -59,13 +70,28 @@ const EditUnit = () => {
                 setError("Failed to load unit details");
             }
         };
+        const fetchFilters = async () => {
+            try {
+                const ucRes = await filterAPI.getFilterOptions("unit_condition");
+                if (ucRes.data.data.length > 0) {
+                    setUnitConditions(ucRes.data.data.map(t => ({ value: t.option_value, label: t.option_value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) })));
+                }
+                const plcRes = await filterAPI.getFilterOptions("plc");
+                if (plcRes.data.data.length > 0) {
+                    setPlcs(plcRes.data.data.map(t => ({ value: t.option_value, label: t.option_value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) })));
+                }
+            } catch (error) {
+                console.error("Error fetching filters", error);
+            }
+        };
         fetchUnitAndProject();
+        fetchFilters();
     }, [id]);
 
     useEffect(() => {
         if (!project || !rentPerSqft) return;
 
-        const calcType = project.calculation_type || 'Super Area';
+        const calcType = project.calculation_type || 'Chargeable Area';
         let area = 0;
 
         if (calcType === 'Covered Area') {
@@ -73,7 +99,7 @@ const EditUnit = () => {
         } else if (calcType === 'Carpet Area') {
             area = parseFloat(formData.carpet_area) || 0;
         } else {
-            area = parseFloat(formData.super_area) || 0;
+            area = parseFloat(formData.chargeable_area) || 0;
         }
 
         const rate = parseFloat(rentPerSqft);
@@ -85,7 +111,7 @@ const EditUnit = () => {
                 projected_rent: total > 0 ? total.toString() : ''
             }));
         }
-    }, [formData.super_area, formData.covered_area, formData.carpet_area, rentPerSqft, project]);
+    }, [formData.chargeable_area, formData.covered_area, formData.carpet_area, rentPerSqft, project]);
 
     const handleChange = (e) => {
         setFormData({
@@ -193,11 +219,11 @@ const EditUnit = () => {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Super Area (sq ft)</label>
+                                    <label>Chargeable Area (sq ft)</label>
                                     <input
                                         type="text"
-                                        name="super_area"
-                                        value={formData.super_area}
+                                        name="chargeable_area"
+                                        value={formData.chargeable_area}
                                         onChange={handleChange}
                                     />
                                 </div>
@@ -218,7 +244,7 @@ const EditUnit = () => {
                                                 style={{ width: '100px' }}
                                             />
                                             <span style={{ fontSize: '12px', color: '#666' }}>
-                                                x {project?.calculation_type || 'Super Area'}
+                                                x {project?.calculation_type || 'Chargeable Area'}
                                             </span>
                                         </div>
                                         <input
@@ -253,20 +279,20 @@ const EditUnit = () => {
                                     <div className="form-group">
                                         <label>Unit Condition</label>
                                         <select name="unit_condition" value={formData.unit_condition} onChange={handleChange}>
-                                            <option value="fully_fitted">Fully Fitted</option>
-                                            <option value="semi_fitted">Semi Fitted</option>
-                                            <option value="bare_shell">Bare Shell</option>
+                                            {unitConditions.map(uc => (
+                                                <option key={uc.value} value={uc.value}>{uc.label}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
                                 <div className="form-group">
                                     <div className="form-group">
-                                        <label>PLC</label>
+                                        <label>Premium on Lease</label>
                                         <select name="plc" value={formData.plc} onChange={handleChange}>
-                                            <option value="front_facing">Front Facing</option>
-                                            <option value="corner">Corner</option>
-                                            <option value="park_facing">Park Facing</option>
-                                            <option value="road_facing">Road Facing</option>
+                                            <option value="">Select Premium On Lease (Optional)</option>
+                                            {plcs.map(plc => (
+                                                <option key={plc.value} value={plc.value}>{plc.label}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>

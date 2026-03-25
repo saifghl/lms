@@ -217,12 +217,12 @@ exports.createOwner = async (req, res) => {
         // 1️⃣ Calculate Area if units are provided
         if (unit_ids && unit_ids.length > 0) {
             const [units] = await conn.query(
-                "SELECT id, super_area FROM units WHERE id IN (?)",
+                "SELECT id, chargeable_area FROM units WHERE id IN (?)",
                 [unit_ids]
             );
             if (units.length > 0) {
                 totalOwnedArea = units.reduce(
-                    (sum, u) => sum + Number(u.super_area),
+                    (sum, u) => sum + Number(u.chargeable_area),
                     0
                 );
             }

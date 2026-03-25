@@ -41,6 +41,8 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState(initialStats);
     const [loading, setLoading] = useState(true);
+    const [projectsList, setProjectsList] = useState([]);
+    const [selectedProject, setSelectedProject] = useState('All');
 
     // Search State
     const [searchTerm, setSearchTerm] = useState("");
@@ -86,9 +88,23 @@ const Dashboard = () => {
     };
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchProjects = async () => {
             try {
-                const response = await getDashboardStats();
+                const res = await getProjects();
+                setProjectsList(res.data?.data || res.data || []);
+            } catch (err) {
+                console.error("Error fetching projects for filter:", err);
+            }
+        };
+        fetchProjects();
+    }, []);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            setLoading(true);
+            try {
+                const params = selectedProject !== 'All' ? { project_id: selectedProject } : undefined;
+                const response = await getDashboardStats(params);
                 if (response.data) {
                     setStats(response.data);
                 }
@@ -100,7 +116,7 @@ const Dashboard = () => {
             }
         };
         fetchStats();
-    }, []);
+    }, [selectedProject]);
 
     // Helper Card Component
     const StatCard = ({ title, value, unit, subtext, color = "blue", onClick }) => (
@@ -154,7 +170,18 @@ const Dashboard = () => {
                         )}
                     </div>
 
-                    <div className="header-actions">
+                    <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <select 
+                            className="form-select" 
+                            style={{ minWidth: '220px', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '6px', padding: '8px 12px', fontSize: '14px', color: '#374151' }}
+                            value={selectedProject}
+                            onChange={(e) => setSelectedProject(e.target.value)}
+                        >
+                            <option value="All">All Projects</option>
+                            {projectsList.map((p) => (
+                                <option key={p.id} value={p.id}>{p.project_name}</option>
+                            ))}
+                        </select>
                         <button className="icon-btn" onClick={() => navigate('/admin/notifications')} title="Notifications">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                         </button>
@@ -216,11 +243,15 @@ const Dashboard = () => {
                                     <div className="stat-value" style={{ color: '#DC2626' }}>₹{Number(stats?.financials?.opportunityLoss?.value || 0).toLocaleString()}</div>
                                 </div>
                                 <div className="stat-card">
+                                    <h4>Avg Projected Rent / Sqft</h4>
+                                    <div className="stat-value">₹{stats?.financials?.avgProjectedRent?.value}</div>
+                                </div>
+                                <div className="stat-card">
                                     <h4>Avg Actual Rent / Sqft</h4>
                                     <div className="stat-value">₹{stats?.financials?.avgActualRent?.value}</div>
                                 </div>
                                 <div className="stat-card">
-                                    <h4>Deviation (Actual vs Projected)</h4>
+                                    <h4>Deviation (Actual / Sqft)</h4>
                                     <div className="stat-value" style={{ color: parseFloat(stats?.financials?.deviation?.value || 0) >= 0 ? 'green' : 'red' }}>
                                         {stats?.financials?.deviation?.value}
                                         <span style={{ fontSize: '0.8rem', marginLeft: '5px' }}>({stats?.financials?.deviation?.percent})</span>

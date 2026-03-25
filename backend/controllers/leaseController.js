@@ -291,13 +291,21 @@ const createLease = async (req, res) => {
             fitout_period_start,
             notice_vacation_date,
             opening_date,
-            rent_free_start_date,
             rent_free_end_date,
             loi_date,
             agreement_date,
             deposit_payment_date,
             registration_date,
-            monthly_net_sales
+            monthly_net_sales,
+            
+            lessee_notice_period_months,
+            lessor_notice_period_months,
+            lessee_lockin_period_months,
+            lessor_lockin_period_months,
+            unit_handover_date,
+            rent_amount_option,
+            mg_amount_sqft,
+            mg_amount
         } = req.body;
 
         // Validate required fields
@@ -316,6 +324,18 @@ const createLease = async (req, res) => {
         if (lease_type === 'Subtenant lease' && (!sub_tenant_id || !sub_lease_area_sqft)) {
             await connection.rollback();
             return res.status(400).json({ message: 'sub_tenant_id and sub_lease_area_sqft are required for Sub lease' });
+        }
+
+        // Prevent multiple active main leases on the same unit
+        if (lease_type !== 'Subtenant lease') {
+            const [existingActiveLease] = await connection.query(
+                "SELECT id FROM leases WHERE unit_id = ? AND status = 'active' AND (lease_type = 'Direct lease' OR lease_type IS NULL OR lease_type = '')",
+                [unit_id]
+            );
+            if (existingActiveLease.length > 0) {
+                await connection.rollback();
+                return res.status(400).json({ message: "An active main lease already exists for this unit. You can only add sub-leases." });
+            }
         }
 
         // Validate Unit belongs to Project
@@ -341,13 +361,16 @@ const createLease = async (req, res) => {
                 lease_type, rent_model, sub_lease_area_sqft,
                 lease_start, lease_end, rent_commencement_date, fitout_period_end,
                 tenure_months, lockin_period_months, notice_period_months,
-                monthly_rent, monthly_net_sales, cam_charges, billing_frequency, payment_due_day,
+                lessee_lockin_period_months, lessor_lockin_period_months,
+                lessee_notice_period_months, lessor_notice_period_months, unit_handover_date,
+                monthly_rent, monthly_net_sales, rent_amount_option, mg_amount_sqft, mg_amount,
+                cam_charges, billing_frequency, payment_due_day,
                 currency_code, security_deposit, utility_deposit, deposit_type,
                 revenue_share_percentage, revenue_share_applicable_on, status,
                 fitout_period_start, notice_vacation_date, opening_date,
                 rent_free_start_date, rent_free_end_date,
                 loi_date, agreement_date, deposit_payment_date, registration_date
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 project_id,
                 unit_id,
@@ -362,10 +385,18 @@ const createLease = async (req, res) => {
                 rent_commencement_date,
                 fitout_period_end || null,
                 tenure_months || (isNaN(calculatedTenure) ? 0 : calculatedTenure),
-                lockin_period_months || 12,
-                notice_period_months || 3,
+                lockin_period_months || 0,
+                notice_period_months || 0,
+                lessee_lockin_period_months || 0,
+                lessor_lockin_period_months || 0,
+                lessee_notice_period_months || 0,
+                lessor_notice_period_months || 0,
+                unit_handover_date || null,
                 monthly_rent || 0,
                 monthly_net_sales || 0,
+                rent_amount_option || null,
+                mg_amount_sqft || 0,
+                mg_amount || 0,
                 cam_charges || 0,
                 billing_frequency || 'Monthly',
                 payment_due_day || '1st of Month',
@@ -395,15 +426,17 @@ const createLease = async (req, res) => {
             for (let i = 0; i < escalations.length; i++) {
                 const esc = escalations[i];
                 await connection.query(
-                    `INSERT INTO lease_escalations (lease_id, sequence_no, effective_from, effective_to, increase_type, value)
-                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    `INSERT INTO lease_escalations (lease_id, sequence_no, effective_from, effective_to, increase_type, value, escalation_on, rate_per_sqft)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         leaseId,
                         i + 1,
                         esc.effective_from,
                         esc.effective_to || null,
                         esc.increase_type || 'Percentage',
-                        esc.value
+                        esc.value || 0,
+                        esc.escalation_on || null,
+                        esc.rate_per_sqft || null
                     ]
                 );
             }
@@ -518,7 +551,7 @@ const getLeaseById = async (req, res) => {
         const [leaseRows] = await pool.query(
             `SELECT l.*, 
                     p.project_name, p.location as project_location,
-                    u.unit_number, u.floor_number, u.super_area, u.carpet_area, u.unit_condition,
+                    u.unit_number, u.floor_number, u.chargeable_area, u.carpet_area, u.unit_condition,
                     COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) AS tenant_name, t.first_name as tenant_first_name, t.last_name as tenant_last_name, t.email as contact_person_email, t.phone as contact_person_phone,
                     COALESCE(o.company_name, CONCAT(o.first_name, ' ', o.last_name)) AS owner_name,
                     st.company_name AS sub_tenant_name
@@ -605,13 +638,21 @@ const updateLease = async (req, res) => {
             fitout_period_start,
             notice_vacation_date,
             opening_date,
-            rent_free_start_date,
             rent_free_end_date,
             loi_date,
             agreement_date,
             deposit_payment_date,
             registration_date,
-            monthly_net_sales
+            monthly_net_sales,
+
+            lessee_notice_period_months,
+            lessor_notice_period_months,
+            lessee_lockin_period_months,
+            lessor_lockin_period_months,
+            unit_handover_date,
+            rent_amount_option,
+            mg_amount_sqft,
+            mg_amount
         } = req.body;
 
         // Check if lease exists
@@ -644,6 +685,14 @@ const updateLease = async (req, res) => {
         if (tenure_months !== undefined) updateFields.push('tenure_months = ?'), updateValues.push(tenure_months);
         if (lockin_period_months !== undefined) updateFields.push('lockin_period_months = ?'), updateValues.push(lockin_period_months);
         if (notice_period_months !== undefined) updateFields.push('notice_period_months = ?'), updateValues.push(notice_period_months);
+        if (lessee_lockin_period_months !== undefined) updateFields.push('lessee_lockin_period_months = ?'), updateValues.push(lessee_lockin_period_months);
+        if (lessor_lockin_period_months !== undefined) updateFields.push('lessor_lockin_period_months = ?'), updateValues.push(lessor_lockin_period_months);
+        if (lessee_notice_period_months !== undefined) updateFields.push('lessee_notice_period_months = ?'), updateValues.push(lessee_notice_period_months);
+        if (lessor_notice_period_months !== undefined) updateFields.push('lessor_notice_period_months = ?'), updateValues.push(lessor_notice_period_months);
+        if (unit_handover_date !== undefined) updateFields.push('unit_handover_date = ?'), updateValues.push(unit_handover_date);
+        if (rent_amount_option !== undefined) updateFields.push('rent_amount_option = ?'), updateValues.push(rent_amount_option);
+        if (mg_amount_sqft !== undefined) updateFields.push('mg_amount_sqft = ?'), updateValues.push(mg_amount_sqft);
+        if (mg_amount !== undefined) updateFields.push('mg_amount = ?'), updateValues.push(mg_amount);
         if (monthly_rent !== undefined) updateFields.push('monthly_rent = ?'), updateValues.push(monthly_rent);
         if (monthly_net_sales !== undefined) updateFields.push('monthly_net_sales = ?'), updateValues.push(monthly_net_sales);
         if (cam_charges !== undefined) updateFields.push('cam_charges = ?'), updateValues.push(cam_charges);
@@ -691,15 +740,17 @@ const updateLease = async (req, res) => {
                 for (let i = 0; i < escalations.length; i++) {
                     const esc = escalations[i];
                     await connection.query(
-                        `INSERT INTO lease_escalations (lease_id, sequence_no, effective_from, effective_to, increase_type, value)
-                         VALUES (?, ?, ?, ?, ?, ?)`,
+                        `INSERT INTO lease_escalations (lease_id, sequence_no, effective_from, effective_to, increase_type, value, escalation_on, rate_per_sqft)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                         [
                             leaseId,
                             i + 1,
                             esc.effective_from,
                             esc.effective_to || null,
                             esc.increase_type || 'Percentage',
-                            parseFloat(esc.value) || 0
+                            parseFloat(esc.value) || 0,
+                            esc.escalation_on || null,
+                            esc.rate_per_sqft || null
                         ]
                     );
                 }
