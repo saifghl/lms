@@ -9,6 +9,7 @@ const getUnits = async (req, res) => {
             SELECT 
                 u.id,
                 u.unit_number,
+                u.block_tower,
                 p.project_name AS building,
                 u.chargeable_area,
                 u.status,

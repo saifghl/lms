@@ -15,7 +15,9 @@ const FilterOptionsMaster = () => {
         { value: 'unit_condition', label: 'Unit Conditions' },
         { value: 'plc', label: 'PLC Types' },
         { value: 'lease_status', label: 'Lease Statuses' },
-        { value: 'brand_category', label: 'Brand Categories' }
+        { value: 'brand_category', label: 'Brand Categories' },
+        { value: 'unit_category', label: 'Unit Categories' },
+        { value: 'unit_zoning_type', label: 'Unit Zoning Types' }
     ];
 
     useEffect(() => {

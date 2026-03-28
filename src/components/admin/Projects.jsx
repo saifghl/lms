@@ -197,7 +197,7 @@ const Projects = () => {
                 <tr>
                   <th>Project Name</th>
                   <th>Location</th>
-                  <th>Total Units</th>
+                  <th>Total Units / Floors</th>
                   <th>Status</th>
                   <th style={{ textAlign: "right" }}>Actions</th>
                 </tr>
@@ -239,7 +239,8 @@ const Projects = () => {
                     <td>
                       <div className="units-cell">
                         <span className="unit-count">
-                          {project.total_units || project.total_floors || 0}
+                          {project.total_units || 0} Units<br />
+                          <small style={{fontSize: '0.8rem', color: '#64748b'}}>{project.total_floors || 0} Floors</small>
                         </span>
                         <span className="occupancy-label">
                           {/* Mock occupancy - replace with real data if available in API */}

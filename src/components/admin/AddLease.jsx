@@ -198,6 +198,7 @@ const AddLease = () => {
             const tenureMonths = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
 
             const payload = {
+                ...formData,
                 project_id: parseInt(formData.project_id),
                 unit_id: parseInt(formData.unit_id),
                 party_owner_id: isSubLease ? null : parseInt(formData.party_owner_id),

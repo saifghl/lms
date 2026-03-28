@@ -17,7 +17,9 @@ const EditUnit = () => {
         block_tower: '', // Added
         unit_condition: '',
         plc: '',
-        carpet_area: ''
+        carpet_area: '',
+        unit_category: '',
+        unit_zoning_type: ''
     });
 
     const [message, setMessage] = useState('');
@@ -36,6 +38,8 @@ const EditUnit = () => {
         { value: 'park_facing', label: 'Park Facing' },
         { value: 'road_facing', label: 'Road Facing' }
     ]);
+    const [unitCategories, setUnitCategories] = useState([]);
+    const [unitZoningTypes, setUnitZoningTypes] = useState([]);
 
     useEffect(() => {
         const fetchUnitAndProject = async () => {
@@ -53,6 +57,8 @@ const EditUnit = () => {
                     plc: data.plc || 'front_facing',
                     carpet_area: data.carpet_area || '',
                     covered_area: data.covered_area || '', // Ensure covered_area is also fetched
+                    unit_category: data.unit_category || '',
+                    unit_zoning_type: data.unit_zoning_type || '',
                     project_id: data.project_id
                 });
 
@@ -79,6 +85,14 @@ const EditUnit = () => {
                 const plcRes = await filterAPI.getFilterOptions("plc");
                 if (plcRes.data.data.length > 0) {
                     setPlcs(plcRes.data.data.map(t => ({ value: t.option_value, label: t.option_value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) })));
+                }
+                const catRes = await filterAPI.getFilterOptions("unit_category");
+                if (catRes.data?.data?.length > 0) {
+                    setUnitCategories(catRes.data.data.map(t => ({ value: t.option_value, label: t.option_value })));
+                }
+                const zoneRes = await filterAPI.getFilterOptions("unit_zoning_type");
+                if (zoneRes.data?.data?.length > 0) {
+                    setUnitZoningTypes(zoneRes.data.data.map(t => ({ value: t.option_value, label: t.option_value })));
                 }
             } catch (error) {
                 console.error("Error fetching filters", error);
@@ -280,6 +294,24 @@ const EditUnit = () => {
                                         <label>Unit Condition</label>
                                         <select name="unit_condition" value={formData.unit_condition} onChange={handleChange}>
                                             {unitConditions.map(uc => (
+                                                <option key={uc.value} value={uc.value}>{uc.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Unit Category</label>
+                                        <select name="unit_category" value={formData.unit_category} onChange={handleChange}>
+                                            <option value="">Select Category</option>
+                                            {unitCategories.map(uc => (
+                                                <option key={uc.value} value={uc.value}>{uc.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Unit Zoning Type</label>
+                                        <select name="unit_zoning_type" value={formData.unit_zoning_type} onChange={handleChange}>
+                                            <option value="">Select Zoning</option>
+                                            {unitZoningTypes.map(uc => (
                                                 <option key={uc.value} value={uc.value}>{uc.label}</option>
                                             ))}
                                         </select>
