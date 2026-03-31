@@ -1,39 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import DataEntrySidebar from './DataEntrySidebar';
-import { partyAPI } from '../../services/api';
+import { filterAPI, partyAPI } from '../../services/api';
+import { indianStates, getCitiesByState } from '../../utils/indianLocations';
+import { isValidPhone, isValidPAN, isValidAadhaar, isValidCIN } from '../../utils/validators';
 import '../admin/PartyForm.css';
 
 const AddMasterDataEntry = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [brandCategories, setBrandCategories] = useState([]);
 
     // Form State
     const [formData, setFormData] = useState({
         type: 'Individual',
+        party_type: 'Tenant',
         company_name: '',
+        brand_name: '',
+        brand_category: '',
+        legal_entity_type: '',
         title: '',
         first_name: '',
         last_name: '',
         email: '',
         phone: '',
         alt_phone: '',
-        identification_type: 'Tax ID',
+        identification_type: 'PAN',
         identification_number: '',
         address_line1: '',
         address_line2: '',
         city: '',
         state: '',
         postal_code: '',
-        country: 'India'
+        country: 'India',
+        representative_designation: '',
+        owner_group: ''
     });
 
+    useEffect(() => {
+        const fetchFilters = async () => {
+            try {
+                const bcRes = await filterAPI.getFilterOptions("brand_category");
+                setBrandCategories(bcRes.data.data || []);
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        fetchFilters();
+    }, []);
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name === 'state') {
+            setFormData({ ...formData, state: value, city: '' });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation
+        if (!isValidPhone(formData.phone)) {
+            alert("Phone Number must be exactly 10 digits.");
+            return;
+        }
+        if (formData.alt_phone && !isValidPhone(formData.alt_phone)) {
+            alert("Alternate Phone Number must be exactly 10 digits.");
+            return;
+        }
+
+        // ID Validation
+        if (formData.identification_type === 'PAN' && !isValidPAN(formData.identification_number)) {
+            alert("Invalid PAN format. Please check.");
+            return;
+        }
+        if (formData.identification_type === 'Aadhar' && !isValidAadhaar(formData.identification_number)) {
+            alert("Invalid Aadhaar format. Must be 12 digits.");
+            return;
+        }
+        if (formData.identification_type === 'CIN' && !isValidCIN(formData.identification_number)) {
+            alert("Invalid CIN format. Please check.");
+            return;
+        }
+
         setLoading(true);
         try {
             await partyAPI.createParty(formData);
@@ -64,11 +115,25 @@ const AddMasterDataEntry = () => {
                     {/* TYPE SELECTION */}
                     <div className="form-section">
                         <div className="section-header">
-                            <h3>Party Type</h3>
+                            <h3>Party Role & Structure</h3>
                         </div>
                         <div className="form-row">
                             <div className="form-group" style={{ maxWidth: '300px' }}>
-                                <label>Legal Entity Type *</label>
+                                <label>Party Role *</label>
+                                <select
+                                    className="form-select"
+                                    name="party_type"
+                                    value={formData.party_type}
+                                    onChange={handleChange}
+                                >
+                                    <option value="Tenant">Tenant</option>
+                                    <option value="Owner">Owner</option>
+                                    <option value="Lessor">Lessor</option>
+                                    <option value="Sub-Lessee">Sub-Lessee</option>
+                                </select>
+                            </div>
+                            <div className="form-group" style={{ maxWidth: '300px' }}>
+                                <label>Profile Structure *</label>
                                 <select
                                     className="form-select"
                                     name="type"
@@ -100,6 +165,49 @@ const AddMasterDataEntry = () => {
                                         placeholder="e.g. Acme Corp Pvt Ltd"
                                     />
                                 </div>
+                                <div className="form-group">
+                                    <label>Brand Name</label>
+                                    <input
+                                        className="form-input"
+                                        name="brand_name"
+                                        value={formData.brand_name}
+                                        onChange={handleChange}
+                                        placeholder="e.g. Acme"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Brand Category</label>
+                                    <select
+                                        className="form-select"
+                                        name="brand_category"
+                                        value={formData.brand_category}
+                                        onChange={handleChange}
+                                    >
+                                        <option value="">Select Category</option>
+                                        {brandCategories.map((c) => (
+                                            <option key={c.id} value={c.option_value}>{c.option_value}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Legal Entity Type</label>
+                                    <select
+                                        className="form-select"
+                                        name="legal_entity_type"
+                                        value={formData.legal_entity_type}
+                                        onChange={handleChange}
+                                    >
+                                        <option value="">Select Type</option>
+                                        <option value="Private Limited">Private Limited</option>
+                                        <option value="Public Limited">Public Limited</option>
+                                        <option value="LLP">LLP</option>
+                                        <option value="Partnership">Partnership</option>
+                                        <option value="Proprietorship">Proprietorship</option>
+                                        <option value="HUF">HUF</option>
+                                        <option value="Trust">Trust</option>
+                                        <option value="Society">Society</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -109,6 +217,20 @@ const AddMasterDataEntry = () => {
                         <div className="section-header">
                             <h3>{formData.type === 'Company' ? 'Representative Information' : 'Personal Information'}</h3>
                         </div>
+                        {formData.type === 'Company' && (
+                            <div className="form-row" style={{ marginBottom: '15px' }}>
+                                <div className="form-group">
+                                    <label>Rep in the capacity of</label>
+                                    <input
+                                        className="form-input"
+                                        name="representative_designation"
+                                        value={formData.representative_designation}
+                                        onChange={handleChange}
+                                        placeholder="e.g. Director, Manager"
+                                    />
+                                </div>
+                            </div>
+                        )}
                         <div className="form-row">
                             <div className="form-group" style={{ flex: 0.2 }}>
                                 <label>Title</label>
@@ -186,10 +308,31 @@ const AddMasterDataEntry = () => {
                         </div>
                     </div>
 
+                    {/* OWNER DETAILS */}
+                    {formData.party_type === 'Owner' && (
+                        <div className="form-section">
+                            <div className="section-header">
+                                <h3>Owner Grouping</h3>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group" style={{ maxWidth: '400px' }}>
+                                    <label>Grouping of Owners</label>
+                                    <input
+                                        className="form-input"
+                                        name="owner_group"
+                                        value={formData.owner_group}
+                                        onChange={handleChange}
+                                        placeholder="Enter Owner Group (Optional)"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* IDENTIFICATION */}
                     <div className="form-section">
                         <div className="section-header">
-                            <h3>Identification</h3>
+                            <h3>Party Details</h3>
                         </div>
                         <div className="form-row">
                             <div className="form-group">
@@ -200,11 +343,12 @@ const AddMasterDataEntry = () => {
                                     value={formData.identification_type}
                                     onChange={handleChange}
                                 >
-                                    <option value="Tax ID">Tax ID / PAN</option>
+                                    <option value="PAN">PAN</option>
+                                    <option value="Aadhar">Aadhaar</option>
+                                    <option value="CIN">CIN</option>
+                                    <option value="GSTIN">GSTIN</option>
                                     <option value="Voter ID">Voter ID</option>
                                     <option value="Passport">Passport</option>
-                                    <option value="Aadhar">Aadhar</option>
-                                    <option value="CIN">CIN (Company)</option>
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
@@ -250,22 +394,32 @@ const AddMasterDataEntry = () => {
                         </div>
                         <div className="form-row">
                             <div className="form-group">
-                                <label>City</label>
-                                <input
-                                    className="form-input"
-                                    name="city"
-                                    value={formData.city}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                            <div className="form-group">
                                 <label>State</label>
-                                <input
-                                    className="form-input"
+                                <select
+                                    className="form-select"
                                     name="state"
                                     value={formData.state}
                                     onChange={handleChange}
-                                />
+                                >
+                                    <option value="">Select State</option>
+                                    {indianStates.map((state, index) => (
+                                        <option key={index} value={state}>{state}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>City</label>
+                                <select
+                                    className="form-select"
+                                    name="city"
+                                    value={formData.city}
+                                    onChange={handleChange}
+                                >
+                                    <option value="">Select City</option>
+                                    {getCitiesByState(formData.state).map((city, index) => (
+                                        <option key={index} value={city}>{city}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="form-group">
                                 <label>Postal Code</label>

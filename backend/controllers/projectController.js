@@ -76,7 +76,7 @@ const addProject = async (req, res) => {
 const getProjects = async (req, res) => {
   try {
     const { search, location, type, status } = req.query;
-    let query = "SELECT * FROM projects";
+    let query = "SELECT projects.*, (SELECT COUNT(*) FROM units WHERE project_id = projects.id) AS total_units FROM projects";
     const conditions = [];
     const params = [];
 

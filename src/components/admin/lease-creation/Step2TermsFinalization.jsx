@@ -11,8 +11,17 @@ const Step2TermsFinalization = ({
         if (formData.lease_start && formData.lease_end) {
             const start = new Date(formData.lease_start);
             const end = new Date(formData.lease_end);
-            const months = Math.round((end - start) / (1000 * 60 * 60 * 24 * 30));
-            setFormData(prev => ({ ...prev, tenure_months: isNaN(months) || months < 0 ? 0 : months }));
+            
+            let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+            if (end.getDate() < start.getDate()) {
+                months--;
+            }
+            months = isNaN(months) || months < 0 ? 0 : months;
+            
+            setFormData(prev => {
+                if (prev.tenure_months === months) return prev;
+                return { ...prev, tenure_months: months };
+            });
         }
     }, [formData.lease_start, formData.lease_end, setFormData]);
 
@@ -27,7 +36,15 @@ const Step2TermsFinalization = ({
                         type="date"
                         className="form-control"
                         value={formData.lease_start}
-                        onChange={(e) => setFormData({ ...formData, lease_start: e.target.value })}
+                        max={formData.lease_end || undefined}
+                        onChange={(e) => {
+                            const newDate = e.target.value;
+                            if (formData.lease_end && newDate > formData.lease_end) {
+                                alert("Lease Start Date cannot be after Lease End Date.");
+                                return;
+                            }
+                            setFormData({ ...formData, lease_start: newDate });
+                        }}
                     />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
@@ -36,27 +53,41 @@ const Step2TermsFinalization = ({
                         type="date"
                         className="form-control"
                         value={formData.lease_end}
-                        onChange={(e) => setFormData({ ...formData, lease_end: e.target.value })}
+                        min={formData.lease_start || undefined}
+                        onChange={(e) => {
+                            const newDate = e.target.value;
+                            if (formData.lease_start && newDate < formData.lease_start) {
+                                alert("Lease End Date cannot be before Lease Start Date.");
+                                return;
+                            }
+                            setFormData({ ...formData, lease_end: newDate });
+                        }}
                     />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                     <label>Duration (Months) *</label>
                     <input
                         type="number"
-                        className="form-control bg-light"
-                        readOnly
-                        value={formData.tenure_months}
-                        // Duration field is unblocked. If user types it, we can calculate lease end date inversely, 
-                        // but auto-calculated from dates is standard. 
-                        // Since rule 25 says "When you edit any lease Duration field gets blocked and you can not edit it" 
-                        // -> I will leave it up to the parent or just make it editable but warn that it might not sync end date unless programmed.
-                        // Let's make it editable and sync back to lease_end
+                        className="form-control"
+                        value={formData.tenure_months === undefined ? '' : formData.tenure_months}
                         onChange={(e) => {
-                            const newMonths = parseInt(e.target.value) || 0;
-                            setFormData(prev => {
-                                const newEnd = new Date(prev.lease_start);
-                                newEnd.setMonth(newEnd.getMonth() + newMonths);
-                                return { ...prev, tenure_months: newMonths, lease_end: newEnd.toISOString().slice(0, 10) }
+                            const newMonths = parseInt(e.target.value);
+                            if (isNaN(newMonths) || newMonths < 0) {
+                                setFormData({ ...formData, tenure_months: '' });
+                                return;
+                            }
+                            
+                            setFormData((prev) => {
+                                const updates = { tenure_months: newMonths };
+                                if (prev.lease_start) {
+                                    const newEnd = new Date(prev.lease_start);
+                                    newEnd.setMonth(newEnd.getMonth() + newMonths);
+                                    
+                                    // Normally the lease end is exactly minus 1 day from the same day after X months.
+                                    // Simple approach: just add the months.
+                                    updates.lease_end = newEnd.toISOString().slice(0, 10);
+                                }
+                                return { ...prev, ...updates };
                             });
                         }}
                     />
@@ -79,7 +110,15 @@ const Step2TermsFinalization = ({
                         type="date"
                         className="form-control"
                         value={formData.fitout_period_start || ''}
-                        onChange={(e) => setFormData({ ...formData, fitout_period_start: e.target.value })}
+                        max={formData.fitout_period_end || undefined}
+                        onChange={(e) => {
+                            const newDate = e.target.value;
+                            if (formData.fitout_period_end && newDate > formData.fitout_period_end) {
+                                alert("Fitout Period Start cannot be after Fitout Period End.");
+                                return;
+                            }
+                            setFormData({ ...formData, fitout_period_start: newDate });
+                        }}
                     />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
@@ -88,7 +127,15 @@ const Step2TermsFinalization = ({
                         type="date"
                         className="form-control"
                         value={formData.fitout_period_end || ''}
-                        onChange={(e) => setFormData({ ...formData, fitout_period_end: e.target.value })}
+                        min={formData.fitout_period_start || undefined}
+                        onChange={(e) => {
+                            const newDate = e.target.value;
+                            if (formData.fitout_period_start && newDate < formData.fitout_period_start) {
+                                alert("Fitout Period End cannot be before Fitout Period Start.");
+                                return;
+                            }
+                            setFormData({ ...formData, fitout_period_end: newDate });
+                        }}
                     />
                 </div>
             </div>

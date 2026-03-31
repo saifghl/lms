@@ -57,8 +57,8 @@ const OwnershipMapping = () => {
 
     const fetchUnits = async (projectId) => {
         try {
-            // Updated to fetch only unsold units
-            const res = await unitAPI.getUnitsByProject(projectId, true);
+            // Fetch ALL units so we can manage documents for sold ones
+            const res = await unitAPI.getUnitsByProject(projectId, false);
             setUnits(Array.isArray(res.data) ? res.data : (res.data?.data || []));
         } catch (error) { console.error(error); }
     };
@@ -156,12 +156,16 @@ const OwnershipMapping = () => {
                             </select>
                         </div>
                         <div className="selection-group">
-                            <label>Select Unit (Available)</label>
+                            <label>Select Unit</label>
                             <select value={selectedUnit} onChange={(e) => setSelectedUnit(e.target.value)} disabled={!selectedProject}>
                                 <option value="">-- Choose Unit --</option>
                                 {units.map(u => (
-                                    <option key={u.id} value={u.id}>Unit {u.unit_number} ({u.status})</option>
+                                    <option key={u.id} value={u.id} style={{ display: u.status === 'Sold' ? 'none' : 'block' }}>Unit {u.unit_number} ({u.status})</option>
                                 ))}
+                                {/* Add the selected unit if it's sold so it stays visible */}
+                                {selectedUnit && units.find(u => u.id === selectedUnit)?.status === 'Sold' && (
+                                    <option value={selectedUnit}>Unit {units.find(u => u.id === selectedUnit).unit_number} (Sold - Current)</option>
+                                )}
                             </select>
                         </div>
                     </div>
@@ -200,7 +204,7 @@ const OwnershipMapping = () => {
                                 {activeOwners.length > 0 && (
                                     <>
                                         <div style={{ marginTop: '30px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <h3>Ownership Documents</h3>
+                                            <h3>Ownership Title Document Chain</h3>
                                         </div>
 
                                         <div className="doc-chain-table" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
@@ -221,14 +225,10 @@ const OwnershipMapping = () => {
                                                         display: 'grid', gridTemplateColumns: '2fr 0.8fr 1.2fr 0.8fr', alignItems: 'center',
                                                         padding: '14px 20px', borderBottom: '1px solid #f1f5f9', background: '#fff'
                                                     }}>
-                                                        {/* Document Name + Radio */}
+                                                        {/* Document Name + Radio/Bullet */}
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                            <div className={`radio-indicator ${doc ? 'checked' : ''}`} style={{
-                                                                width: '18px', height: '18px', borderRadius: '50%',
-                                                                border: doc ? '6px solid #16a34a' : '2px solid #cbd5e1',
-                                                                boxSizing: 'border-box',
-                                                                flexShrink: 0
-                                                            }} />
+                                                            {/* Small circled bullet */}
+                                                            <span style={{ fontSize: '20px', color: '#cbd5e1', lineHeight: '1', display: 'flex', alignItems: 'center' }}>○</span>
                                                             <span style={{ fontSize: '15px', fontWeight: 500, color: '#334155' }}>
                                                                 {type.name}
                                                             </span>
@@ -254,7 +254,7 @@ const OwnershipMapping = () => {
 
                                                         {/* Date Column */}
                                                         <div style={{ textAlign: 'center', fontSize: '14px', color: '#64748b' }}>
-                                                            {doc ? new Date(doc.document_date).toLocaleDateString() : 'N/A'}
+                                                            {doc ? new Date(doc.document_date).toLocaleDateString() : '11/1/26'}
                                                         </div>
 
                                                         {/* Action Column */}
@@ -262,11 +262,13 @@ const OwnershipMapping = () => {
                                                             {doc ? (
                                                                 <div className="action-icon-wrapper center">
                                                                     <button className="action-icon-btn view" onClick={() => viewDocument(doc)} title="View Document">
-                                                                        <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                                                     </button>
                                                                 </div>
                                                             ) : (
-                                                                <span style={{ color: '#cbd5e1' }}>-</span>
+                                                                <span style={{ color: '#cbd5e1', display: 'inline-flex', alignItems: 'center' }} title="No document to view">
+                                                                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                                </span>
                                                             )}
                                                         </div>
                                                     </div>
@@ -321,7 +323,7 @@ const OwnershipMapping = () => {
                             setIsAssignModalOpen(false);
                             fetchOwnerships(selectedUnit);
                             fetchUnits(selectedProject); // refresh unit list
-                            setSelectedUnit(''); // Reset selection as it's now sold
+                            // keeping selected unit so we can manage its documents immediately
                         }}
                     />
                 )}

@@ -63,7 +63,7 @@ const getDashboardStats = async (req, res) => {
       let totalProjectArea = 0;
       let globalProjectedRentTotal = 0;
       try {
-        const [unitRows] = await connection.query(`SELECT COUNT(*) as count, COALESCE(SUM(chargeable_area), 0) as total_area, COALESCE(SUM(projected_rent * COALESCE(chargeable_area, 0)), 0) as total_projected_rent FROM units ${uFilter}`, params);
+        const [unitRows] = await connection.query(`SELECT COUNT(*) as count, COALESCE(SUM(chargeable_area), 0) as total_area, COALESCE(SUM(projected_rent), 0) as total_projected_rent FROM units ${uFilter}`, params);
         totalUnits = unitRows[0]?.count || 0;
         totalProjectArea = parseFloat(unitRows[0]?.total_area || 0);
         globalProjectedRentTotal = parseFloat(unitRows[0]?.total_projected_rent || 0);
@@ -77,10 +77,9 @@ const getDashboardStats = async (req, res) => {
       let areaSold = 0;
       try {
         const [soldRows] = await connection.query(`
-            SELECT COUNT(DISTINCT u.id) as count, COALESCE(SUM(u.chargeable_area), 0) as area
+            SELECT COUNT(*) as count, COALESCE(SUM(u.chargeable_area), 0) as area
             FROM units u
-            JOIN unit_ownerships uo ON u.id = uo.unit_id
-            WHERE uo.ownership_status = 'Active' ${uAliasFilterAnd}
+            WHERE u.id IN (SELECT unit_id FROM unit_ownerships WHERE ownership_status = 'Active') ${uAliasFilterAnd}
           `, params);
         unitsSold = soldRows[0]?.count || 0;
         areaSold = parseFloat(soldRows[0]?.area || 0);
@@ -111,9 +110,9 @@ const getDashboardStats = async (req, res) => {
         const pArr = projectId ? [projectId, projectId, projectId] : [];
         const [leasedRows] = await connection.query(`
             SELECT 
-                (SELECT COUNT(DISTINCT unit_id) FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}) as count,
-                (SELECT COALESCE(SUM(chargeable_area), 0) FROM units WHERE id IN (SELECT unit_id FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}) ${uFilterAnd}) as area,
-                (SELECT COALESCE(SUM(monthly_rent), 0) FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}) as total_rent
+                (SELECT COUNT(DISTINCT unit_id) FROM leases WHERE status = 'active' AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}) as count,
+                (SELECT COALESCE(SUM(chargeable_area), 0) FROM units WHERE id IN (SELECT unit_id FROM leases WHERE status = 'active' AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}) ${uFilterAnd}) as area,
+                (SELECT COALESCE(SUM(monthly_rent), 0) FROM leases WHERE status = 'active' AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}) as total_rent
           `, pArr);
         unitsLeased = leasedRows[0]?.count || 0;
         areaLeased = parseFloat(leasedRows[0]?.area || 0);
@@ -126,7 +125,7 @@ const getDashboardStats = async (req, res) => {
       } catch (e) { console.error("Error fetching leases:", e.message); }
 
       try {
-        const [lesseeRows] = await connection.query(`SELECT COUNT(DISTINCT party_tenant_id) as count FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}`, params);
+        const [lesseeRows] = await connection.query(`SELECT COUNT(DISTINCT party_tenant_id) as count FROM leases WHERE status = 'active' AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd}`, params);
         response.thirdRow.totalLessees.value = lesseeRows[0]?.count || 0;
       } catch (e) { console.error("Error fetching lessees:", e.message); }
 
@@ -139,9 +138,9 @@ const getDashboardStats = async (req, res) => {
 
       try {
         const [vacantProjRows] = await connection.query(`
-            SELECT COALESCE(SUM(projected_rent * COALESCE(chargeable_area, 0)), 0) as loss
+            SELECT COALESCE(SUM(projected_rent), 0) as loss
             FROM units u
-            WHERE u.id NOT IN (SELECT unit_id FROM leases WHERE status = 'active' AND CURDATE() >= lease_start AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd})
+            WHERE u.id NOT IN (SELECT unit_id FROM leases WHERE status = 'active' AND (CURDATE() <= lease_end OR lease_end IS NULL) ${lFilterAnd})
             ${uAliasFilterAnd}
           `, projectId ? [projectId, projectId] : []);
         response.financials.opportunityLoss.value = parseFloat(vacantProjRows[0]?.loss || 0);

@@ -229,7 +229,9 @@ export const ownershipAPI = {
   // Document Chain
   getDocumentTypes: () => API.get("/ownerships/document-types"),
   addDocumentType: (data) => API.post("/ownerships/document-types", data),
-  uploadDocument: (data) => API.post("/ownerships/documents", data),
+  uploadDocument: (data) => API.post("/ownerships/documents", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+  }),
   getDocuments: (unitId, partyId) => API.get(`/ownerships/documents/${unitId}/${partyId}`),
 };
 
